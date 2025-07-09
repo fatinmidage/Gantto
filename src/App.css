@@ -122,6 +122,41 @@
   transform: translateY(0) !important;
 }
 
+/* 新增优化样式类 */
+.milestone-dragging {
+  will-change: transform, box-shadow !important;
+  pointer-events: none !important;
+  transition: none !important;
+  z-index: 100 !important;
+}
+
+.milestone-optimized {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  will-change: transform, box-shadow;
+  contain: layout style paint;
+}
+
+.milestone-hardware-accelerated {
+  transform: translateZ(0);
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+/* 性能优化的拖动状态 */
+.gantt-chart.dragging {
+  user-select: none;
+  cursor: grabbing !important;
+}
+
+.gantt-chart.dragging * {
+  pointer-events: none;
+}
+
+.gantt-chart.dragging .milestone-dragging {
+  pointer-events: auto;
+}
+
 /* 当前日期指示线样式 */
 .gantt-chart > div:last-child {
   background: linear-gradient(to bottom, #ff5722, #d84315) !important;
