@@ -19,6 +19,7 @@ interface Task {
   color: string;
   x: number;
   width: number;
+  order: number; // 添加排序字段
 }
 
 interface GanttChartProps {
@@ -26,6 +27,16 @@ interface GanttChartProps {
   endDate?: Date;
   timelineHeight?: number;
   taskHeight?: number;
+}
+
+// 添加垂直拖拽类型
+interface VerticalDragState {
+  isDragging: boolean;
+  draggedTaskId: string | null;
+  draggedTaskIndex: number | null;
+  targetIndex: number | null;
+  startY: number;
+  currentY: number;
 }
 
 // --- Custom Hooks ---
@@ -120,7 +131,8 @@ const GanttChart: React.FC<GanttChartProps> = ({
       endDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
       color: '#4CAF50',
       x: 0,
-      width: 0
+      width: 0,
+      order: 0 // 添加排序字段
     },
     {
       id: '2',
@@ -129,7 +141,8 @@ const GanttChart: React.FC<GanttChartProps> = ({
       endDate: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
       color: '#2196F3',
       x: 0,
-      width: 0
+      width: 0,
+      order: 1 // 添加排序字段
     },
     {
       id: '3',
@@ -138,7 +151,8 @@ const GanttChart: React.FC<GanttChartProps> = ({
       endDate: new Date(Date.now() + 20 * 24 * 60 * 60 * 1000),
       color: '#FF9800',
       x: 0,
-      width: 0
+      width: 0,
+      order: 2 // 添加排序字段
     },
     {
       id: '4',
@@ -147,7 +161,8 @@ const GanttChart: React.FC<GanttChartProps> = ({
       endDate: new Date(Date.now() + 28 * 24 * 60 * 60 * 1000),
       color: '#f44336',
       x: 0,
-      width: 0
+      width: 0,
+      order: 3 // 添加排序字段
     }
   ]);
 
@@ -156,6 +171,16 @@ const GanttChart: React.FC<GanttChartProps> = ({
   const [isDragging, setIsDragging] = useState(false);
   const [tempDragPosition, setTempDragPosition] = useState<{ id: string; x: number; width: number } | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // 添加垂直拖拽状态
+  const [verticalDragState, setVerticalDragState] = useState<VerticalDragState>({
+    isDragging: false,
+    draggedTaskId: null,
+    draggedTaskIndex: null,
+    targetIndex: null,
+    startY: 0,
+    currentY: 0
+  });
 
   const [taskMap, setTaskMap] = useState<Map<string, Task>>(new Map());
   const [draggedTaskData, setDraggedTaskData] = useState<Task | null>(null);
@@ -171,6 +196,11 @@ const GanttChart: React.FC<GanttChartProps> = ({
     const pixelPerDay = CHART_WIDTH / totalDays;
     return { totalDays, pixelPerDay };
   }, [startDate, endDate]);
+
+  // 添加任务排序辅助函数
+  const sortedTasks = useMemo(() => {
+    return [...tasks].sort((a, b) => a.order - b.order);
+  }, [tasks]);
 
   const dateToPixel = useCallback((date: Date): number => {
     const daysPassed = (date.getTime() - startDate.getTime()) / (24 * 60 * 60 * 1000);
@@ -192,11 +222,11 @@ const GanttChart: React.FC<GanttChartProps> = ({
 
   useEffect(() => {
     const newMap = new Map<string, Task>();
-    tasks.forEach(task => {
+    sortedTasks.forEach(task => {
       newMap.set(task.id, task);
     });
     setTaskMap(newMap);
-  }, [tasks]);
+  }, [sortedTasks]);
 
   useEffect(() => {
     updateTaskPositions();
@@ -222,6 +252,82 @@ const GanttChart: React.FC<GanttChartProps> = ({
       });
     }
   };
+
+  // 添加垂直拖拽事件处理器
+  const handleTitleMouseDown = (e: React.MouseEvent, taskId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const taskIndex = sortedTasks.findIndex(task => task.id === taskId);
+    if (taskIndex === -1) return;
+    
+    setVerticalDragState({
+      isDragging: true,
+      draggedTaskId: taskId,
+      draggedTaskIndex: taskIndex,
+      targetIndex: taskIndex,
+      startY: e.clientY,
+      currentY: e.clientY
+    });
+  };
+
+  const handleTitleMouseMove = useCallback((e: MouseEvent) => {
+    if (!verticalDragState.isDragging) return;
+    
+    const deltaY = e.clientY - verticalDragState.startY;
+    const taskHeight = 30 + 10; // taskHeight + margin
+    const newTargetIndex = Math.max(0, Math.min(
+      sortedTasks.length - 1,
+      verticalDragState.draggedTaskIndex! + Math.round(deltaY / taskHeight)
+    ));
+    
+    setVerticalDragState(prev => ({
+      ...prev,
+      currentY: e.clientY,
+      targetIndex: newTargetIndex
+    }));
+  }, [verticalDragState.isDragging, verticalDragState.startY, verticalDragState.draggedTaskIndex, sortedTasks.length]);
+
+  const handleTitleMouseUp = useCallback(() => {
+    if (!verticalDragState.isDragging) return;
+    
+    if (verticalDragState.targetIndex !== null && 
+        verticalDragState.draggedTaskIndex !== null &&
+        verticalDragState.targetIndex !== verticalDragState.draggedTaskIndex) {
+      
+      // 重新排序任务
+      setTasks(prev => {
+        const newTasks = [...prev];
+        const draggedTask = newTasks.find(t => t.id === verticalDragState.draggedTaskId);
+        if (!draggedTask) return prev;
+        
+        // 更新所有任务的order
+        const sortedTasksCopy = [...sortedTasks];
+        const draggedIndex = verticalDragState.draggedTaskIndex!;
+        const targetIndex = verticalDragState.targetIndex!;
+        
+        // 移除被拖拽的任务
+        sortedTasksCopy.splice(draggedIndex, 1);
+        // 插入到新位置
+        sortedTasksCopy.splice(targetIndex, 0, draggedTask);
+        
+        // 更新order字段
+        return newTasks.map(task => {
+          const newIndex = sortedTasksCopy.findIndex(t => t.id === task.id);
+          return { ...task, order: newIndex };
+        });
+      });
+    }
+    
+    setVerticalDragState({
+      isDragging: false,
+      draggedTaskId: null,
+      draggedTaskIndex: null,
+      targetIndex: null,
+      startY: 0,
+      currentY: 0
+    });
+  }, [verticalDragState, sortedTasks]);
 
   const handleMouseMoveCore = useCallback((e: MouseEvent) => {
     if (!isDragging || !draggedTask || !draggedTaskData) return;
@@ -282,6 +388,18 @@ const GanttChart: React.FC<GanttChartProps> = ({
     }
   }, [isDragging, handleMouseMove, handleMouseUp]);
 
+  // 添加垂直拖拽事件监听器
+  useEffect(() => {
+    if (verticalDragState.isDragging) {
+      document.addEventListener('mousemove', handleTitleMouseMove);
+      document.addEventListener('mouseup', handleTitleMouseUp);
+      return () => {
+        document.removeEventListener('mousemove', handleTitleMouseMove);
+        document.removeEventListener('mouseup', handleTitleMouseUp);
+      };
+    }
+  }, [verticalDragState.isDragging, handleTitleMouseMove, handleTitleMouseUp]);
+
   const timeScales = useMemo(() => {
     const scales = [];
     const interval = Math.max(1, Math.floor(dateRange.totalDays / 10));
@@ -334,141 +452,215 @@ const GanttChart: React.FC<GanttChartProps> = ({
     fontSize: '14px',
     color: '#555',
     borderBottom: '1px solid #f0f0f0', // Subtle bottom border
-    transition: 'background-color 0.2s ease'
+    transition: 'all 0.2s ease', // 添加过渡动画
+    position: 'relative'
   };
 
   return (
-    <div className="gantt-container" style={{ display: 'flex', border: '1px solid #ddd', backgroundColor: '#fff', borderRadius: '8px', overflow: 'hidden' }}>
-      {/* Title Column */}
-      <div className="title-column" style={titleColumnStyle}>
-        <div className="title-header" style={titleHeaderStyle}>
-          <span>任务列表</span>
-        </div>
-        <div className="task-titles" style={taskTitlesContainerStyle}>
-          {tasks.map((task) => (
-            <div
-              key={task.id}
-              className="task-title"
-              style={taskTitleStyle}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f0f0f0'}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-            >
-              {task.title}
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Gantt Chart Area */}
-      <div 
-        ref={containerRef}
-        className={`gantt-chart ${isDragging ? 'dragging' : ''}`}
-        style={{
-          width: CHART_WIDTH,
-          height: CONTAINER_HEIGHT,
-          position: 'relative',
-          cursor: isDragging ? 'grabbing' : 'default'
-        }}
-      >
-        {/* Timeline */}
-        <div className="timeline" style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          height: timelineHeight,
-          backgroundColor: '#f5f5f5',
-          borderBottom: '1px solid #e0e0e0'
-        }}>
-          {timeScales.map((scale, index) => (
-            <div key={index} style={{
-              position: 'absolute',
-              left: scale.x,
-              top: 0,
-              height: '100%',
-              borderLeft: '1px solid #e0e0e0',
-              paddingLeft: '5px',
-              fontSize: '12px',
-              display: 'flex',
-              alignItems: 'center',
-              color: '#777'
-            }}>
-              {scale.label}
-            </div>
-          ))}
-        </div>
-
-        {/* Grid Lines */}
-        <div className="grid-lines">
-          {timeScales.map((scale, index) => (
-            <div key={index} style={{
-              position: 'absolute',
-              left: scale.x,
-              top: timelineHeight,
-              bottom: 0,
-              width: '1px',
-              backgroundColor: '#f0f0f0',
-              pointerEvents: 'none'
-            }} />
-          ))}
-        </div>
-
-        {/* Task Bars */}
-        <div className="tasks" style={{
-          position: 'absolute',
-          top: timelineHeight + 10,
-          left: 0,
-          right: 0,
-          bottom: 0
-        }}>
-          {tasks.map((task, index) => {
-            const isBeingDragged = draggedTask === task.id;
-            const displayX = isBeingDragged && tempDragPosition ? tempDragPosition.x : task.x;
-            const displayWidth = isBeingDragged && tempDragPosition ? tempDragPosition.width : task.width;
-            
-            return (
-              <div
-                key={task.id}
-                className={'task'}
-                style={{
-                  position: 'absolute',
-                  left: displayX,
-                  top: index * (taskHeight + 10),
-                  width: displayWidth,
-                  height: taskHeight,
-                  backgroundColor: task.color,
-                  borderRadius: '5px',
-                  cursor: 'grab',
-                  boxShadow: isBeingDragged
-                    ? '0 6px 12px rgba(0,0,0,0.3)' 
-                    : '0 2px 5px rgba(0,0,0,0.15)',
-                  transform: isBeingDragged ? `scale(1.03)` : 'scale(1)',
-                  transition: isBeingDragged ? 'none' : 'box-shadow 0.2s ease, transform 0.2s ease',
-                  userSelect: 'none',
-                  zIndex: isBeingDragged ? 100 : 1
-                } as React.CSSProperties}
-                onMouseDown={(e) => handleMouseDown(e, task.id)}
-              >
-                {/* Title removed from here */}
+    <>
+      <style>
+        {`
+          @keyframes pulse {
+            0% {
+              opacity: 1;
+            }
+            50% {
+              opacity: 0.5;
+            }
+            100% {
+              opacity: 1;
+            }
+          }
+        `}
+      </style>
+      
+      <div className="gantt-container" style={{ 
+        display: 'flex', 
+        border: '1px solid #ddd', 
+        backgroundColor: '#fff', 
+        borderRadius: '8px', 
+        overflow: 'hidden',
+        cursor: verticalDragState.isDragging ? 'grabbing' : 'default' // 添加全局拖拽光标
+      }}>
+        {/* Title Column */}
+        <div className="title-column" style={titleColumnStyle}>
+          <div className="title-header" style={titleHeaderStyle}>
+            <span>任务列表</span>
+          </div>
+          <div className="task-titles" style={taskTitlesContainerStyle}>
+            {sortedTasks.map((task, index) => (
+              <div key={task.id}>
+                {/* 拖拽指示器 - 在目标位置上方显示 */}
+                {verticalDragState.isDragging && 
+                 verticalDragState.targetIndex === index && 
+                 verticalDragState.draggedTaskIndex !== index && (
+                  <div style={{
+                    height: '2px',
+                    backgroundColor: '#2196F3',
+                    margin: '0 10px',
+                    borderRadius: '1px',
+                    boxShadow: '0 0 4px rgba(33, 150, 243, 0.6)',
+                    animation: 'pulse 1s infinite' // 添加脉冲动画
+                  }} />
+                )}
+                
+                <div
+                  className="task-title"
+                  style={{
+                    ...taskTitleStyle,
+                    backgroundColor: verticalDragState.draggedTaskId === task.id ? '#e3f2fd' : 'transparent',
+                    opacity: verticalDragState.draggedTaskId === task.id ? 0.7 : 1,
+                    cursor: verticalDragState.isDragging ? 'grabbing' : 'grab',
+                    userSelect: 'none',
+                    transform: verticalDragState.draggedTaskId === task.id ? 'scale(1.02)' : 'scale(1)',
+                    boxShadow: verticalDragState.draggedTaskId === task.id ? '0 4px 8px rgba(0,0,0,0.15)' : 'none',
+                    zIndex: verticalDragState.draggedTaskId === task.id ? 10 : 1
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!verticalDragState.isDragging) {
+                      e.currentTarget.style.backgroundColor = '#f0f0f0';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!verticalDragState.isDragging && verticalDragState.draggedTaskId !== task.id) {
+                      e.currentTarget.style.backgroundColor = 'transparent';
+                    }
+                  }}
+                  onMouseDown={(e) => handleTitleMouseDown(e, task.id)}
+                >
+                  {task.title}
+                </div>
+                
+                {/* 拖拽指示器 - 在最后一个任务下方显示 */}
+                {verticalDragState.isDragging && 
+                 verticalDragState.targetIndex === sortedTasks.length - 1 && 
+                 index === sortedTasks.length - 1 &&
+                 verticalDragState.draggedTaskIndex !== sortedTasks.length - 1 && (
+                  <div style={{
+                    height: '2px',
+                    backgroundColor: '#2196F3',
+                    margin: '0 10px',
+                    borderRadius: '1px',
+                    boxShadow: '0 0 4px rgba(33, 150, 243, 0.6)',
+                    animation: 'pulse 1s infinite' // 添加脉冲动画
+                  }} />
+                )}
               </div>
-            );
-          })}
+            ))}
+          </div>
         </div>
 
-        {/* Current Date Line */}
-        <div style={{
-          position: 'absolute',
-          left: dateToPixel(new Date()),
-          top: 0,
-          bottom: 0,
-          width: '2px',
-          backgroundColor: '#e91e63',
-          pointerEvents: 'none',
-          zIndex: 10,
-          boxShadow: '0 0 8px rgba(233, 30, 99, 0.7)'
-        }} />
+        {/* Gantt Chart Area */}
+        <div 
+          ref={containerRef}
+          className={`gantt-chart ${isDragging ? 'dragging' : ''}`}
+          style={{
+            width: CHART_WIDTH,
+            height: CONTAINER_HEIGHT,
+            position: 'relative',
+            cursor: isDragging ? 'grabbing' : 'default'
+          }}
+        >
+          {/* Timeline */}
+          <div className="timeline" style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: timelineHeight,
+            backgroundColor: '#f5f5f5',
+            borderBottom: '1px solid #e0e0e0'
+          }}>
+            {timeScales.map((scale, index) => (
+              <div key={index} style={{
+                position: 'absolute',
+                left: scale.x,
+                top: 0,
+                height: '100%',
+                borderLeft: '1px solid #e0e0e0',
+                paddingLeft: '5px',
+                fontSize: '12px',
+                display: 'flex',
+                alignItems: 'center',
+                color: '#777'
+              }}>
+                {scale.label}
+              </div>
+            ))}
+          </div>
+
+          {/* Grid Lines */}
+          <div className="grid-lines">
+            {timeScales.map((scale, index) => (
+              <div key={index} style={{
+                position: 'absolute',
+                left: scale.x,
+                top: timelineHeight,
+                bottom: 0,
+                width: '1px',
+                backgroundColor: '#f0f0f0',
+                pointerEvents: 'none'
+              }} />
+            ))}
+          </div>
+
+          {/* Task Bars */}
+          <div className="tasks" style={{
+            position: 'absolute',
+            top: timelineHeight + 10,
+            left: 0,
+            right: 0,
+            bottom: 0
+          }}>
+            {sortedTasks.map((task, index) => {
+              const isBeingDragged = draggedTask === task.id;
+              const displayX = isBeingDragged && tempDragPosition ? tempDragPosition.x : task.x;
+              const displayWidth = isBeingDragged && tempDragPosition ? tempDragPosition.width : task.width;
+              
+              return (
+                <div
+                  key={task.id}
+                  className={'task'}
+                  style={{
+                    position: 'absolute',
+                    left: displayX,
+                    top: index * (taskHeight + 10),
+                    width: displayWidth,
+                    height: taskHeight,
+                    backgroundColor: task.color,
+                    borderRadius: '5px',
+                    cursor: 'grab',
+                    boxShadow: isBeingDragged
+                      ? '0 6px 12px rgba(0,0,0,0.3)' 
+                      : '0 2px 5px rgba(0,0,0,0.15)',
+                    transform: isBeingDragged ? `scale(1.03)` : 'scale(1)',
+                    transition: isBeingDragged ? 'none' : 'box-shadow 0.2s ease, transform 0.2s ease',
+                    userSelect: 'none',
+                    zIndex: isBeingDragged ? 100 : 1
+                  } as React.CSSProperties}
+                  onMouseDown={(e) => handleMouseDown(e, task.id)}
+                >
+                  {/* Title removed from here */}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Current Date Line */}
+          <div style={{
+            position: 'absolute',
+            left: dateToPixel(new Date()),
+            top: 0,
+            bottom: 0,
+            width: '2px',
+            backgroundColor: '#e91e63',
+            pointerEvents: 'none',
+            zIndex: 10,
+            boxShadow: '0 0 8px rgba(233, 30, 99, 0.7)'
+          }} />
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 
