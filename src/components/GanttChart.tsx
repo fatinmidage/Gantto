@@ -277,7 +277,7 @@ const GanttChart: React.FC<GanttChartProps> = ({
     const deltaY = e.clientY - verticalDragState.startY;
     const taskHeight = 30 + 10; // taskHeight + margin
     const newTargetIndex = Math.max(0, Math.min(
-      sortedTasks.length - 1,
+      sortedTasks.length, // 允许拖拽到最后位置
       verticalDragState.draggedTaskIndex! + Math.round(deltaY / taskHeight)
     ));
     
@@ -308,8 +308,15 @@ const GanttChart: React.FC<GanttChartProps> = ({
         
         // 移除被拖拽的任务
         sortedTasksCopy.splice(draggedIndex, 1);
+        
         // 插入到新位置
-        sortedTasksCopy.splice(targetIndex, 0, draggedTask);
+        if (targetIndex >= sortedTasksCopy.length) {
+          // 插入到最后位置
+          sortedTasksCopy.push(draggedTask);
+        } else {
+          // 插入到指定位置
+          sortedTasksCopy.splice(targetIndex, 0, draggedTask);
+        }
         
         // 更新order字段
         return newTasks.map(task => {
@@ -488,65 +495,86 @@ const GanttChart: React.FC<GanttChartProps> = ({
             <span>任务列表</span>
           </div>
           <div className="task-titles" style={taskTitlesContainerStyle}>
-            {sortedTasks.map((task, index) => (
-              <div key={task.id}>
-                {/* 拖拽指示器 - 在目标位置上方显示 */}
-                {verticalDragState.isDragging && 
-                 verticalDragState.targetIndex === index && 
-                 verticalDragState.draggedTaskIndex !== index && (
-                  <div style={{
-                    height: '2px',
-                    backgroundColor: '#2196F3',
-                    margin: '0 10px',
-                    borderRadius: '1px',
-                    boxShadow: '0 0 4px rgba(33, 150, 243, 0.6)',
-                    animation: 'pulse 1s infinite' // 添加脉冲动画
-                  }} />
-                )}
-                
-                <div
-                  className="task-title"
-                  style={{
-                    ...taskTitleStyle,
-                    backgroundColor: verticalDragState.draggedTaskId === task.id ? '#e3f2fd' : 'transparent',
-                    opacity: verticalDragState.draggedTaskId === task.id ? 0.7 : 1,
-                    cursor: verticalDragState.isDragging ? 'grabbing' : 'grab',
-                    userSelect: 'none',
-                    transform: verticalDragState.draggedTaskId === task.id ? 'scale(1.02)' : 'scale(1)',
-                    boxShadow: verticalDragState.draggedTaskId === task.id ? '0 4px 8px rgba(0,0,0,0.15)' : 'none',
-                    zIndex: verticalDragState.draggedTaskId === task.id ? 10 : 1
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!verticalDragState.isDragging) {
-                      e.currentTarget.style.backgroundColor = '#f0f0f0';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!verticalDragState.isDragging && verticalDragState.draggedTaskId !== task.id) {
-                      e.currentTarget.style.backgroundColor = 'transparent';
-                    }
-                  }}
-                  onMouseDown={(e) => handleTitleMouseDown(e, task.id)}
-                >
-                  {task.title}
+            {sortedTasks.map((task, index) => {
+              const isDraggedTask = verticalDragState.draggedTaskId === task.id;
+              const isTargetPosition = verticalDragState.isDragging && verticalDragState.targetIndex === index;
+              const isDraggingDown = verticalDragState.isDragging && 
+                verticalDragState.draggedTaskIndex !== null && 
+                verticalDragState.targetIndex !== null &&
+                verticalDragState.targetIndex > verticalDragState.draggedTaskIndex;
+              
+              return (
+                <div key={task.id}>
+                  {/* 拖拽指示器 - 向上拖拽时在目标位置上方显示 */}
+                  {isTargetPosition && 
+                   !isDraggingDown &&
+                   verticalDragState.draggedTaskIndex !== index && (
+                    <div style={{
+                      height: '2px',
+                      backgroundColor: '#2196F3',
+                      margin: '0 10px',
+                      borderRadius: '1px',
+                      boxShadow: '0 0 4px rgba(33, 150, 243, 0.6)',
+                      animation: 'pulse 1s infinite'
+                    }} />
+                  )}
+                  
+                  <div
+                    className="task-title"
+                    style={{
+                      ...taskTitleStyle,
+                      backgroundColor: isDraggedTask ? '#e3f2fd' : 'transparent',
+                      opacity: isDraggedTask ? 0.7 : 1,
+                      cursor: verticalDragState.isDragging ? 'grabbing' : 'grab',
+                      userSelect: 'none',
+                      transform: isDraggedTask ? 'scale(1.02)' : 'scale(1)',
+                      boxShadow: isDraggedTask ? '0 4px 8px rgba(0,0,0,0.15)' : 'none',
+                      zIndex: isDraggedTask ? 10 : 1
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!verticalDragState.isDragging) {
+                        e.currentTarget.style.backgroundColor = '#f0f0f0';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!verticalDragState.isDragging && !isDraggedTask) {
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                      }
+                    }}
+                    onMouseDown={(e) => handleTitleMouseDown(e, task.id)}
+                  >
+                    {task.title}
+                  </div>
+                  
+                  {/* 拖拽指示器 - 向下拖拽时在目标位置下方显示 */}
+                  {isTargetPosition && 
+                   isDraggingDown &&
+                   verticalDragState.draggedTaskIndex !== index && (
+                    <div style={{
+                      height: '2px',
+                      backgroundColor: '#2196F3',
+                      margin: '0 10px',
+                      borderRadius: '1px',
+                      boxShadow: '0 0 4px rgba(33, 150, 243, 0.6)',
+                      animation: 'pulse 1s infinite'
+                    }} />
+                  )}
                 </div>
-                
-                {/* 拖拽指示器 - 在最后一个任务下方显示 */}
-                {verticalDragState.isDragging && 
-                 verticalDragState.targetIndex === sortedTasks.length - 1 && 
-                 index === sortedTasks.length - 1 &&
-                 verticalDragState.draggedTaskIndex !== sortedTasks.length - 1 && (
-                  <div style={{
-                    height: '2px',
-                    backgroundColor: '#2196F3',
-                    margin: '0 10px',
-                    borderRadius: '1px',
-                    boxShadow: '0 0 4px rgba(33, 150, 243, 0.6)',
-                    animation: 'pulse 1s infinite' // 添加脉冲动画
-                  }} />
-                )}
-              </div>
-            ))}
+              );
+            })}
+            
+            {/* 拖拽指示器 - 拖拽到最后位置时显示 */}
+            {verticalDragState.isDragging && 
+             verticalDragState.targetIndex === sortedTasks.length && (
+              <div style={{
+                height: '2px',
+                backgroundColor: '#2196F3',
+                margin: '0 10px',
+                borderRadius: '1px',
+                boxShadow: '0 0 4px rgba(33, 150, 243, 0.6)',
+                animation: 'pulse 1s infinite'
+              }} />
+            )}
           </div>
         </div>
 
