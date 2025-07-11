@@ -1,4 +1,6 @@
 import React, { useState, useRef, useCallback, useMemo, useEffect } from 'react';
+import Toolbar from './Toolbar';
+import TaskIcon, { DragHandle } from './TaskIcon';
 
 // Type definitions
 interface DragCache {
@@ -20,6 +22,9 @@ interface Task {
   x: number;
   width: number;
   order: number; // 添加排序字段
+  type?: 'milestone' | 'development' | 'testing' | 'delivery' | 'default';
+  status?: 'pending' | 'in-progress' | 'completed' | 'overdue';
+  progress?: number; // 进度百分比 0-100
 }
 
 interface GanttChartProps {
@@ -132,7 +137,10 @@ const GanttChart: React.FC<GanttChartProps> = ({
       color: '#4CAF50',
       x: 0,
       width: 0,
-      order: 0 // 添加排序字段
+      order: 0,
+      type: 'milestone',
+      status: 'completed',
+      progress: 100
     },
     {
       id: '2',
@@ -142,7 +150,10 @@ const GanttChart: React.FC<GanttChartProps> = ({
       color: '#2196F3',
       x: 0,
       width: 0,
-      order: 1 // 添加排序字段
+      order: 1,
+      type: 'delivery',
+      status: 'in-progress',
+      progress: 65
     },
     {
       id: '3',
@@ -152,7 +163,10 @@ const GanttChart: React.FC<GanttChartProps> = ({
       color: '#FF9800',
       x: 0,
       width: 0,
-      order: 2 // 添加排序字段
+      order: 2,
+      type: 'development',
+      status: 'pending',
+      progress: 0
     },
     {
       id: '4',
@@ -162,7 +176,10 @@ const GanttChart: React.FC<GanttChartProps> = ({
       color: '#f44336',
       x: 0,
       width: 0,
-      order: 3 // 添加排序字段
+      order: 3,
+      type: 'testing',
+      status: 'pending',
+      progress: 0
     }
   ]);
 
@@ -186,6 +203,11 @@ const GanttChart: React.FC<GanttChartProps> = ({
   const [draggedTaskData, setDraggedTaskData] = useState<Task | null>(null);
   const dragCache = useDragCache();
   const batchedUpdates = useBatchedUpdates();
+  
+  // 工具栏状态
+  const [zoomLevel, setZoomLevel] = useState(1);
+  const [currentView, setCurrentView] = useState<'timeline' | 'list' | 'grid'>('timeline');
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
 
   const TITLE_COLUMN_WIDTH = 180; // Increased width for better spacing
   const CHART_WIDTH = 800;
@@ -196,6 +218,54 @@ const GanttChart: React.FC<GanttChartProps> = ({
     const pixelPerDay = CHART_WIDTH / totalDays;
     return { totalDays, pixelPerDay };
   }, [startDate, endDate]);
+
+  // 工具栏事件处理函数
+  const handleAddTask = useCallback(() => {
+    const newTask: Task = {
+      id: Date.now().toString(),
+      title: '新任务',
+      startDate: new Date(),
+      endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      color: '#9C27B0',
+      x: 0,
+      width: 0,
+      order: tasks.length,
+      type: 'default',
+      status: 'pending'
+    };
+    setTasks(prev => [...prev, newTask]);
+  }, [tasks.length]);
+
+  const handleDeleteTask = useCallback(() => {
+    if (selectedTaskId) {
+      setTasks(prev => prev.filter(task => task.id !== selectedTaskId));
+      setSelectedTaskId(null);
+    }
+  }, [selectedTaskId]);
+
+  const handleEditTask = useCallback(() => {
+    if (selectedTaskId) {
+      console.log('编辑任务:', selectedTaskId);
+      // TODO: 实现编辑任务功能
+    }
+  }, [selectedTaskId]);
+
+  const handleViewToday = useCallback(() => {
+    console.log('定位到今天');
+    // TODO: 实现定位到今天的功能
+  }, []);
+
+  const handleZoomIn = useCallback(() => {
+    setZoomLevel(prev => Math.min(prev + 0.25, 3));
+  }, []);
+
+  const handleZoomOut = useCallback(() => {
+    setZoomLevel(prev => Math.max(prev - 0.25, 0.25));
+  }, []);
+
+  const handleViewChange = useCallback((view: 'timeline' | 'list' | 'grid') => {
+    setCurrentView(view);
+  }, []);
 
   // 添加任务排序辅助函数
   const sortedTasks = useMemo(() => {
@@ -481,14 +551,29 @@ const GanttChart: React.FC<GanttChartProps> = ({
         `}
       </style>
       
-      <div className="gantt-container" style={{ 
-        display: 'flex', 
-        border: '1px solid #ddd', 
-        backgroundColor: '#fff', 
-        borderRadius: '8px', 
-        overflow: 'hidden',
-        cursor: verticalDragState.isDragging ? 'grabbing' : 'default' // 添加全局拖拽光标
-      }}>
+      <div className="gantt-container-wrapper">
+        <Toolbar
+          onZoomIn={handleZoomIn}
+          onZoomOut={handleZoomOut}
+          onAddTask={handleAddTask}
+          onDeleteTask={handleDeleteTask}
+          onEditTask={handleEditTask}
+          onViewToday={handleViewToday}
+          onViewChange={handleViewChange}
+          currentView={currentView}
+          zoomLevel={zoomLevel}
+          canZoomIn={zoomLevel < 3}
+          canZoomOut={zoomLevel > 0.25}
+        />
+        
+        <div className="gantt-container" style={{ 
+          display: 'flex', 
+          border: '1px solid #ddd', 
+          backgroundColor: '#fff', 
+          borderRadius: '8px', 
+          overflow: 'hidden',
+          cursor: verticalDragState.isDragging ? 'grabbing' : 'default' // 添加全局拖拽光标
+        }}>
         {/* Title Column */}
         <div className="title-column" style={titleColumnStyle}>
           <div className="title-header" style={titleHeaderStyle}>
@@ -542,8 +627,19 @@ const GanttChart: React.FC<GanttChartProps> = ({
                       }
                     }}
                     onMouseDown={(e) => handleTitleMouseDown(e, task.id)}
+                    onClick={() => setSelectedTaskId(task.id)}
                   >
-                    {task.title}
+                    <DragHandle size={14} />
+                    <TaskIcon 
+                      type={task.type} 
+                      status={task.status} 
+                      size={16} 
+                      className={`task-icon-${task.type}`} 
+                    />
+                    <span className="task-title-text">{task.title}</span>
+                    {selectedTaskId === task.id && (
+                      <div className="task-selected-indicator" />
+                    )}
                   </div>
                   
                   {/* 拖拽指示器 - 向下拖拽时在目标位置下方显示 */}
@@ -590,27 +686,16 @@ const GanttChart: React.FC<GanttChartProps> = ({
           }}
         >
           {/* Timeline */}
-          <div className="timeline" style={{
+          <div className="gantt-timeline" style={{
             position: 'absolute',
             top: 0,
             left: 0,
             right: 0,
-            height: timelineHeight,
-            backgroundColor: '#f5f5f5',
-            borderBottom: '1px solid #e0e0e0'
+            height: timelineHeight
           }}>
             {timeScales.map((scale, index) => (
-              <div key={index} style={{
-                position: 'absolute',
-                left: scale.x,
-                top: 0,
-                height: '100%',
-                borderLeft: '1px solid #e0e0e0',
-                paddingLeft: '5px',
-                fontSize: '12px',
-                display: 'flex',
-                alignItems: 'center',
-                color: '#777'
+              <div key={index} className="timeline-scale" style={{
+                left: scale.x
               }}>
                 {scale.label}
               </div>
@@ -618,16 +703,11 @@ const GanttChart: React.FC<GanttChartProps> = ({
           </div>
 
           {/* Grid Lines */}
-          <div className="grid-lines">
+          <div className="gantt-grid-lines">
             {timeScales.map((scale, index) => (
-              <div key={index} style={{
-                position: 'absolute',
+              <div key={index} className="gantt-grid-line" style={{
                 left: scale.x,
-                top: timelineHeight,
-                bottom: 0,
-                width: '1px',
-                backgroundColor: '#f0f0f0',
-                pointerEvents: 'none'
+                top: timelineHeight
               }} />
             ))}
           </div>
@@ -644,50 +724,48 @@ const GanttChart: React.FC<GanttChartProps> = ({
               const isBeingDragged = draggedTask === task.id;
               const displayX = isBeingDragged && tempDragPosition ? tempDragPosition.x : task.x;
               const displayWidth = isBeingDragged && tempDragPosition ? tempDragPosition.width : task.width;
+              const isSelected = selectedTaskId === task.id;
               
               return (
                 <div
                   key={task.id}
-                  className={'task'}
+                  className={`gantt-task-bar ${isBeingDragged ? 'dragging' : ''} ${isSelected ? 'selected' : ''} status-${task.status} type-${task.type}`}
                   style={{
-                    position: 'absolute',
                     left: displayX,
                     top: index * (taskHeight + 10),
                     width: displayWidth,
-                    height: taskHeight,
-                    backgroundColor: task.color,
-                    borderRadius: '5px',
-                    cursor: 'grab',
-                    boxShadow: isBeingDragged
-                      ? '0 6px 12px rgba(0,0,0,0.3)' 
-                      : '0 2px 5px rgba(0,0,0,0.15)',
-                    transform: isBeingDragged ? `scale(1.03)` : 'scale(1)',
-                    transition: isBeingDragged ? 'none' : 'box-shadow 0.2s ease, transform 0.2s ease',
-                    userSelect: 'none',
-                    zIndex: isBeingDragged ? 100 : 1
-                  } as React.CSSProperties}
+                    height: taskHeight
+                  }}
                   onMouseDown={(e) => handleMouseDown(e, task.id)}
+                  onClick={() => setSelectedTaskId(task.id)}
                 >
-                  {/* Title removed from here */}
+                  {/* 进度条 */}
+                  {task.progress && task.progress > 0 && (
+                    <div 
+                      className="gantt-task-progress"
+                      style={{
+                        width: `${task.progress}%`
+                      }}
+                    />
+                  )}
+                  
+                  {/* 任务内容 */}
+                  <div className="gantt-task-content">
+                    {task.type === 'milestone' ? '◆' : ''}
+                    {task.progress && task.progress > 0 ? `${task.progress}%` : ''}
+                  </div>
                 </div>
               );
             })}
           </div>
 
           {/* Current Date Line */}
-          <div style={{
-            position: 'absolute',
-            left: dateToPixel(new Date()),
-            top: 0,
-            bottom: 0,
-            width: '2px',
-            backgroundColor: '#e91e63',
-            pointerEvents: 'none',
-            zIndex: 10,
-            boxShadow: '0 0 8px rgba(233, 30, 99, 0.7)'
+          <div className="gantt-current-date-line" style={{
+            left: dateToPixel(new Date())
           }} />
         </div>
       </div>
+    </div>
     </>
   );
 };
