@@ -162,7 +162,7 @@ const GanttChart: React.FC<GanttChartProps> = ({
   const dragCache = useDragCache();
   const batchedUpdates = useBatchedUpdates();
 
-  const TITLE_COLUMN_WIDTH = 150;
+  const TITLE_COLUMN_WIDTH = 180; // Increased width for better spacing
   const CHART_WIDTH = 800;
   const CONTAINER_HEIGHT = 400;
 
@@ -298,34 +298,60 @@ const GanttChart: React.FC<GanttChartProps> = ({
     return scales;
   }, [dateRange.totalDays, startDate, dateToPixel]);
 
+  // --- Styles ---
+  const titleColumnStyle: React.CSSProperties = {
+    width: TITLE_COLUMN_WIDTH,
+    borderRight: '1px solid #e0e0e0', // Lighter border
+    backgroundColor: '#fafafa', // Light background color
+    display: 'flex',
+    flexDirection: 'column'
+  };
+
+  const titleHeaderStyle: React.CSSProperties = {
+    height: timelineHeight,
+    borderBottom: '1px solid #e0e0e0',
+    display: 'flex',
+    alignItems: 'center',
+    padding: '0 20px', // Increased padding
+    boxSizing: 'border-box',
+    backgroundColor: '#f5f5f5',
+    color: '#333',
+    fontWeight: 600, // Bolder font
+    fontSize: '16px'
+  };
+
+  const taskTitlesContainerStyle: React.CSSProperties = {
+    paddingTop: '10px',
+    flex: 1
+  };
+
+  const taskTitleStyle: React.CSSProperties = {
+    height: taskHeight,
+    marginBottom: 10,
+    display: 'flex',
+    alignItems: 'center',
+    padding: '0 20px',
+    fontSize: '14px',
+    color: '#555',
+    borderBottom: '1px solid #f0f0f0', // Subtle bottom border
+    transition: 'background-color 0.2s ease'
+  };
+
   return (
-    <div className="gantt-container" style={{ display: 'flex', border: '1px solid #ddd', backgroundColor: '#fff' }}>
+    <div className="gantt-container" style={{ display: 'flex', border: '1px solid #ddd', backgroundColor: '#fff', borderRadius: '8px', overflow: 'hidden' }}>
       {/* Title Column */}
-      <div className="title-column" style={{ width: TITLE_COLUMN_WIDTH, borderRight: '1px solid #ddd' }}>
-        <div className="title-header" style={{
-          height: timelineHeight,
-          borderBottom: '1px solid #ddd',
-          display: 'flex',
-          alignItems: 'center',
-          paddingLeft: '10px',
-          boxSizing: 'border-box',
-          backgroundColor: '#f5f5f5'
-        }}>
-          <strong>任务</strong>
+      <div className="title-column" style={titleColumnStyle}>
+        <div className="title-header" style={titleHeaderStyle}>
+          <span>任务列表</span>
         </div>
-        <div className="task-titles" style={{ paddingTop: '10px' }}>
-          {tasks.map((task, index) => (
+        <div className="task-titles" style={taskTitlesContainerStyle}>
+          {tasks.map((task) => (
             <div
               key={task.id}
               className="task-title"
-              style={{
-                height: taskHeight,
-                marginBottom: 10,
-                display: 'flex',
-                alignItems: 'center',
-                paddingLeft: '10px',
-                fontSize: '14px',
-              }}
+              style={taskTitleStyle}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f0f0f0'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
             >
               {task.title}
             </div>
@@ -352,7 +378,7 @@ const GanttChart: React.FC<GanttChartProps> = ({
           right: 0,
           height: timelineHeight,
           backgroundColor: '#f5f5f5',
-          borderBottom: '1px solid #ddd'
+          borderBottom: '1px solid #e0e0e0'
         }}>
           {timeScales.map((scale, index) => (
             <div key={index} style={{
@@ -360,12 +386,12 @@ const GanttChart: React.FC<GanttChartProps> = ({
               left: scale.x,
               top: 0,
               height: '100%',
-              borderLeft: '1px solid #ccc',
-              paddingLeft: '4px',
+              borderLeft: '1px solid #e0e0e0',
+              paddingLeft: '5px',
               fontSize: '12px',
               display: 'flex',
               alignItems: 'center',
-              color: '#666'
+              color: '#777'
             }}>
               {scale.label}
             </div>
@@ -381,7 +407,7 @@ const GanttChart: React.FC<GanttChartProps> = ({
               top: timelineHeight,
               bottom: 0,
               width: '1px',
-              backgroundColor: '#eee',
+              backgroundColor: '#f0f0f0',
               pointerEvents: 'none'
             }} />
           ))}
@@ -411,12 +437,12 @@ const GanttChart: React.FC<GanttChartProps> = ({
                   width: displayWidth,
                   height: taskHeight,
                   backgroundColor: task.color,
-                  borderRadius: '4px',
+                  borderRadius: '5px',
                   cursor: 'grab',
                   boxShadow: isBeingDragged
-                    ? '0 4px 8px rgba(0,0,0,0.3)' 
-                    : '0 2px 4px rgba(0,0,0,0.1)',
-                  transform: isBeingDragged ? `scale(1.02)` : 'scale(1)',
+                    ? '0 6px 12px rgba(0,0,0,0.3)' 
+                    : '0 2px 5px rgba(0,0,0,0.15)',
+                  transform: isBeingDragged ? `scale(1.03)` : 'scale(1)',
                   transition: isBeingDragged ? 'none' : 'box-shadow 0.2s ease, transform 0.2s ease',
                   userSelect: 'none',
                   zIndex: isBeingDragged ? 100 : 1
@@ -436,9 +462,10 @@ const GanttChart: React.FC<GanttChartProps> = ({
           top: 0,
           bottom: 0,
           width: '2px',
-          backgroundColor: '#f44336',
+          backgroundColor: '#e91e63',
           pointerEvents: 'none',
-          zIndex: 10
+          zIndex: 10,
+          boxShadow: '0 0 8px rgba(233, 30, 99, 0.7)'
         }} />
       </div>
     </div>
