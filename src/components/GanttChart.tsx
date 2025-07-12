@@ -308,6 +308,11 @@ const GanttChart: React.FC<GanttChartProps> = ({
 
   const [taskMap, setTaskMap] = useState<Map<string, Task>>(new Map());
   const [draggedTaskData, setDraggedTaskData] = useState<Task | null>(null);
+  
+  // 边界拖拽状态
+  const [dragType, setDragType] = useState<'move' | 'resize-left' | 'resize-right' | null>(null);
+  const [isHoveringEdge, setIsHoveringEdge] = useState<'left' | 'right' | null>(null);
+  
   const dragCache = useDragCache();
   const batchedUpdates = useBatchedUpdates();
   
@@ -483,14 +488,33 @@ const GanttChart: React.FC<GanttChartProps> = ({
     updateTaskPositions();
   }, [updateTaskPositions]);
 
+  // 检测是否在任务条边界附近
+  const detectEdgeHover = (e: React.MouseEvent, task: Task): 'left' | 'right' | null => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const edgeZone = 8; // 8px边界检测区域
+    
+    if (mouseX <= edgeZone) {
+      return 'left';
+    } else if (mouseX >= rect.width - edgeZone) {
+      return 'right';
+    }
+    return null;
+  };
+
   const handleMouseDown = (e: React.MouseEvent, taskId: string) => {
     e.preventDefault();
     const task = taskMap.get(taskId);
     if (!task || !containerRef.current) return;
     
+    // 检测拖拽类型
+    const edgeType = detectEdgeHover(e, task);
+    const currentDragType = edgeType ? `resize-${edgeType}` as 'resize-left' | 'resize-right' : 'move';
+    
     setDraggedTask(taskId);
     setDraggedTaskData(task);
     setIsDragging(true);
+    setDragType(currentDragType);
     
     dragCache.updateContainerBounds(containerRef.current);
     dragCache.updateDragMetrics(task, dateRange.pixelPerDay);
@@ -624,31 +648,73 @@ const GanttChart: React.FC<GanttChartProps> = ({
   }, [verticalDragState, sortedTasks]);
 
   const handleMouseMoveCore = useCallback((e: MouseEvent) => {
-    if (!isDragging || !draggedTask || !draggedTaskData) return;
+    if (!isDragging || !draggedTask || !draggedTaskData || !dragType) return;
 
     const bounds = dragCache.containerBounds.current;
     const metrics = dragCache.dragMetrics.current;
     if (!bounds || !metrics) return;
 
-    const newX = e.clientX - bounds.left - dragOffset.x;
-    const constrainedX = Math.max(0, Math.min(newX, CHART_WIDTH - 20));
+    const mouseX = e.clientX - bounds.left;
+    const minWidth = 20; // 最小任务条宽度
     
     batchedUpdates(() => {
-      setTempDragPosition({
-        id: draggedTask,
-        x: constrainedX,
-        width: metrics.minWidth
-      });
+      if (dragType === 'move') {
+        // 移动整个任务条
+        const newX = mouseX - dragOffset.x;
+        const constrainedX = Math.max(0, Math.min(newX, CHART_WIDTH - metrics.minWidth));
+        
+        setTempDragPosition({
+          id: draggedTask,
+          x: constrainedX,
+          width: metrics.minWidth
+        });
+      } else if (dragType === 'resize-left') {
+        // 拖拽左边界
+        const originalRight = draggedTaskData.x + draggedTaskData.width;
+        const newLeft = Math.max(0, Math.min(mouseX, originalRight - minWidth));
+        const newWidth = originalRight - newLeft;
+        
+        setTempDragPosition({
+          id: draggedTask,
+          x: newLeft,
+          width: newWidth
+        });
+      } else if (dragType === 'resize-right') {
+        // 拖拽右边界
+        const newWidth = Math.max(minWidth, Math.min(mouseX - draggedTaskData.x, CHART_WIDTH - draggedTaskData.x));
+        
+        setTempDragPosition({
+          id: draggedTask,
+          x: draggedTaskData.x,
+          width: newWidth
+        });
+      }
     });
-  }, [isDragging, draggedTask, draggedTaskData, dragOffset, dragCache, batchedUpdates]);
+  }, [isDragging, draggedTask, draggedTaskData, dragType, dragOffset, dragCache, batchedUpdates]);
 
   const handleMouseMove = useThrottledMouseMove(handleMouseMoveCore, [isDragging, draggedTask, draggedTaskData, dragOffset, dragCache]);
 
   const handleMouseUp = useCallback(() => {
-    if (tempDragPosition && draggedTask && draggedTaskData) {
-      const newStartDate = pixelToDate(tempDragPosition.x);
-      const duration = draggedTaskData.endDate.getTime() - draggedTaskData.startDate.getTime();
-      const newEndDate = new Date(newStartDate.getTime() + duration);
+    if (tempDragPosition && draggedTask && draggedTaskData && dragType) {
+      let newStartDate: Date;
+      let newEndDate: Date;
+      
+      if (dragType === 'move') {
+        // 移动任务条：保持时间段长度，改变开始和结束时间
+        newStartDate = pixelToDate(tempDragPosition.x);
+        const duration = draggedTaskData.endDate.getTime() - draggedTaskData.startDate.getTime();
+        newEndDate = new Date(newStartDate.getTime() + duration);
+      } else if (dragType === 'resize-left') {
+        // 左边界拖拽：改变开始时间，保持结束时间
+        newStartDate = pixelToDate(tempDragPosition.x);
+        newEndDate = draggedTaskData.endDate;
+      } else if (dragType === 'resize-right') {
+        // 右边界拖拽：保持开始时间，改变结束时间
+        newStartDate = draggedTaskData.startDate;
+        newEndDate = pixelToDate(tempDragPosition.x + tempDragPosition.width);
+      } else {
+        return; // 未知的拖拽类型
+      }
       
       setTasks(prev => prev.map(m => {
         if (m.id === draggedTask) {
@@ -668,8 +734,9 @@ const GanttChart: React.FC<GanttChartProps> = ({
     setDraggedTask(null);
     setDraggedTaskData(null);
     setTempDragPosition(null);
+    setDragType(null);
     dragCache.clearCache();
-  }, [tempDragPosition, draggedTask, draggedTaskData, pixelToDate, dragCache]);
+  }, [tempDragPosition, draggedTask, draggedTaskData, dragType, pixelToDate, dragCache]);
 
   useEffect(() => {
     if (isDragging) {
@@ -1034,14 +1101,26 @@ const GanttChart: React.FC<GanttChartProps> = ({
               return (
                 <div
                   key={task.id}
-                  className={`gantt-task-bar ${isBeingDragged ? 'dragging' : ''} ${isSelected ? 'selected' : ''} status-${task.status} type-${task.type}`}
+                  className={`gantt-task-bar ${isBeingDragged ? 'dragging' : ''} ${isSelected ? 'selected' : ''} status-${task.status} type-${task.type} ${isHoveringEdge ? `edge-hover-${isHoveringEdge}` : ''}`}
                   style={{
                     left: displayX,
                     top: index * (taskHeight + 10),
                     width: displayWidth,
-                    height: taskHeight
+                    height: taskHeight,
+                    cursor: isHoveringEdge === 'left' ? 'w-resize' : isHoveringEdge === 'right' ? 'e-resize' : 'grab'
                   }}
                   onMouseDown={(e) => handleMouseDown(e, task.id)}
+                  onMouseMove={(e) => {
+                    if (!isDragging) {
+                      const edgeType = detectEdgeHover(e, task);
+                      setIsHoveringEdge(edgeType);
+                    }
+                  }}
+                  onMouseLeave={() => {
+                    if (!isDragging) {
+                      setIsHoveringEdge(null);
+                    }
+                  }}
                   onClick={() => setSelectedTaskId(task.id)}
                 >
                   

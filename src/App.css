@@ -732,6 +732,37 @@ html, body {
   filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.2));
 }
 
+/* 边界拖拽样式 */
+.gantt-task-bar.edge-hover-left {
+  border-left: 3px solid rgba(59, 130, 246, 0.6);
+}
+
+.gantt-task-bar.edge-hover-right {
+  border-right: 3px solid rgba(59, 130, 246, 0.6);
+}
+
+.gantt-task-bar.edge-hover-left::before {
+  content: '';
+  position: absolute;
+  left: -1px;
+  top: 0;
+  width: 2px;
+  height: 100%;
+  background: rgba(59, 130, 246, 0.8);
+  cursor: w-resize;
+}
+
+.gantt-task-bar.edge-hover-right::after {
+  content: '';
+  position: absolute;
+  right: -1px;
+  top: 0;
+  width: 2px;
+  height: 100%;
+  background: rgba(59, 130, 246, 0.8);
+  cursor: e-resize;
+}
+
 /* 里程碑样式增强（保留原有的里程碑相关样式） */
 .milestone {
   transition: none !important;
