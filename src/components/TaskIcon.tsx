@@ -4,17 +4,12 @@ import {
   Package, 
   Code, 
   CheckCircle, 
-  Clock, 
-  AlertCircle,
   Circle,
-  GripVertical,
-  Calendar,
-  Zap
+  GripVertical
 } from 'lucide-react';
 
 interface TaskIconProps {
   type?: 'milestone' | 'development' | 'testing' | 'delivery' | 'default';
-  status?: 'pending' | 'in-progress' | 'completed' | 'overdue';
   size?: number;
   className?: string;
   level?: number; // 任务层级，0为根任务，1为子任务
@@ -22,7 +17,6 @@ interface TaskIconProps {
 
 const TaskIcon: React.FC<TaskIconProps> = ({ 
   type = 'default', 
-  status = 'pending',
   size = 16,
   className = '',
   level = 0
@@ -43,19 +37,6 @@ const TaskIcon: React.FC<TaskIconProps> = ({
         return <Package size={adjustedSize} className={className} />;
       default:
         return <Circle size={adjustedSize} className={className} />;
-    }
-  };
-
-  const getStatusIcon = () => {
-    switch (status) {
-      case 'completed':
-        return <CheckCircle size={size} className={`${className} text-green-500`} />;
-      case 'in-progress':
-        return <Clock size={size} className={`${className} text-blue-500`} />;
-      case 'overdue':
-        return <AlertCircle size={size} className={`${className} text-red-500`} />;
-      default:
-        return <Circle size={size} className={`${className} text-gray-400`} />;
     }
   };
 

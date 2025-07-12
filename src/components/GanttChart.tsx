@@ -3,16 +3,6 @@ import Toolbar from './Toolbar';
 import TaskIcon, { DragHandle } from './TaskIcon';
 
 // Type definitions
-interface DragCache {
-  containerBounds: DOMRect | null;
-  taskData: Task | null;
-  dragMetrics: {
-    duration: number;
-    pixelPerDay: number;
-    minWidth: number;
-  } | null;
-}
-
 interface Task {
   id: string;
   title: string;
@@ -50,25 +40,6 @@ interface VerticalDragState {
 }
 
 // --- Task Hierarchy Helpers ---
-
-/**
- * 获取任务的所有子任务ID（递归）
- */
-const getAllChildrenIds = (task: Task, taskMap: Map<string, Task>): string[] => {
-  const allChildren: string[] = [];
-  const queue = [...(task.children || [])];
-  
-  while (queue.length > 0) {
-    const childId = queue.shift()!;
-    allChildren.push(childId);
-    const childTask = taskMap.get(childId);
-    if (childTask && childTask.children) {
-      queue.push(...childTask.children);
-    }
-  }
-  
-  return allChildren;
-};
 
 /**
  * 获取可见任务列表（考虑展开/折叠状态）
@@ -810,7 +781,6 @@ const GanttChart: React.FC<GanttChartProps> = ({
           canZoomIn={zoomLevel < 3}
           canZoomOut={zoomLevel > 0.25}
           onAddSubtask={() => selectedTaskId && handleCreateSubtask(selectedTaskId)}
-          selectedTaskId={selectedTaskId}
           canAddSubtask={!!selectedTaskId}
         />
         
@@ -912,7 +882,6 @@ const GanttChart: React.FC<GanttChartProps> = ({
                     
                     <TaskIcon 
                       type={task.type} 
-                      status={task.status} 
                       size={16} 
                       className={`task-icon-${task.type}`}
                       level={task.level}

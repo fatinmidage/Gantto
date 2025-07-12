@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import GanttChart from './components/GanttChart';
 import Header from './components/Header';
 import './App.css';

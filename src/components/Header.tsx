@@ -6,7 +6,6 @@ import {
   Settings, 
   Moon, 
   Sun,
-  Calendar,
   BarChart3
 } from 'lucide-react';
 

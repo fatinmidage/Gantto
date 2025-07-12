@@ -8,11 +8,7 @@ import {
   Plus, 
   Trash2,
   Edit3,
-  Eye,
-  Clock,
   Target,
-  RotateCcw,
-  ChevronLeft,
   ChevronRight
 } from 'lucide-react';
 
@@ -30,7 +26,6 @@ interface ToolbarProps {
   canZoomOut?: boolean;
   // 子任务相关
   onAddSubtask?: () => void;
-  selectedTaskId?: string | null;
   canAddSubtask?: boolean;
 }
 
@@ -47,7 +42,6 @@ const Toolbar: React.FC<ToolbarProps> = ({
   canZoomIn = true,
   canZoomOut = true,
   onAddSubtask,
-  selectedTaskId,
   canAddSubtask = false
 }) => {
   return (
