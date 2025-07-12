@@ -21,6 +21,7 @@ interface Task {
   children?: string[]; // 子任务ID数组
   level?: number; // 层级深度，0为根任务
   isExpanded?: boolean; // 是否展开显示子任务
+  rowId?: string; // 行ID，同一行的任务有相同的rowId
 }
 
 interface GanttChartProps {
@@ -172,7 +173,8 @@ const GanttChart: React.FC<GanttChartProps> = ({
       status: 'completed',
       progress: 100,
       level: 0,
-      isExpanded: false
+      isExpanded: false,
+      rowId: 'row-0'
     },
     {
       id: '2',
@@ -449,12 +451,37 @@ const GanttChart: React.FC<GanttChartProps> = ({
     return getVisibleTasks(sortedTasks, taskMapMemo);
   }, [sortedTasks, taskMapMemo]);
 
-  // 计算容器高度：根据可见任务数量动态调整
+  // 按rowId分组任务，支持同一行显示多个任务
+  const taskRows = useMemo(() => {
+    const rowMap = new Map<string, Task[]>();
+    
+    visibleTasks.forEach(task => {
+      const rowId = task.rowId || `row-${Math.floor(task.order)}`;
+      if (!rowMap.has(rowId)) {
+        rowMap.set(rowId, []);
+      }
+      rowMap.get(rowId)!.push(task);
+    });
+    
+    // 按order排序行，同一行内按startDate排序任务
+    return Array.from(rowMap.entries())
+      .sort(([, tasksA], [, tasksB]) => {
+        const orderA = Math.min(...tasksA.map(t => t.order));
+        const orderB = Math.min(...tasksB.map(t => t.order));
+        return orderA - orderB;
+      })
+      .map(([rowId, tasks]) => ({
+        rowId,
+        tasks: tasks.sort((a, b) => a.startDate.getTime() - b.startDate.getTime())
+      }));
+  }, [visibleTasks]);
+
+  // 计算容器高度：根据行数动态调整
   const containerHeight = useMemo(() => {
     const taskRowHeight = taskHeight + 10; // 任务高度 + 间距
-    const calculatedHeight = visibleTasks.length * taskRowHeight + 20; // 额外20px留白
+    const calculatedHeight = taskRows.length * taskRowHeight + 20; // 额外20px留白
     return Math.max(MIN_CONTAINER_HEIGHT, calculatedHeight);
-  }, [visibleTasks.length, taskHeight]);
+  }, [taskRows.length, taskHeight]);
 
   // 计算任务内容区域高度（不包含时间轴）
   const taskContentHeight = useMemo(() => {
@@ -499,25 +526,69 @@ const GanttChart: React.FC<GanttChartProps> = ({
   // 创建新任务条
   const handleCreateTask = useCallback(() => {
     const clickDate = pixelToDate(contextMenu.clickPosition.x);
+    
+    // 计算点击位置对应的行索引
+    const taskRowHeight = taskHeight + 10; // 任务高度 + 间距
+    const clickedRowIndex = Math.floor(contextMenu.clickPosition.y / taskRowHeight);
+    
+    // 获取目标行的rowId和order
+    let targetRowId: string;
+    let insertOrder: number;
+    
+    if (clickedRowIndex < visibleTasks.length) {
+      // 在现有任务行创建，使用该行的rowId
+      const targetTask = visibleTasks[clickedRowIndex];
+      targetRowId = targetTask.rowId || `row-${Math.floor(targetTask.order)}`;
+      insertOrder = targetTask.order; // 使用相同的order，表示同一行
+    } else {
+      // 在空白区域创建新行
+      const newRowOrder = visibleTasks.length > 0 ? visibleTasks[visibleTasks.length - 1].order + 1 : 0;
+      targetRowId = `row-${newRowOrder}`;
+      insertOrder = newRowOrder;
+    }
+    
     const newTask: Task = {
       id: Date.now().toString(),
       title: '新任务',
       startDate: clickDate,
-      endDate: new Date(clickDate.getTime() + 7 * 24 * 60 * 60 * 1000), // 默认7天
+      endDate: new Date(clickDate.getTime() + 7 * 24 * 60 * 60 * 1000),
       color: '#9C27B0',
       x: 0,
       width: 0,
-      order: tasks.length,
+      order: insertOrder,
       type: 'default',
-      status: 'pending'
+      status: 'pending',
+      rowId: targetRowId
     };
+    
     setTasks(prev => [...prev, newTask]);
     hideContextMenu();
-  }, [contextMenu.clickPosition.x, pixelToDate, tasks.length, hideContextMenu]);
+  }, [contextMenu.clickPosition.x, contextMenu.clickPosition.y, pixelToDate, taskHeight, visibleTasks, hideContextMenu]);
 
   // 创建新节点（里程碑）
   const handleCreateMilestone = useCallback(() => {
     const clickDate = pixelToDate(contextMenu.clickPosition.x);
+    
+    // 计算点击位置对应的行索引
+    const taskRowHeight = taskHeight + 10; // 任务高度 + 间距
+    const clickedRowIndex = Math.floor(contextMenu.clickPosition.y / taskRowHeight);
+    
+    // 获取目标行的rowId和order
+    let targetRowId: string;
+    let insertOrder: number;
+    
+    if (clickedRowIndex < visibleTasks.length) {
+      // 在现有任务行创建，使用该行的rowId
+      const targetTask = visibleTasks[clickedRowIndex];
+      targetRowId = targetTask.rowId || `row-${Math.floor(targetTask.order)}`;
+      insertOrder = targetTask.order; // 使用相同的order，表示同一行
+    } else {
+      // 在空白区域创建新行
+      const newRowOrder = visibleTasks.length > 0 ? visibleTasks[visibleTasks.length - 1].order + 1 : 0;
+      targetRowId = `row-${newRowOrder}`;
+      insertOrder = newRowOrder;
+    }
+    
     const newMilestone: Task = {
       id: Date.now().toString(),
       title: '新节点',
@@ -526,13 +597,15 @@ const GanttChart: React.FC<GanttChartProps> = ({
       color: '#FF5722',
       x: 0,
       width: 0,
-      order: tasks.length,
+      order: insertOrder,
       type: 'milestone',
-      status: 'pending'
+      status: 'pending',
+      rowId: targetRowId
     };
+    
     setTasks(prev => [...prev, newMilestone]);
     hideContextMenu();
-  }, [contextMenu.clickPosition.x, pixelToDate, tasks.length, hideContextMenu]);
+  }, [contextMenu.clickPosition.x, contextMenu.clickPosition.y, pixelToDate, taskHeight, visibleTasks, hideContextMenu]);
 
   // 移除自动更新任务位置的useEffect，改为在渲染时计算
   // 避免无限循环：updateTaskPositions -> setTasks -> sortedTasks -> updateTaskPositions
@@ -922,20 +995,24 @@ const GanttChart: React.FC<GanttChartProps> = ({
             <span>任务列表</span>
           </div>
           <div className="task-titles" style={taskTitlesContainerStyle}>
-            {visibleTasks.map((task, index) => {
-              const isDraggedTask = verticalDragState.draggedTaskId === task.id;
+            {taskRows.map((row, rowIndex) => {
+              // 显示每行的第一个任务作为行标题，其他任务作为附加信息
+              const mainTask = row.tasks[0];
+              const additionalTasks = row.tasks.slice(1);
+              const index = rowIndex;
+              const isDraggedTask = verticalDragState.draggedTaskId === mainTask.id;
               const isTargetPosition = verticalDragState.isDragging && verticalDragState.targetIndex === index && verticalDragState.shouldShowIndicator;
               const isDraggingDown = verticalDragState.isDragging && 
                 verticalDragState.draggedTaskIndex !== null && 
                 verticalDragState.targetIndex !== null &&
                 verticalDragState.targetIndex > verticalDragState.draggedTaskIndex;
               
-              const hasChildren = task.children && task.children.length > 0;
-              const level = task.level || 0;
+              const hasChildren = mainTask.children && mainTask.children.length > 0;
+              const level = mainTask.level || 0;
               const indentWidth = level * 20; // 每级缩进20px
               
               return (
-                <div key={task.id}>
+                <div key={mainTask.id}>
                   {/* 拖拽指示器 - 向上拖拽时在目标位置上方显示 */}
                   {isTargetPosition && 
                    !isDraggingDown &&
@@ -972,8 +1049,8 @@ const GanttChart: React.FC<GanttChartProps> = ({
                         e.currentTarget.style.backgroundColor = 'transparent';
                       }
                     }}
-                    onMouseDown={(e) => handleTitleMouseDown(e, task.id)}
-                    onClick={() => setSelectedTaskId(task.id)}
+                    onMouseDown={(e) => handleTitleMouseDown(e, mainTask.id)}
+                    onClick={() => setSelectedTaskId(mainTask.id)}
                   >
                     <DragHandle size={14} />
                     
@@ -982,7 +1059,7 @@ const GanttChart: React.FC<GanttChartProps> = ({
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleToggleExpand(task.id);
+                          handleToggleExpand(mainTask.id);
                         }}
                         style={{
                           background: 'none',
@@ -994,7 +1071,7 @@ const GanttChart: React.FC<GanttChartProps> = ({
                           color: '#666'
                         }}
                       >
-                        {task.isExpanded ? '▼' : '▶'}
+                        {mainTask.isExpanded ? '▼' : '▶'}
                       </button>
                     )}
                     
@@ -1004,18 +1081,24 @@ const GanttChart: React.FC<GanttChartProps> = ({
                     )}
                     
                     <TaskIcon 
-                      type={task.type} 
+                      type={mainTask.type} 
                       size={16} 
-                      className={`task-icon-${task.type}`}
-                      level={task.level}
+                      className={`task-icon-${mainTask.type}`}
+                      level={mainTask.level}
                     />
-                    <span className="task-title-text">{task.title}</span>
+                    <span className="task-title-text">{mainTask.title}
+                      {additionalTasks.length > 0 && (
+                        <span style={{color: '#888', fontSize: '12px', marginLeft: '8px'}}>
+                          +{additionalTasks.length} more
+                        </span>
+                      )}
+                    </span>
                     
                     {/* 创建子任务按钮 */}
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleCreateSubtask(task.id);
+                        handleCreateSubtask(mainTask.id);
                       }}
                       style={{
                         background: 'none',
@@ -1041,7 +1124,7 @@ const GanttChart: React.FC<GanttChartProps> = ({
                       +
                     </button>
                     
-                    {selectedTaskId === task.id && (
+                    {selectedTaskId === mainTask.id && (
                       <div className="task-selected-indicator" />
                     )}
                   </div>
@@ -1125,7 +1208,9 @@ const GanttChart: React.FC<GanttChartProps> = ({
             right: 0,
             bottom: 0
           }}>
-            {visibleTasks.map((task, index) => {
+            {taskRows.map((row, rowIndex) => 
+              row.tasks.map((task) => {
+                const index = rowIndex; // 使用行索引来定位Y坐标
               const isBeingDragged = draggedTask === task.id;
               const displayX = isBeingDragged && tempDragPosition ? tempDragPosition.x : task.x;
               const displayWidth = isBeingDragged && tempDragPosition ? tempDragPosition.width : task.width;
@@ -1180,7 +1265,8 @@ const GanttChart: React.FC<GanttChartProps> = ({
                   </div>
                 </div>
               );
-            })}
+            })
+            )}
           </div>
 
           {/* Current Date Line */}
