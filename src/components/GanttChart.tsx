@@ -458,19 +458,13 @@ const GanttChart: React.FC<GanttChartProps> = ({
     return null;
   };
 
-  // 节流的边界检测处理器
-  const edgeHoverThrottleRef = useRef<number>();
+  // 简化的边界检测处理器
   const handleEdgeHover = useCallback((e: React.MouseEvent, task: Task) => {
     if (!isDragging) {
-      if (edgeHoverThrottleRef.current) {
-        clearTimeout(edgeHoverThrottleRef.current);
+      const edgeType = detectEdgeHover(e, task);
+      if (isHoveringEdge !== edgeType) {
+        setIsHoveringEdge(edgeType);
       }
-      edgeHoverThrottleRef.current = window.setTimeout(() => {
-        const edgeType = detectEdgeHover(e, task);
-        if (isHoveringEdge !== edgeType) {
-          setIsHoveringEdge(edgeType);
-        }
-      }, 16); // 限制为60fps
     }
   }, [isDragging, isHoveringEdge]);
 
@@ -1071,7 +1065,6 @@ const GanttChart: React.FC<GanttChartProps> = ({
                   }}
                   onClick={() => setSelectedTaskId(task.id)}
                 >
-                  
                   {/* 任务内容 */}
                   <div className="gantt-task-content">
                     {/* 移除里程碑的 ◆ 符号，因为现在使用独立节点 */}
