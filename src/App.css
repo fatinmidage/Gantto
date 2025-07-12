@@ -607,8 +607,6 @@ html, body {
 }
 
 .gantt-task-bar.dragging {
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-  transform: scale(1.02);
   z-index: 100;
   border-color: rgba(255, 255, 255, 0.4);
 }
@@ -728,7 +726,6 @@ html, body {
 }
 
 .gantt-milestone-node.dragging .milestone-icon {
-  transform: scale(1.15);
   filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.2));
 }
 
@@ -1055,18 +1052,6 @@ html, body {
   animation: shimmer 2s infinite;
 }
 
-/* 拖拽动画 */
-.gantt-task-bar.dragging {
-  animation: none;
-  transform: scale(1.05) rotate(2deg);
-  box-shadow: var(--shadow-lg);
-  z-index: 1000;
-}
-
-.milestone.dragging {
-  animation: none;
-  transform: scale(1.1) rotate(3deg);
-}
 
 /* 页面加载动画 */
 .app {
