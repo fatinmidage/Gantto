@@ -38,6 +38,7 @@ interface VerticalDragState {
   targetIndex: number | null;
   startY: number;
   currentY: number;
+  shouldShowIndicator: boolean; // 是否应该显示提示线
 }
 
 // --- Task Hierarchy Helpers ---
@@ -303,7 +304,8 @@ const GanttChart: React.FC<GanttChartProps> = ({
     draggedTaskIndex: null,
     targetIndex: null,
     startY: 0,
-    currentY: 0
+    currentY: 0,
+    shouldShowIndicator: false
   });
 
   const [taskMap, setTaskMap] = useState<Map<string, Task>>(new Map());
@@ -542,7 +544,8 @@ const GanttChart: React.FC<GanttChartProps> = ({
       draggedTaskIndex: taskIndex,
       targetIndex: taskIndex,
       startY: e.clientY,
-      currentY: e.clientY
+      currentY: e.clientY,
+      shouldShowIndicator: false
     });
   };
 
@@ -556,10 +559,15 @@ const GanttChart: React.FC<GanttChartProps> = ({
       verticalDragState.draggedTaskIndex! + Math.floor(deltaY / taskHeight + 0.5)
     ));
     
+    // 计算拖拽距离是否超过0.8行
+    const dragDistance = Math.abs(deltaY / taskHeight);
+    const shouldShowIndicator = dragDistance >= 0.8 && newTargetIndex !== verticalDragState.draggedTaskIndex;
+    
     setVerticalDragState(prev => ({
       ...prev,
       currentY: e.clientY,
-      targetIndex: newTargetIndex
+      targetIndex: newTargetIndex,
+      shouldShowIndicator
     }));
   }, [verticalDragState.isDragging, verticalDragState.startY, verticalDragState.draggedTaskIndex, visibleTasks.length]);
 
@@ -623,7 +631,8 @@ const GanttChart: React.FC<GanttChartProps> = ({
       draggedTaskIndex: null,
       targetIndex: null,
       startY: 0,
-      currentY: 0
+      currentY: 0,
+      shouldShowIndicator: false
     });
   }, [verticalDragState, visibleTasks]);
 
@@ -848,7 +857,7 @@ const GanttChart: React.FC<GanttChartProps> = ({
           <div className="task-titles" style={taskTitlesContainerStyle}>
             {visibleTasks.map((task, index) => {
               const isDraggedTask = verticalDragState.draggedTaskId === task.id;
-              const isTargetPosition = verticalDragState.isDragging && verticalDragState.targetIndex === index;
+              const isTargetPosition = verticalDragState.isDragging && verticalDragState.targetIndex === index && verticalDragState.shouldShowIndicator;
               const isDraggingDown = verticalDragState.isDragging && 
                 verticalDragState.draggedTaskIndex !== null && 
                 verticalDragState.targetIndex !== null &&
@@ -990,7 +999,8 @@ const GanttChart: React.FC<GanttChartProps> = ({
             
             {/* 拖拽指示器 - 拖拽到最后位置时显示 */}
             {verticalDragState.isDragging && 
-             verticalDragState.targetIndex === visibleTasks.length && (
+             verticalDragState.targetIndex === visibleTasks.length && 
+             verticalDragState.shouldShowIndicator && (
               <div style={{
                 height: '2px',
                 backgroundColor: '#2196F3',

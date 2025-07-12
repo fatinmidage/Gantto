@@ -466,9 +466,6 @@ html, body {
   box-shadow: 0 0 8px rgba(59, 130, 246, 0.4);
 }
 
-.task-title:hover .task-title-text {
-  color: var(--text-inverse);
-}
 
 /* 任务标题布局优化 */
 .task-title {
