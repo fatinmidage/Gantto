@@ -301,6 +301,19 @@ const GanttChart: React.FC<GanttChartProps> = ({
   const [currentView, setCurrentView] = useState<'timeline' | 'list' | 'grid'>('timeline');
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
 
+  // 右键菜单状态
+  const [contextMenu, setContextMenu] = useState<{
+    visible: boolean;
+    x: number;
+    y: number;
+    clickPosition: { x: number; y: number };
+  }>({
+    visible: false,
+    x: 0,
+    y: 0,
+    clickPosition: { x: 0, y: 0 }
+  });
+
   const TITLE_COLUMN_WIDTH = 230; // Increased width for better spacing
   const CHART_WIDTH = 800;
   const MIN_CONTAINER_HEIGHT = 200; // 最小高度
@@ -452,6 +465,74 @@ const GanttChart: React.FC<GanttChartProps> = ({
     const daysPassed = pixel / dateRange.pixelPerDay;
     return new Date(startDate.getTime() + daysPassed * 24 * 60 * 60 * 1000);
   }, [startDate, dateRange.pixelPerDay]);
+
+  // 右键菜单事件处理
+  const handleContextMenu = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    
+    const rect = e.currentTarget.getBoundingClientRect();
+    const chartAreaX = e.clientX - rect.left; // 容器内的相对X坐标
+    const chartAreaY = e.clientY - rect.top; // 容器内的相对Y坐标
+    
+    // 检查是否在时间轴区域内
+    const isInTimelineArea = chartAreaY < timelineHeight;
+    
+    // 在整个甘特图容器区域都可以右键，但点击位置用于创建任务的坐标需要调整
+    const taskAreaY = Math.max(0, chartAreaY - timelineHeight);
+    
+    setContextMenu({
+      visible: true,
+      x: e.clientX,
+      y: e.clientY,
+      clickPosition: { 
+        x: chartAreaX, 
+        y: isInTimelineArea ? 0 : taskAreaY // 如果在时间轴区域，任务创建位置设为第一行
+      }
+    });
+  }, [timelineHeight]);
+
+  // 隐藏右键菜单
+  const hideContextMenu = useCallback(() => {
+    setContextMenu(prev => ({ ...prev, visible: false }));
+  }, []);
+
+  // 创建新任务条
+  const handleCreateTask = useCallback(() => {
+    const clickDate = pixelToDate(contextMenu.clickPosition.x);
+    const newTask: Task = {
+      id: Date.now().toString(),
+      title: '新任务',
+      startDate: clickDate,
+      endDate: new Date(clickDate.getTime() + 7 * 24 * 60 * 60 * 1000), // 默认7天
+      color: '#9C27B0',
+      x: 0,
+      width: 0,
+      order: tasks.length,
+      type: 'default',
+      status: 'pending'
+    };
+    setTasks(prev => [...prev, newTask]);
+    hideContextMenu();
+  }, [contextMenu.clickPosition.x, pixelToDate, tasks.length, hideContextMenu]);
+
+  // 创建新节点（里程碑）
+  const handleCreateMilestone = useCallback(() => {
+    const clickDate = pixelToDate(contextMenu.clickPosition.x);
+    const newMilestone: Task = {
+      id: Date.now().toString(),
+      title: '新节点',
+      startDate: clickDate,
+      endDate: clickDate, // 里程碑开始和结束时间相同
+      color: '#FF5722',
+      x: 0,
+      width: 0,
+      order: tasks.length,
+      type: 'milestone',
+      status: 'pending'
+    };
+    setTasks(prev => [...prev, newMilestone]);
+    hideContextMenu();
+  }, [contextMenu.clickPosition.x, pixelToDate, tasks.length, hideContextMenu]);
 
   // 移除自动更新任务位置的useEffect，改为在渲染时计算
   // 避免无限循环：updateTaskPositions -> setTasks -> sortedTasks -> updateTaskPositions
@@ -736,6 +817,20 @@ const GanttChart: React.FC<GanttChartProps> = ({
     }
   }, [verticalDragState.isDragging, handleTitleMouseMove, handleTitleMouseUp]);
 
+  // 监听全局点击事件，隐藏右键菜单
+  useEffect(() => {
+    const handleClickOutside = () => {
+      if (contextMenu.visible) {
+        hideContextMenu();
+      }
+    };
+
+    if (contextMenu.visible) {
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
+    }
+  }, [contextMenu.visible, hideContextMenu]);
+
   const timeScales = useMemo(() => {
     const scales = [];
     const interval = Math.max(1, Math.floor(dateRange.totalDays / 10));
@@ -993,6 +1088,7 @@ const GanttChart: React.FC<GanttChartProps> = ({
             position: 'relative',
             cursor: isDragging ? 'grabbing' : 'default'
           }}
+          onContextMenu={handleContextMenu}
         >
           {/* Timeline */}
           <div className="gantt-timeline" style={{
@@ -1094,6 +1190,55 @@ const GanttChart: React.FC<GanttChartProps> = ({
         </div>
       </div>
     </div>
+
+    {/* 右键菜单 */}
+    {contextMenu.visible && (
+      <div
+        style={{
+          position: 'fixed',
+          top: contextMenu.y,
+          left: contextMenu.x,
+          backgroundColor: '#fff',
+          border: '1px solid #ddd',
+          borderRadius: '4px',
+          boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
+          zIndex: 1000,
+          minWidth: '150px'
+        }}
+      >
+        <div
+          style={{
+            padding: '8px 16px',
+            cursor: 'pointer',
+            borderBottom: '1px solid #eee'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = '#f5f5f5';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = 'transparent';
+          }}
+          onClick={handleCreateTask}
+        >
+          新建任务条
+        </div>
+        <div
+          style={{
+            padding: '8px 16px',
+            cursor: 'pointer'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = '#f5f5f5';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = 'transparent';
+          }}
+          onClick={handleCreateMilestone}
+        >
+          新建节点
+        </div>
+      </div>
+    )}
     </>
   );
 };
