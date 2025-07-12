@@ -533,7 +533,7 @@ const GanttChart: React.FC<GanttChartProps> = ({
     e.preventDefault();
     e.stopPropagation();
     
-    const taskIndex = sortedTasks.findIndex(task => task.id === taskId);
+    const taskIndex = visibleTasks.findIndex(task => task.id === taskId);
     if (taskIndex === -1) return;
     
     setVerticalDragState({
@@ -552,8 +552,8 @@ const GanttChart: React.FC<GanttChartProps> = ({
     const deltaY = e.clientY - verticalDragState.startY;
     const taskHeight = 30 + 10; // taskHeight + margin
     const newTargetIndex = Math.max(0, Math.min(
-      sortedTasks.length, // 允许拖拽到最后位置
-      verticalDragState.draggedTaskIndex! + Math.round(deltaY / taskHeight)
+      visibleTasks.length, // 允许拖拽到最后位置
+      verticalDragState.draggedTaskIndex! + Math.floor(deltaY / taskHeight + 0.5)
     ));
     
     setVerticalDragState(prev => ({
@@ -561,7 +561,7 @@ const GanttChart: React.FC<GanttChartProps> = ({
       currentY: e.clientY,
       targetIndex: newTargetIndex
     }));
-  }, [verticalDragState.isDragging, verticalDragState.startY, verticalDragState.draggedTaskIndex, sortedTasks.length]);
+  }, [verticalDragState.isDragging, verticalDragState.startY, verticalDragState.draggedTaskIndex, visibleTasks.length]);
 
   const handleTitleMouseUp = useCallback(() => {
     if (!verticalDragState.isDragging) return;
@@ -573,67 +573,47 @@ const GanttChart: React.FC<GanttChartProps> = ({
       // 重新排序任务
       setTasks(prev => {
         const newTasks = [...prev];
-        const draggedTask = newTasks.find(t => t.id === verticalDragState.draggedTaskId);
+        const draggedTask = visibleTasks[verticalDragState.draggedTaskIndex!];
+        const targetTask = verticalDragState.targetIndex! < visibleTasks.length 
+          ? visibleTasks[verticalDragState.targetIndex!]
+          : null;
+        
         if (!draggedTask) return prev;
         
-        // 获取被拖拽任务的所有子任务（递归）
-        const taskMap = new Map<string, Task>();
-        newTasks.forEach(task => {
-          taskMap.set(task.id, task);
-        });
+        // 获取draggedTask在sortedTasks中的order
+        const draggedOrder = draggedTask.order;
         
-        const getAllChildrenIds = (task: Task): string[] => {
-          const allChildren: string[] = [];
-          const queue = [...(task.children || [])];
-          
-          while (queue.length > 0) {
-            const childId = queue.shift()!;
-            allChildren.push(childId);
-            const childTask = taskMap.get(childId);
-            if (childTask && childTask.children) {
-              queue.push(...childTask.children);
-            }
-          }
-          
-          return allChildren;
-        };
-        
-        // 获取需要一起移动的所有任务（父任务 + 所有子任务）
-        const tasksToMove = [draggedTask.id, ...getAllChildrenIds(draggedTask)];
-        
-        // 从排序列表中获取所有要移动的任务
-        const sortedTasksCopy = [...sortedTasks];
-        const tasksToMoveObjects = tasksToMove.map(id => sortedTasksCopy.find(t => t.id === id)).filter(Boolean) as Task[];
-        
-        // 从原位置移除所有要移动的任务
-        for (let i = sortedTasksCopy.length - 1; i >= 0; i--) {
-          if (tasksToMove.includes(sortedTasksCopy[i].id)) {
-            sortedTasksCopy.splice(i, 1);
-          }
-        }
-        
-        const draggedIndex = verticalDragState.draggedTaskIndex!;
-        let targetIndex = verticalDragState.targetIndex!;
-        
-        // 如果目标位置在原位置之后，需要调整目标位置（因为已经移除了一些任务）
-        if (targetIndex > draggedIndex) {
-          targetIndex = targetIndex - tasksToMoveObjects.length;
-        }
-        
-        // 在新位置插入所有要移动的任务
-        if (targetIndex >= sortedTasksCopy.length) {
-          // 插入到最后位置
-          sortedTasksCopy.push(...tasksToMoveObjects);
+        // 计算新的order值
+        let newOrder: number;
+        if (!targetTask) {
+          // 拖拽到最后位置
+          const maxOrder = Math.max(...newTasks.map(t => t.order));
+          newOrder = maxOrder + 1;
         } else {
-          // 插入到指定位置
-          sortedTasksCopy.splice(targetIndex, 0, ...tasksToMoveObjects);
+          const targetOrder = targetTask.order;
+          if (verticalDragState.targetIndex! > verticalDragState.draggedTaskIndex!) {
+            // 向下拖拽，插入到目标任务之后
+            newOrder = targetOrder + 0.5;
+          } else {
+            // 向上拖拽，插入到目标任务之前
+            newOrder = targetOrder - 0.5;
+          }
         }
         
-        // 更新order字段
-        return newTasks.map(task => {
-          const newIndex = sortedTasksCopy.findIndex(t => t.id === task.id);
-          return { ...task, order: newIndex };
+        // 更新被拖拽任务的order
+        const updatedTasks = newTasks.map(task => {
+          if (task.id === draggedTask.id) {
+            return { ...task, order: newOrder };
+          }
+          return task;
         });
+        
+        // 重新标准化order值（确保是连续的整数）
+        const sortedByOrder = [...updatedTasks].sort((a, b) => a.order - b.order);
+        return sortedByOrder.map((task, index) => ({
+          ...task,
+          order: index
+        }));
       });
     }
     
@@ -645,7 +625,7 @@ const GanttChart: React.FC<GanttChartProps> = ({
       startY: 0,
       currentY: 0
     });
-  }, [verticalDragState, sortedTasks]);
+  }, [verticalDragState, visibleTasks]);
 
   const handleMouseMoveCore = useCallback((e: MouseEvent) => {
     if (!isDragging || !draggedTask || !draggedTaskData || !dragType) return;
