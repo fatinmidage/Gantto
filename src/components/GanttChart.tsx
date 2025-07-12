@@ -303,7 +303,7 @@ const GanttChart: React.FC<GanttChartProps> = ({
 
   const TITLE_COLUMN_WIDTH = 230; // Increased width for better spacing
   const CHART_WIDTH = 800;
-  const CONTAINER_HEIGHT = 400;
+  const MIN_CONTAINER_HEIGHT = 200; // 最小高度
 
   const dateRange = useMemo(() => {
     const totalDays = (endDate.getTime() - startDate.getTime()) / (24 * 60 * 60 * 1000);
@@ -435,6 +435,18 @@ const GanttChart: React.FC<GanttChartProps> = ({
   const visibleTasks = useMemo(() => {
     return getVisibleTasks(sortedTasks, taskMapMemo);
   }, [sortedTasks, taskMapMemo]);
+
+  // 计算容器高度：根据可见任务数量动态调整
+  const containerHeight = useMemo(() => {
+    const taskRowHeight = taskHeight + 10; // 任务高度 + 间距
+    const calculatedHeight = visibleTasks.length * taskRowHeight + 20; // 额外20px留白
+    return Math.max(MIN_CONTAINER_HEIGHT, calculatedHeight);
+  }, [visibleTasks.length, taskHeight]);
+
+  // 计算任务内容区域高度（不包含时间轴）
+  const taskContentHeight = useMemo(() => {
+    return containerHeight; // 左侧任务列表区域的内容高度
+  }, [containerHeight]);
 
   const pixelToDate = useCallback((pixel: number): Date => {
     const daysPassed = pixel / dateRange.pixelPerDay;
@@ -764,7 +776,8 @@ const GanttChart: React.FC<GanttChartProps> = ({
 
   const taskTitlesContainerStyle: React.CSSProperties = {
     paddingTop: '10px',
-    flex: 1
+    height: taskContentHeight,
+    overflow: 'auto' // 添加滚动条以防内容超出
   };
 
   const taskTitleStyle: React.CSSProperties = {
@@ -976,7 +989,7 @@ const GanttChart: React.FC<GanttChartProps> = ({
           className={`gantt-chart ${isDragging ? 'dragging' : ''}`}
           style={{
             width: CHART_WIDTH,
-            height: CONTAINER_HEIGHT,
+            height: timelineHeight + taskContentHeight,
             position: 'relative',
             cursor: isDragging ? 'grabbing' : 'default'
           }}
