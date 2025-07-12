@@ -28,6 +28,10 @@ interface ToolbarProps {
   zoomLevel?: number;
   canZoomIn?: boolean;
   canZoomOut?: boolean;
+  // 子任务相关
+  onAddSubtask?: () => void;
+  selectedTaskId?: string | null;
+  canAddSubtask?: boolean;
 }
 
 const Toolbar: React.FC<ToolbarProps> = ({
@@ -41,7 +45,10 @@ const Toolbar: React.FC<ToolbarProps> = ({
   currentView = 'timeline',
   zoomLevel = 1,
   canZoomIn = true,
-  canZoomOut = true
+  canZoomOut = true,
+  onAddSubtask,
+  selectedTaskId,
+  canAddSubtask = false
 }) => {
   return (
     <div className="gantt-toolbar">
@@ -54,6 +61,15 @@ const Toolbar: React.FC<ToolbarProps> = ({
           >
             <Plus size={16} />
             <span>添加任务</span>
+          </button>
+          <button 
+            className="toolbar-btn"
+            onClick={onAddSubtask}
+            disabled={!canAddSubtask}
+            title={canAddSubtask ? "添加子任务" : "请先选择一个任务"}
+          >
+            <ChevronRight size={16} />
+            <span>添加子任务</span>
           </button>
           <button 
             className="toolbar-btn"

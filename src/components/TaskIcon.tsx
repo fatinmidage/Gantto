@@ -17,26 +17,32 @@ interface TaskIconProps {
   status?: 'pending' | 'in-progress' | 'completed' | 'overdue';
   size?: number;
   className?: string;
+  level?: number; // 任务层级，0为根任务，1为子任务
 }
 
 const TaskIcon: React.FC<TaskIconProps> = ({ 
   type = 'default', 
   status = 'pending',
   size = 16,
-  className = ''
+  className = '',
+  level = 0
 }) => {
+  // 根据层级调整图标大小和透明度
+  const adjustedSize = level > 0 ? size * 0.85 : size;
+  const opacity = level > 0 ? 0.8 : 1;
+
   const getTypeIcon = () => {
     switch (type) {
       case 'milestone':
-        return <Target size={size} className={className} />;
+        return <Target size={adjustedSize} className={className} />;
       case 'development':
-        return <Code size={size} className={className} />;
+        return <Code size={adjustedSize} className={className} />;
       case 'testing':
-        return <CheckCircle size={size} className={className} />;
+        return <CheckCircle size={adjustedSize} className={className} />;
       case 'delivery':
-        return <Package size={size} className={className} />;
+        return <Package size={adjustedSize} className={className} />;
       default:
-        return <Circle size={size} className={className} />;
+        return <Circle size={adjustedSize} className={className} />;
     }
   };
 
@@ -54,7 +60,7 @@ const TaskIcon: React.FC<TaskIconProps> = ({
   };
 
   return (
-    <div className="task-icon-container">
+    <div className="task-icon-container" style={{ opacity }}>
       {getTypeIcon()}
     </div>
   );

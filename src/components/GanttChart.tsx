@@ -25,6 +25,11 @@ interface Task {
   type?: 'milestone' | 'development' | 'testing' | 'delivery' | 'default';
   status?: 'pending' | 'in-progress' | 'completed' | 'overdue';
   progress?: number; // 进度百分比 0-100
+  // 子任务支持
+  parentId?: string; // 父任务ID
+  children?: string[]; // 子任务ID数组
+  level?: number; // 层级深度，0为根任务
+  isExpanded?: boolean; // 是否展开显示子任务
 }
 
 interface GanttChartProps {
@@ -43,6 +48,79 @@ interface VerticalDragState {
   startY: number;
   currentY: number;
 }
+
+// --- Task Hierarchy Helpers ---
+
+/**
+ * 获取任务的所有子任务ID（递归）
+ */
+const getAllChildrenIds = (task: Task, taskMap: Map<string, Task>): string[] => {
+  const allChildren: string[] = [];
+  const queue = [...(task.children || [])];
+  
+  while (queue.length > 0) {
+    const childId = queue.shift()!;
+    allChildren.push(childId);
+    const childTask = taskMap.get(childId);
+    if (childTask && childTask.children) {
+      queue.push(...childTask.children);
+    }
+  }
+  
+  return allChildren;
+};
+
+/**
+ * 获取可见任务列表（考虑展开/折叠状态）
+ */
+const getVisibleTasks = (tasks: Task[], taskMap: Map<string, Task>): Task[] => {
+  const visibleTasks: Task[] = [];
+  
+  // 检查任务是否可见（递归检查所有父任务的展开状态）
+  const isTaskVisible = (task: Task): boolean => {
+    if (!task.parentId) {
+      return true; // 根任务总是可见
+    }
+    
+    const parentTask = taskMap.get(task.parentId);
+    if (!parentTask) {
+      return false; // 找不到父任务
+    }
+    
+    // 父任务必须展开，并且父任务本身也必须可见
+    return (parentTask.isExpanded || false) && isTaskVisible(parentTask);
+  };
+  
+  for (const task of tasks) {
+    if (isTaskVisible(task)) {
+      visibleTasks.push(task);
+    }
+  }
+  
+  return visibleTasks;
+};
+
+/**
+ * 计算父任务的进度（基于子任务）
+ */
+const calculateParentProgress = (task: Task, taskMap: Map<string, Task>): number => {
+  if (!task.children || task.children.length === 0) {
+    return task.progress || 0;
+  }
+  
+  let totalProgress = 0;
+  let validChildren = 0;
+  
+  for (const childId of task.children) {
+    const childTask = taskMap.get(childId);
+    if (childTask) {
+      totalProgress += childTask.progress || 0;
+      validChildren++;
+    }
+  }
+  
+  return validChildren > 0 ? Math.round(totalProgress / validChildren) : 0;
+};
 
 // --- Custom Hooks ---
 
@@ -140,7 +218,9 @@ const GanttChart: React.FC<GanttChartProps> = ({
       order: 0,
       type: 'milestone',
       status: 'completed',
-      progress: 100
+      progress: 100,
+      level: 0,
+      isExpanded: false
     },
     {
       id: '2',
@@ -153,7 +233,9 @@ const GanttChart: React.FC<GanttChartProps> = ({
       order: 1,
       type: 'delivery',
       status: 'in-progress',
-      progress: 65
+      progress: 65,
+      level: 0,
+      isExpanded: false
     },
     {
       id: '3',
@@ -165,8 +247,59 @@ const GanttChart: React.FC<GanttChartProps> = ({
       width: 0,
       order: 2,
       type: 'development',
+      status: 'in-progress',
+      progress: 13, // 将根据子任务自动计算：(40 + 0 + 0) / 3 = 13
+      level: 0,
+      children: ['3-1', '3-2', '3-3'],
+      isExpanded: true
+    },
+    {
+      id: '3-1',
+      title: 'A样开发',
+      startDate: new Date(Date.now() + 12 * 24 * 60 * 60 * 1000),
+      endDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000),
+      color: '#FFB74D',
+      x: 0,
+      width: 0,
+      order: 3,
+      type: 'development',
+      status: 'in-progress',
+      progress: 40,
+      level: 1,
+      parentId: '3',
+      isExpanded: false
+    },
+    {
+      id: '3-2',
+      title: 'B样开发',
+      startDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+      endDate: new Date(Date.now() + 17 * 24 * 60 * 60 * 1000),
+      color: '#FFB74D',
+      x: 0,
+      width: 0,
+      order: 4,
+      type: 'development',
       status: 'pending',
-      progress: 0
+      progress: 0,
+      level: 1,
+      parentId: '3',
+      isExpanded: false
+    },
+    {
+      id: '3-3',
+      title: 'C样开发',
+      startDate: new Date(Date.now() + 16 * 24 * 60 * 60 * 1000),
+      endDate: new Date(Date.now() + 19 * 24 * 60 * 60 * 1000),
+      color: '#FFB74D',
+      x: 0,
+      width: 0,
+      order: 5,
+      type: 'development',
+      status: 'pending',
+      progress: 0,
+      level: 1,
+      parentId: '3',
+      isExpanded: false
     },
     {
       id: '4',
@@ -176,10 +309,12 @@ const GanttChart: React.FC<GanttChartProps> = ({
       color: '#f44336',
       x: 0,
       width: 0,
-      order: 3,
+      order: 6,
       type: 'testing',
       status: 'pending',
-      progress: 0
+      progress: 0,
+      level: 0,
+      isExpanded: false
     }
   ]);
 
@@ -267,10 +402,84 @@ const GanttChart: React.FC<GanttChartProps> = ({
     setCurrentView(view);
   }, []);
 
+  // 处理展开/折叠
+  const handleToggleExpand = useCallback((taskId: string) => {
+    setTasks(prev => prev.map(task => 
+      task.id === taskId 
+        ? { ...task, isExpanded: !task.isExpanded }
+        : task
+    ));
+  }, []);
+
+  // 创建子任务
+  const handleCreateSubtask = useCallback((parentId: string) => {
+    const parentTask = tasks.find(task => task.id === parentId);
+    if (!parentTask) return;
+
+    const newSubtask: Task = {
+      id: `${parentId}-${Date.now()}`,
+      title: '新子任务',
+      startDate: new Date(parentTask.startDate),
+      endDate: new Date(parentTask.startDate.getTime() + 3 * 24 * 60 * 60 * 1000), // 默认3天
+      color: parentTask.color,
+      x: 0,
+      width: 0,
+      order: tasks.length,
+      type: parentTask.type,
+      status: 'pending',
+      progress: 0,
+      level: (parentTask.level || 0) + 1,
+      parentId: parentId,
+      isExpanded: false
+    };
+
+    setTasks(prev => {
+      const newTasks = [...prev, newSubtask];
+      // 更新父任务的children数组
+      return newTasks.map(task => {
+        if (task.id === parentId) {
+          return {
+            ...task,
+            children: [...(task.children || []), newSubtask.id],
+            isExpanded: true // 自动展开父任务
+          };
+        }
+        return task;
+      });
+    });
+  }, [tasks]);
+
   // 添加任务排序辅助函数
   const sortedTasks = useMemo(() => {
     return [...tasks].sort((a, b) => a.order - b.order);
   }, [tasks]);
+
+  // 获取可见任务列表（考虑层级展开状态）
+  const visibleTasks = useMemo(() => {
+    return getVisibleTasks(sortedTasks, taskMap);
+  }, [sortedTasks, taskMap]);
+
+  // 自动计算父任务进度
+  useEffect(() => {
+    const updateParentProgress = () => {
+      setTasks(prevTasks => {
+        const newTasks = [...prevTasks];
+        const taskMap = new Map(newTasks.map(task => [task.id, task]));
+        
+        // 更新所有有子任务的父任务的进度
+        for (const task of newTasks) {
+          if (task.children && task.children.length > 0) {
+            const calculatedProgress = calculateParentProgress(task, taskMap);
+            task.progress = calculatedProgress;
+          }
+        }
+        
+        return newTasks;
+      });
+    };
+
+    updateParentProgress();
+  }, [tasks.map(t => t.progress).join(',')]); // 当任何任务的进度发生变化时重新计算
 
   const dateToPixel = useCallback((date: Date): number => {
     const daysPassed = (date.getTime() - startDate.getTime()) / (24 * 60 * 60 * 1000);
@@ -371,21 +580,57 @@ const GanttChart: React.FC<GanttChartProps> = ({
         const draggedTask = newTasks.find(t => t.id === verticalDragState.draggedTaskId);
         if (!draggedTask) return prev;
         
-        // 更新所有任务的order
+        // 获取被拖拽任务的所有子任务（递归）
+        const taskMap = new Map<string, Task>();
+        newTasks.forEach(task => {
+          taskMap.set(task.id, task);
+        });
+        
+        const getAllChildrenIds = (task: Task): string[] => {
+          const allChildren: string[] = [];
+          const queue = [...(task.children || [])];
+          
+          while (queue.length > 0) {
+            const childId = queue.shift()!;
+            allChildren.push(childId);
+            const childTask = taskMap.get(childId);
+            if (childTask && childTask.children) {
+              queue.push(...childTask.children);
+            }
+          }
+          
+          return allChildren;
+        };
+        
+        // 获取需要一起移动的所有任务（父任务 + 所有子任务）
+        const tasksToMove = [draggedTask.id, ...getAllChildrenIds(draggedTask)];
+        
+        // 从排序列表中获取所有要移动的任务
         const sortedTasksCopy = [...sortedTasks];
+        const tasksToMoveObjects = tasksToMove.map(id => sortedTasksCopy.find(t => t.id === id)).filter(Boolean) as Task[];
+        
+        // 从原位置移除所有要移动的任务
+        for (let i = sortedTasksCopy.length - 1; i >= 0; i--) {
+          if (tasksToMove.includes(sortedTasksCopy[i].id)) {
+            sortedTasksCopy.splice(i, 1);
+          }
+        }
+        
         const draggedIndex = verticalDragState.draggedTaskIndex!;
-        const targetIndex = verticalDragState.targetIndex!;
+        let targetIndex = verticalDragState.targetIndex!;
         
-        // 移除被拖拽的任务
-        sortedTasksCopy.splice(draggedIndex, 1);
+        // 如果目标位置在原位置之后，需要调整目标位置（因为已经移除了一些任务）
+        if (targetIndex > draggedIndex) {
+          targetIndex = targetIndex - tasksToMoveObjects.length;
+        }
         
-        // 插入到新位置
+        // 在新位置插入所有要移动的任务
         if (targetIndex >= sortedTasksCopy.length) {
           // 插入到最后位置
-          sortedTasksCopy.push(draggedTask);
+          sortedTasksCopy.push(...tasksToMoveObjects);
         } else {
           // 插入到指定位置
-          sortedTasksCopy.splice(targetIndex, 0, draggedTask);
+          sortedTasksCopy.splice(targetIndex, 0, ...tasksToMoveObjects);
         }
         
         // 更新order字段
@@ -564,6 +809,9 @@ const GanttChart: React.FC<GanttChartProps> = ({
           zoomLevel={zoomLevel}
           canZoomIn={zoomLevel < 3}
           canZoomOut={zoomLevel > 0.25}
+          onAddSubtask={() => selectedTaskId && handleCreateSubtask(selectedTaskId)}
+          selectedTaskId={selectedTaskId}
+          canAddSubtask={!!selectedTaskId}
         />
         
         <div className="gantt-container" style={{ 
@@ -580,13 +828,17 @@ const GanttChart: React.FC<GanttChartProps> = ({
             <span>任务列表</span>
           </div>
           <div className="task-titles" style={taskTitlesContainerStyle}>
-            {sortedTasks.map((task, index) => {
+            {visibleTasks.map((task, index) => {
               const isDraggedTask = verticalDragState.draggedTaskId === task.id;
               const isTargetPosition = verticalDragState.isDragging && verticalDragState.targetIndex === index;
               const isDraggingDown = verticalDragState.isDragging && 
                 verticalDragState.draggedTaskIndex !== null && 
                 verticalDragState.targetIndex !== null &&
                 verticalDragState.targetIndex > verticalDragState.draggedTaskIndex;
+              
+              const hasChildren = task.children && task.children.length > 0;
+              const level = task.level || 0;
+              const indentWidth = level * 20; // 每级缩进20px
               
               return (
                 <div key={task.id}>
@@ -614,7 +866,8 @@ const GanttChart: React.FC<GanttChartProps> = ({
                       userSelect: 'none',
                       transform: isDraggedTask ? 'scale(1.02)' : 'scale(1)',
                       boxShadow: isDraggedTask ? '0 4px 8px rgba(0,0,0,0.15)' : 'none',
-                      zIndex: isDraggedTask ? 10 : 1
+                      zIndex: isDraggedTask ? 10 : 1,
+                      paddingLeft: `${20 + indentWidth}px` // 添加层级缩进
                     }}
                     onMouseEnter={(e) => {
                       if (!verticalDragState.isDragging) {
@@ -630,13 +883,72 @@ const GanttChart: React.FC<GanttChartProps> = ({
                     onClick={() => setSelectedTaskId(task.id)}
                   >
                     <DragHandle size={14} />
+                    
+                    {/* 展开/折叠按钮 */}
+                    {hasChildren && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleToggleExpand(task.id);
+                        }}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          cursor: 'pointer',
+                          padding: '2px',
+                          marginRight: '4px',
+                          fontSize: '12px',
+                          color: '#666'
+                        }}
+                      >
+                        {task.isExpanded ? '▼' : '▶'}
+                      </button>
+                    )}
+                    
+                    {/* 如果没有子任务，添加占位符保持对齐 */}
+                    {!hasChildren && (
+                      <div style={{ width: '16px', marginRight: '4px' }} />
+                    )}
+                    
                     <TaskIcon 
                       type={task.type} 
                       status={task.status} 
                       size={16} 
-                      className={`task-icon-${task.type}`} 
+                      className={`task-icon-${task.type}`}
+                      level={task.level}
                     />
                     <span className="task-title-text">{task.title}</span>
+                    
+                    {/* 创建子任务按钮 */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleCreateSubtask(task.id);
+                      }}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        padding: '2px 4px',
+                        marginLeft: 'auto',
+                        fontSize: '12px',
+                        color: '#666',
+                        opacity: 0.7,
+                        borderRadius: '2px'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = '#f0f0f0';
+                        e.currentTarget.style.opacity = '1';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                        e.currentTarget.style.opacity = '0.7';
+                      }}
+                      title="创建子任务"
+                    >
+                      +
+                    </button>
+                    
                     {selectedTaskId === task.id && (
                       <div className="task-selected-indicator" />
                     )}
@@ -661,7 +973,7 @@ const GanttChart: React.FC<GanttChartProps> = ({
             
             {/* 拖拽指示器 - 拖拽到最后位置时显示 */}
             {verticalDragState.isDragging && 
-             verticalDragState.targetIndex === sortedTasks.length && (
+             verticalDragState.targetIndex === visibleTasks.length && (
               <div style={{
                 height: '2px',
                 backgroundColor: '#2196F3',
@@ -720,7 +1032,7 @@ const GanttChart: React.FC<GanttChartProps> = ({
             right: 0,
             bottom: 0
           }}>
-            {sortedTasks.map((task, index) => {
+            {visibleTasks.map((task, index) => {
               const isBeingDragged = draggedTask === task.id;
               const displayX = isBeingDragged && tempDragPosition ? tempDragPosition.x : task.x;
               const displayWidth = isBeingDragged && tempDragPosition ? tempDragPosition.width : task.width;
