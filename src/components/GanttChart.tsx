@@ -315,7 +315,7 @@ const GanttChart: React.FC<GanttChartProps> = ({
   const [currentView, setCurrentView] = useState<'timeline' | 'list' | 'grid'>('timeline');
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
 
-  const TITLE_COLUMN_WIDTH = 180; // Increased width for better spacing
+  const TITLE_COLUMN_WIDTH = 230; // Increased width for better spacing
   const CHART_WIDTH = 800;
   const CONTAINER_HEIGHT = 400;
 
