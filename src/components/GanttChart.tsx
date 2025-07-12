@@ -160,6 +160,25 @@ const getVisibleTasks = (tasks: Task[], taskMap: Map<string, Task>): Task[] => {
   return visibleTasks;
 };
 
+/**
+ * 递归获取项目行的所有子行（包括子行的子行）
+ */
+const getAllDescendantRows = (rowId: string, rows: ProjectRow[]): ProjectRow[] => {
+  const descendants: ProjectRow[] = [];
+  
+  const collectDescendants = (parentId: string) => {
+    for (const row of rows) {
+      if (row.parentId === parentId) {
+        descendants.push(row);
+        collectDescendants(row.id); // 递归收集子行的子行
+      }
+    }
+  };
+  
+  collectDescendants(rowId);
+  return descendants;
+};
+
 
 // --- Custom Hooks ---
 
@@ -1240,45 +1259,91 @@ const GanttChart: React.FC<GanttChartProps> = ({
         verticalDragState.draggedTaskIndex !== null &&
         verticalDragState.targetIndex !== verticalDragState.draggedTaskIndex) {
       
-      // 重新排序任务
-      setTasks(prev => {
-        const newTasks = [...prev];
-        const draggedTask = leftPanelTasks[verticalDragState.draggedTaskIndex!];
-        const targetTask = verticalDragState.targetIndex! < leftPanelTasks.length 
+      // 重新排序项目行
+      setProjectRows(prev => {
+        const newRows = [...prev];
+        const draggedRowData = leftPanelTasks[verticalDragState.draggedTaskIndex!];
+        const targetRowData = verticalDragState.targetIndex! < leftPanelTasks.length 
           ? leftPanelTasks[verticalDragState.targetIndex!]
           : null;
         
-        if (!draggedTask) return prev;
+        if (!draggedRowData) return prev;
+        
+        // 找到对应的ProjectRow
+        const draggedRow = newRows.find(row => row.id === draggedRowData.id);
+        if (!draggedRow) return prev;
+        
+        // 获取被拖拽行的所有子行
+        const draggedDescendants = getAllDescendantRows(draggedRow.id, newRows);
+        const allDraggedRows = [draggedRow, ...draggedDescendants];
+        
+        // 检查子行拖拽限制：子行不能拖拽到父行层级外
+        if (draggedRow.parentId) {
+          const parentRow = newRows.find(r => r.id === draggedRow.parentId);
+          if (parentRow) {
+            // 获取父行的所有子行（在左侧面板中的位置）
+            const parentDescendants = getAllDescendantRows(parentRow.id, newRows);
+            const parentRowIndex = leftPanelTasks.findIndex(t => t.id === parentRow.id);
+            const validRange = {
+              start: parentRowIndex + 1,
+              end: parentRowIndex + parentDescendants.length
+            };
+            
+            // 检查目标位置是否在有效范围内
+            if (verticalDragState.targetIndex! < validRange.start || 
+                verticalDragState.targetIndex! > validRange.end) {
+              // 子行不能拖拽到父行层级外，取消拖拽
+              setVerticalDragState({
+                isDragging: false,
+                draggedTaskId: null,
+                draggedTaskIndex: null,
+                targetIndex: null,
+                startY: 0,
+                currentY: 0,
+                shouldShowIndicator: false
+              });
+              return prev;
+            }
+          }
+        }
         
         // 计算新的order值
         let newOrder: number;
-        if (!targetTask) {
+        if (!targetRowData) {
           // 拖拽到最后位置
-          const maxOrder = Math.max(...newTasks.map(t => t.order));
+          const maxOrder = Math.max(...newRows.map(r => r.order));
           newOrder = maxOrder + 1;
         } else {
-          const targetOrder = targetTask.order;
+          const targetRow = newRows.find(row => row.id === targetRowData.id);
+          if (!targetRow) return prev;
+          
+          const targetOrder = targetRow.order;
           if (verticalDragState.targetIndex! > verticalDragState.draggedTaskIndex!) {
-            // 向下拖拽，插入到目标任务之后
+            // 向下拖拽，插入到目标行之后
             newOrder = targetOrder + 0.5;
           } else {
-            // 向上拖拽，插入到目标任务之前
+            // 向上拖拽，插入到目标行之前
             newOrder = targetOrder - 0.5;
           }
         }
         
-        // 更新被拖拽任务的order
-        const updatedTasks = newTasks.map(task => {
-          if (task.id === draggedTask.id) {
-            return { ...task, order: newOrder };
+        // 计算移动距离
+        const orderDelta = newOrder - draggedRow.order;
+        
+        // 更新被拖拽行及其所有子行的order
+        const updatedRows = newRows.map(row => {
+          // 检查是否是被拖拽的行或其子行
+          const isDraggedOrDescendant = allDraggedRows.some(draggedRow => draggedRow.id === row.id);
+          if (isDraggedOrDescendant) {
+            return { ...row, order: row.order + orderDelta };
           }
-          return task;
+          return row;
         });
         
         // 重新标准化order值（确保是连续的整数）
-        const sortedByOrder = [...updatedTasks].sort((a, b) => a.order - b.order);
-        return sortedByOrder.map((task, index) => ({
-          ...task,
+        const sortedByOrder = [...updatedRows].sort((a, b) => a.order - b.order);
+        return sortedByOrder.map((row, index) => ({
+          ...row,
           order: index
         }));
       });
