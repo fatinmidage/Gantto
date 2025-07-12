@@ -4,8 +4,6 @@ import Header from './components/Header';
 import './App.css';
 
 function App() {
-  const [isDarkMode, setIsDarkMode] = useState(false);
-
   const handleNewProject = () => {
     console.log('新建项目');
     // TODO: 实现新建项目功能
@@ -21,18 +19,12 @@ function App() {
     // TODO: 实现保存项目功能
   };
 
-  const handleToggleTheme = () => {
-    setIsDarkMode(!isDarkMode);
-  };
-
   return (
-    <div className={`app ${isDarkMode ? 'dark-theme' : 'light-theme'}`}>
+    <div className="app">
       <Header
         onNewProject={handleNewProject}
         onOpenProject={handleOpenProject}
         onSaveProject={handleSaveProject}
-        onToggleTheme={handleToggleTheme}
-        isDarkMode={isDarkMode}
       />
       <main className="app-main">
         <GanttChart />

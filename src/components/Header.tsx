@@ -4,8 +4,6 @@ import {
   FolderOpen, 
   Save, 
   Settings, 
-  Moon, 
-  Sun,
   BarChart3
 } from 'lucide-react';
 
@@ -13,16 +11,12 @@ interface HeaderProps {
   onNewProject?: () => void;
   onOpenProject?: () => void;
   onSaveProject?: () => void;
-  onToggleTheme?: () => void;
-  isDarkMode?: boolean;
 }
 
 const Header: React.FC<HeaderProps> = ({
   onNewProject,
   onOpenProject,
-  onSaveProject,
-  onToggleTheme,
-  isDarkMode = false
+  onSaveProject
 }) => {
   return (
     <header className="app-header">
@@ -63,13 +57,6 @@ const Header: React.FC<HeaderProps> = ({
         </div>
         
         <div className="action-group">
-          <button 
-            className="action-btn icon-only" 
-            onClick={onToggleTheme}
-            title={isDarkMode ? "切换到亮色模式" : "切换到暗色模式"}
-          >
-            {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
-          </button>
           <button 
             className="action-btn icon-only" 
             title="设置"
