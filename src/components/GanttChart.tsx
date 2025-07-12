@@ -1,4 +1,5 @@
 import React, { useState, useRef, useCallback, useMemo, useEffect } from 'react';
+import { Target } from 'lucide-react';
 import Toolbar from './Toolbar';
 import TaskIcon, { DragHandle } from './TaskIcon';
 
@@ -1007,6 +1008,29 @@ const GanttChart: React.FC<GanttChartProps> = ({
               const displayWidth = isBeingDragged && tempDragPosition ? tempDragPosition.width : task.width;
               const isSelected = selectedTaskId === task.id;
               
+              // 里程碑节点渲染
+              if (task.type === 'milestone') {
+                // 里程碑节点基于开始时间定位，不使用任务条宽度
+                const milestoneX = isBeingDragged && tempDragPosition ? tempDragPosition.x : dateToPixel(task.startDate);
+                return (
+                  <div
+                    key={task.id}
+                    className={`gantt-milestone-node ${isBeingDragged ? 'dragging' : ''} ${isSelected ? 'selected' : ''} status-${task.status}`}
+                    style={{
+                      left: milestoneX - 8, // 减去图标宽度的一半，让它居中对齐
+                      top: index * (taskHeight + 10) + (taskHeight - 16) / 2, // 居中对齐
+                    }}
+                    onMouseDown={(e) => handleMouseDown(e, task.id)}
+                    onClick={() => setSelectedTaskId(task.id)}
+                  >
+                    <div className="milestone-icon">
+                      <Target size={16} />
+                    </div>
+                  </div>
+                );
+              }
+              
+              // 普通任务条渲染
               return (
                 <div
                   key={task.id}
@@ -1023,7 +1047,7 @@ const GanttChart: React.FC<GanttChartProps> = ({
                   
                   {/* 任务内容 */}
                   <div className="gantt-task-content">
-                    {task.type === 'milestone' ? '◆' : ''}
+                    {/* 移除里程碑的 ◆ 符号，因为现在使用独立节点 */}
                   </div>
                 </div>
               );

@@ -701,7 +701,38 @@ html, body {
   animation: taskPulse 2s ease-in-out infinite;
 }
 
-/* 里程碑样式增强 */
+/* 里程碑节点样式 */
+.gantt-milestone-node {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  z-index: 10;
+  transition: none !important;
+}
+
+.gantt-milestone-node .milestone-icon {
+  color: var(--accent-warning);
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+.gantt-milestone-node:hover .milestone-icon {
+  color: var(--accent-warning);
+  transform: scale(1.1);
+}
+
+.gantt-milestone-node.selected .milestone-icon {
+  color: var(--accent-warning);
+  transform: scale(1.2);
+  filter: drop-shadow(0 4px 8px rgba(245, 158, 11, 0.3));
+}
+
+.gantt-milestone-node.dragging .milestone-icon {
+  transform: scale(1.15);
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.2));
+}
+
+/* 里程碑样式增强（保留原有的里程碑相关样式） */
 .milestone {
   transition: none !important;
   border: 2px solid rgba(255, 255, 255, 0.2);
