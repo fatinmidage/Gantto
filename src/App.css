@@ -613,30 +613,6 @@ html, body {
   border-color: rgba(255, 255, 255, 0.4);
 }
 
-/* 任务条进度显示 */
-.gantt-task-progress {
-  position: absolute;
-  top: 0;
-  left: 0;
-  height: 100%;
-  background: linear-gradient(90deg, 
-    rgba(255, 255, 255, 0.3) 0%, 
-    rgba(255, 255, 255, 0.1) 100%
-  );
-  border-radius: 8px 0 0 8px;
-  transition: width 0.3s ease;
-}
-
-.gantt-task-progress::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 1px;
-  height: 100%;
-  background: rgba(255, 255, 255, 0.5);
-  box-shadow: 0 0 4px rgba(255, 255, 255, 0.3);
-}
 
 /* 任务条内容 */
 .gantt-task-content {
@@ -1046,10 +1022,6 @@ html, body {
   animation: fadeInUp 0.3s ease-out;
 }
 
-/* 进度条动画 */
-.gantt-task-progress {
-  animation: slideInLeft 0.5s ease-out;
-}
 
 /* 当前日期线动画 */
 .gantt-current-date-line {

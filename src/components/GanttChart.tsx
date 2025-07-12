@@ -1020,20 +1020,10 @@ const GanttChart: React.FC<GanttChartProps> = ({
                   onMouseDown={(e) => handleMouseDown(e, task.id)}
                   onClick={() => setSelectedTaskId(task.id)}
                 >
-                  {/* 进度条 */}
-                  {task.progress && task.progress > 0 && (
-                    <div 
-                      className="gantt-task-progress"
-                      style={{
-                        width: `${task.progress}%`
-                      }}
-                    />
-                  )}
                   
                   {/* 任务内容 */}
                   <div className="gantt-task-content">
                     {task.type === 'milestone' ? '◆' : ''}
-                    {task.progress && task.progress > 0 ? `${task.progress}%` : ''}
                   </div>
                 </div>
               );
