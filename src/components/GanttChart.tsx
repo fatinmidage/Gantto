@@ -678,7 +678,7 @@ const GanttChart: React.FC<GanttChartProps> = ({
     e.preventDefault();
     e.stopPropagation();
     
-    const taskIndex = visibleTasks.findIndex(task => task.id === taskId);
+    const taskIndex = leftPanelTasks.findIndex(task => task.id === taskId);
     if (taskIndex === -1) return;
     
     setVerticalDragState({
@@ -698,7 +698,7 @@ const GanttChart: React.FC<GanttChartProps> = ({
     const deltaY = e.clientY - verticalDragState.startY;
     const taskHeight = 30 + 10; // taskHeight + margin
     const newTargetIndex = Math.max(0, Math.min(
-      visibleTasks.length, // 允许拖拽到最后位置
+      leftPanelTasks.length, // 允许拖拽到最后位置
       verticalDragState.draggedTaskIndex! + Math.floor(deltaY / taskHeight + 0.5)
     ));
     
@@ -712,7 +712,7 @@ const GanttChart: React.FC<GanttChartProps> = ({
       targetIndex: newTargetIndex,
       shouldShowIndicator
     }));
-  }, [verticalDragState.isDragging, verticalDragState.startY, verticalDragState.draggedTaskIndex, visibleTasks.length]);
+  }, [verticalDragState.isDragging, verticalDragState.startY, verticalDragState.draggedTaskIndex, leftPanelTasks.length]);
 
   const handleTitleMouseUp = useCallback(() => {
     if (!verticalDragState.isDragging) return;
@@ -724,9 +724,9 @@ const GanttChart: React.FC<GanttChartProps> = ({
       // 重新排序任务
       setTasks(prev => {
         const newTasks = [...prev];
-        const draggedTask = visibleTasks[verticalDragState.draggedTaskIndex!];
-        const targetTask = verticalDragState.targetIndex! < visibleTasks.length 
-          ? visibleTasks[verticalDragState.targetIndex!]
+        const draggedTask = leftPanelTasks[verticalDragState.draggedTaskIndex!];
+        const targetTask = verticalDragState.targetIndex! < leftPanelTasks.length 
+          ? leftPanelTasks[verticalDragState.targetIndex!]
           : null;
         
         if (!draggedTask) return prev;
@@ -774,7 +774,7 @@ const GanttChart: React.FC<GanttChartProps> = ({
       currentY: 0,
       shouldShowIndicator: false
     });
-  }, [verticalDragState, visibleTasks]);
+  }, [verticalDragState, leftPanelTasks]);
 
   const handleMouseMoveCore = useCallback((e: MouseEvent) => {
     if (!isDragging || !draggedTask || !draggedTaskData || !dragType) return;
@@ -1145,7 +1145,7 @@ const GanttChart: React.FC<GanttChartProps> = ({
             
             {/* 拖拽指示器 - 拖拽到最后位置时显示 */}
             {verticalDragState.isDragging && 
-             verticalDragState.targetIndex === visibleTasks.length && 
+             verticalDragState.targetIndex === leftPanelTasks.length && 
              verticalDragState.shouldShowIndicator && (
               <div style={{
                 height: '2px',
@@ -1208,7 +1208,24 @@ const GanttChart: React.FC<GanttChartProps> = ({
           }}>
             {taskRows.map((row, rowIndex) => 
               row.tasks.map((task) => {
-                const index = rowIndex; // 使用行索引来定位Y坐标
+                // 计算任务在左侧面板中的正确Y坐标位置
+                let index = rowIndex; // 默认使用行索引
+                if (!task.isCreatedFromContext) {
+                  // 对于原始任务，使用它在leftPanelTasks中的索引
+                  const leftPanelIndex = leftPanelTasks.findIndex(t => t.id === task.id);
+                  if (leftPanelIndex !== -1) {
+                    index = leftPanelIndex;
+                  }
+                } else {
+                  // 对于右键创建的任务，找到它所属行的主任务在leftPanelTasks中的位置
+                  const mainTask = row.tasks.find(t => !t.isCreatedFromContext);
+                  if (mainTask) {
+                    const leftPanelIndex = leftPanelTasks.findIndex(t => t.id === mainTask.id);
+                    if (leftPanelIndex !== -1) {
+                      index = leftPanelIndex;
+                    }
+                  }
+                }
               const isBeingDragged = draggedTask === task.id;
               const displayX = isBeingDragged && tempDragPosition ? tempDragPosition.x : task.x;
               const displayWidth = isBeingDragged && tempDragPosition ? tempDragPosition.width : task.width;
