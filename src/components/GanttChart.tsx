@@ -73,27 +73,6 @@ const getVisibleTasks = (tasks: Task[], taskMap: Map<string, Task>): Task[] => {
   return visibleTasks;
 };
 
-/**
- * 计算父任务的进度（基于子任务）
- */
-const calculateParentProgress = (task: Task, taskMap: Map<string, Task>): number => {
-  if (!task.children || task.children.length === 0) {
-    return task.progress || 0;
-  }
-  
-  let totalProgress = 0;
-  let validChildren = 0;
-  
-  for (const childId of task.children) {
-    const childTask = taskMap.get(childId);
-    if (childTask) {
-      totalProgress += childTask.progress || 0;
-      validChildren++;
-    }
-  }
-  
-  return validChildren > 0 ? Math.round(totalProgress / validChildren) : 0;
-};
 
 // --- Custom Hooks ---
 
@@ -184,7 +163,7 @@ const GanttChart: React.FC<GanttChartProps> = ({
       id: '1',
       title: '项目里程碑',
       startDate: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
-      endDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+      endDate: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
       color: '#4CAF50',
       x: 0,
       width: 0,
@@ -308,7 +287,6 @@ const GanttChart: React.FC<GanttChartProps> = ({
     shouldShowIndicator: false
   });
 
-  const [taskMap, setTaskMap] = useState<Map<string, Task>>(new Map());
   const [draggedTaskData, setDraggedTaskData] = useState<Task | null>(null);
   
   // 边界拖拽状态
@@ -428,70 +406,46 @@ const GanttChart: React.FC<GanttChartProps> = ({
     });
   }, [tasks]);
 
-  // 添加任务排序辅助函数
-  const sortedTasks = useMemo(() => {
-    return [...tasks].sort((a, b) => a.order - b.order);
-  }, [tasks]);
-
-  // 获取可见任务列表（考虑层级展开状态）
-  const visibleTasks = useMemo(() => {
-    return getVisibleTasks(sortedTasks, taskMap);
-  }, [sortedTasks, taskMap]);
-
-  // 自动计算父任务进度
-  useEffect(() => {
-    const updateParentProgress = () => {
-      setTasks(prevTasks => {
-        const newTasks = [...prevTasks];
-        const taskMap = new Map(newTasks.map(task => [task.id, task]));
-        
-        // 更新所有有子任务的父任务的进度
-        for (const task of newTasks) {
-          if (task.children && task.children.length > 0) {
-            const calculatedProgress = calculateParentProgress(task, taskMap);
-            task.progress = calculatedProgress;
-          }
-        }
-        
-        return newTasks;
-      });
-    };
-
-    updateParentProgress();
-  }, [tasks.map(t => t.progress).join(',')]); // 当任何任务的进度发生变化时重新计算
-
   const dateToPixel = useCallback((date: Date): number => {
     const daysPassed = (date.getTime() - startDate.getTime()) / (24 * 60 * 60 * 1000);
     return daysPassed * dateRange.pixelPerDay;
   }, [startDate, dateRange.pixelPerDay]);
+
+  // 添加任务排序辅助函数，同时计算位置信息
+  const sortedTasks = useMemo(() => {
+    return [...tasks]
+      .sort((a, b) => a.order - b.order)
+      .map(task => {
+        const x = dateToPixel(task.startDate);
+        const width = dateToPixel(task.endDate) - x;
+        return { ...task, x, width: Math.max(width, 20) };
+      });
+  }, [tasks, dateToPixel]);
+
+  // 优化taskMap的创建，避免不必要的状态更新
+  const taskMapMemo = useMemo(() => {
+    const newMap = new Map<string, Task>();
+    sortedTasks.forEach(task => {
+      newMap.set(task.id, task);
+    });
+    return newMap;
+  }, [sortedTasks]);
+
+  // 获取可见任务列表（考虑层级展开状态）
+  const visibleTasks = useMemo(() => {
+    return getVisibleTasks(sortedTasks, taskMapMemo);
+  }, [sortedTasks, taskMapMemo]);
 
   const pixelToDate = useCallback((pixel: number): Date => {
     const daysPassed = pixel / dateRange.pixelPerDay;
     return new Date(startDate.getTime() + daysPassed * 24 * 60 * 60 * 1000);
   }, [startDate, dateRange.pixelPerDay]);
 
-  const updateTaskPositions = useCallback(() => {
-    setTasks(prev => prev.map(task => {
-      const x = dateToPixel(task.startDate);
-      const width = dateToPixel(task.endDate) - x;
-      return { ...task, x, width: Math.max(width, 20) };
-    }));
-  }, [dateToPixel]);
-
-  useEffect(() => {
-    const newMap = new Map<string, Task>();
-    sortedTasks.forEach(task => {
-      newMap.set(task.id, task);
-    });
-    setTaskMap(newMap);
-  }, [sortedTasks]);
-
-  useEffect(() => {
-    updateTaskPositions();
-  }, [updateTaskPositions]);
+  // 移除自动更新任务位置的useEffect，改为在渲染时计算
+  // 避免无限循环：updateTaskPositions -> setTasks -> sortedTasks -> updateTaskPositions
 
   // 检测是否在任务条边界附近
-  const detectEdgeHover = (e: React.MouseEvent, task: Task): 'left' | 'right' | null => {
+  const detectEdgeHover = (e: React.MouseEvent, _task: Task): 'left' | 'right' | null => {
     const rect = e.currentTarget.getBoundingClientRect();
     const mouseX = e.clientX - rect.left;
     const edgeZone = 8; // 8px边界检测区域
@@ -504,14 +458,33 @@ const GanttChart: React.FC<GanttChartProps> = ({
     return null;
   };
 
+  // 节流的边界检测处理器
+  const edgeHoverThrottleRef = useRef<number>();
+  const handleEdgeHover = useCallback((e: React.MouseEvent, task: Task) => {
+    if (!isDragging) {
+      if (edgeHoverThrottleRef.current) {
+        clearTimeout(edgeHoverThrottleRef.current);
+      }
+      edgeHoverThrottleRef.current = window.setTimeout(() => {
+        const edgeType = detectEdgeHover(e, task);
+        if (isHoveringEdge !== edgeType) {
+          setIsHoveringEdge(edgeType);
+        }
+      }, 16); // 限制为60fps
+    }
+  }, [isDragging, isHoveringEdge]);
+
   const handleMouseDown = (e: React.MouseEvent, taskId: string) => {
     e.preventDefault();
-    const task = taskMap.get(taskId);
+    const task = taskMapMemo.get(taskId);
     if (!task || !containerRef.current) return;
     
     // 检测拖拽类型
-    const edgeType = detectEdgeHover(e, task);
-    const currentDragType = edgeType ? `resize-${edgeType}` as 'resize-left' | 'resize-right' : 'move';
+    // 里程碑始终是移动操作，不支持resize
+    const currentDragType = task.type === 'milestone' ? 'move' : (() => {
+      const edgeType = detectEdgeHover(e, task);
+      return edgeType ? `resize-${edgeType}` as 'resize-left' | 'resize-right' : 'move';
+    })();
     
     setDraggedTask(taskId);
     setDraggedTaskData(task);
@@ -523,8 +496,10 @@ const GanttChart: React.FC<GanttChartProps> = ({
     
     const bounds = dragCache.containerBounds.current;
     if (bounds) {
+      // 对里程碑使用正确的位置计算
+      const taskX = task.type === 'milestone' ? dateToPixel(task.startDate) : task.x;
       setDragOffset({
-        x: e.clientX - bounds.left - task.x,
+        x: e.clientX - bounds.left - taskX,
         y: e.clientY - bounds.top
       });
     }
@@ -588,9 +563,6 @@ const GanttChart: React.FC<GanttChartProps> = ({
         
         if (!draggedTask) return prev;
         
-        // 获取draggedTask在sortedTasks中的order
-        const draggedOrder = draggedTask.order;
-        
         // 计算新的order值
         let newOrder: number;
         if (!targetTask) {
@@ -650,7 +622,9 @@ const GanttChart: React.FC<GanttChartProps> = ({
       if (dragType === 'move') {
         // 移动整个任务条
         const newX = mouseX - dragOffset.x;
-        const constrainedX = Math.max(0, Math.min(newX, CHART_WIDTH - metrics.minWidth));
+        // 里程碑可以拖拽到整个时间线范围，普通任务需要保留最小宽度空间
+        const maxX = draggedTaskData.type === 'milestone' ? CHART_WIDTH : CHART_WIDTH - metrics.minWidth;
+        const constrainedX = Math.max(0, Math.min(newX, maxX));
         
         setTempDragPosition({
           id: draggedTask,
@@ -691,8 +665,14 @@ const GanttChart: React.FC<GanttChartProps> = ({
       if (dragType === 'move') {
         // 移动任务条：保持时间段长度，改变开始和结束时间
         newStartDate = pixelToDate(tempDragPosition.x);
-        const duration = draggedTaskData.endDate.getTime() - draggedTaskData.startDate.getTime();
-        newEndDate = new Date(newStartDate.getTime() + duration);
+        if (draggedTaskData.type === 'milestone') {
+          // 里程碑只更新开始时间，结束时间保持与开始时间相同
+          newEndDate = newStartDate;
+        } else {
+          // 普通任务保持时间段长度
+          const duration = draggedTaskData.endDate.getTime() - draggedTaskData.startDate.getTime();
+          newEndDate = new Date(newStartDate.getTime() + duration);
+        }
       } else if (dragType === 'resize-left') {
         // 左边界拖拽：改变开始时间，保持结束时间
         newStartDate = pixelToDate(tempDragPosition.x);
@@ -808,21 +788,6 @@ const GanttChart: React.FC<GanttChartProps> = ({
 
   return (
     <>
-      <style>
-        {`
-          @keyframes pulse {
-            0% {
-              opacity: 1;
-            }
-            50% {
-              opacity: 0.5;
-            }
-            100% {
-              opacity: 1;
-            }
-          }
-        `}
-      </style>
       
       <div className="gantt-container-wrapper">
         <Toolbar
@@ -879,7 +844,6 @@ const GanttChart: React.FC<GanttChartProps> = ({
                       margin: '0 10px',
                       borderRadius: '1px',
                       boxShadow: '0 0 4px rgba(33, 150, 243, 0.6)',
-                      animation: 'pulse 1s infinite'
                     }} />
                   )}
                   
@@ -990,7 +954,6 @@ const GanttChart: React.FC<GanttChartProps> = ({
                       margin: '0 10px',
                       borderRadius: '1px',
                       boxShadow: '0 0 4px rgba(33, 150, 243, 0.6)',
-                      animation: 'pulse 1s infinite'
                     }} />
                   )}
                 </div>
@@ -1100,12 +1063,7 @@ const GanttChart: React.FC<GanttChartProps> = ({
                     cursor: isHoveringEdge === 'left' ? 'w-resize' : isHoveringEdge === 'right' ? 'e-resize' : 'grab'
                   }}
                   onMouseDown={(e) => handleMouseDown(e, task.id)}
-                  onMouseMove={(e) => {
-                    if (!isDragging) {
-                      const edgeType = detectEdgeHover(e, task);
-                      setIsHoveringEdge(edgeType);
-                    }
-                  }}
+                  onMouseMove={(e) => handleEdgeHover(e, task)}
                   onMouseLeave={() => {
                     if (!isDragging) {
                       setIsHoveringEdge(null);
