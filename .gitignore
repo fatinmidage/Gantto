@@ -1,5 +1,27 @@
-# Logs
-logs
+# ===========================================
+# 依赖文件 / Dependencies
+# ===========================================
+node_modules/
+.pnpm-store/
+.npm/
+.yarn/
+.pnp/
+.pnp.js
+jspm_packages/
+
+# ===========================================
+# 构建输出 / Build Output
+# ===========================================
+dist/
+dist-ssr/
+build/
+out/
+*.local
+
+# ===========================================
+# 日志文件 / Logs
+# ===========================================
+logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
@@ -7,38 +29,94 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-# Dependencies
-node_modules
-.pnp
-.pnp.js
-
-# Production builds
-dist
-dist-ssr
-build
-*.local
-
-# Environment variables
+# ===========================================
+# 环境变量 / Environment Variables
+# ===========================================
 .env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
+.env.*.local
 
-# Editor directories and files
+# ===========================================
+# Tauri 后端 / Tauri Backend
+# ===========================================
+src-tauri/target/
+src-tauri/Cargo.lock
+src-tauri/gen/
+src-tauri/WixTools
+
+# ===========================================
+# TypeScript / JavaScript
+# ===========================================
+*.tsbuildinfo
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+
+# ===========================================
+# 测试和覆盖率 / Testing & Coverage
+# ===========================================
+coverage/
+*.lcov
+.nyc_output/
+.vscode-test/
+
+# ===========================================
+# 缓存文件 / Cache Files
+# ===========================================
+.cache/
+.parcel-cache/
+.eslintcache
+.stylelintcache
+
+# ===========================================
+# 临时文件 / Temporary Files
+# ===========================================
+*.tmp
+*.temp
+.tmp/
+temp/
+tmp/
+
+# ===========================================
+# 运行时数据 / Runtime Data
+# ===========================================
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# ===========================================
+# 包管理器文件 / Package Manager Files
+# ===========================================
+.yarn-integrity
+.pnp.*
+*.tgz
+package-lock.json
+yarn.lock
+
+# ===========================================
+# 编辑器和IDE / Editors & IDEs
+# ===========================================
 .vscode/*
 !.vscode/extensions.json
 !.vscode/settings.json
 !.vscode/tasks.json
 !.vscode/launch.json
-.idea
+.idea/
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+*~
 
-# OS generated files
+# ===========================================
+# 操作系统生成的文件 / OS Generated Files
+# ===========================================
 .DS_Store
 .DS_Store?
 ._*
@@ -46,99 +124,26 @@ build
 .Trashes
 ehthumbs.db
 Thumbs.db
+Desktop.ini
 
-# Rust (Tauri)
-src-tauri/target/
-src-tauri/Cargo.lock
-src-tauri/gen/
+# ===========================================
+# 构建工具 / Build Tools
+# ===========================================
+.next/
+.nuxt/
+.storybook-out/
+.rts2_cache/
 
-# TypeScript
-*.tsbuildinfo
-
-# Testing
-coverage
-*.lcov
-.nyc_output
-
-# Temporary files
-*.tmp
-*.temp
-.cache
-
-# Package manager files
-.npm
-.yarn-integrity
-.pnpm-store/
-
-# Optional npm cache directory
-.npm
-
-# Optional eslint cache
-.eslintcache
-
-# Microbundle cache
-.rpt2_cache/
-.rts2_cache_cjs/
-.rts2_cache_es/
-.rts2_cache_umd/
-
-# Optional REPL history
+# ===========================================
+# 可选的REPL历史 / Optional REPL History
+# ===========================================
 .node_repl_history
 
-# Output of 'npm pack'
-*.tgz
-
-# Yarn Integrity file
-.yarn-integrity
-
-# parcel-bundler cache (https://parceljs.org/)
-.parcel-cache
-
-# Next.js build output
-.next
-
-# Nuxt.js build / generate output
-.nuxt
-
-# Storybook build outputs
-.out
-.storybook-out
-
-# Temporary folders
-tmp/
-temp/
-
-# Runtime data
-pids
-*.pid
-*.seed
-*.pid.lock
-
-# Coverage directory used by tools like istanbul
-coverage/
-*.lcov
-
-# Dependency directories
-jspm_packages/
-
-# Optional REPL history
-.node_repl_history
-
-# Output of 'npm pack'
-*.tgz
-
-# Yarn Integrity file
-.yarn-integrity
-
-# dotenv environment variables file
-.env.test
-
-# Stores VSCode versions used for testing VSCode extensions
-.vscode-test
-
-# yarn v2
-.yarn/cache
-.yarn/unplugged
-.yarn/build-state.yml
-.yarn/install-state.gz
-.pnp.*
+# ===========================================
+# 其他 / Miscellaneous
+# ===========================================
+.vite/
+*.swp
+*.swo
+*~
+.husky/_
