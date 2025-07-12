@@ -23,6 +23,7 @@ interface Task {
   isExpanded?: boolean; // 是否展开显示子任务
   rowId?: string; // 行ID，同一行的任务有相同的rowId
   isCreatedFromContext?: boolean; // 是否通过右键菜单创建，用于区分原始任务和新创建的任务
+  tags?: string[]; // 新增标签数组字段
 }
 
 interface GanttChartProps {
@@ -41,6 +42,27 @@ interface VerticalDragState {
   startY: number;
   currentY: number;
   shouldShowIndicator: boolean; // 是否应该显示提示线
+}
+
+// 任务条右键菜单状态
+interface TaskContextMenu {
+  visible: boolean;
+  x: number;
+  y: number;
+  taskId: string | null;
+}
+
+// 颜色选择器状态
+interface ColorPickerState {
+  visible: boolean;
+  taskId: string | null;
+}
+
+// 标签管理器状态
+interface TagManagerState {
+  visible: boolean;
+  taskId: string | null;
+  newTag: string;
 }
 
 // --- Task Hierarchy Helpers ---
@@ -317,6 +339,39 @@ const GanttChart: React.FC<GanttChartProps> = ({
     clickPosition: { x: 0, y: 0 }
   });
 
+  // 任务条右键菜单状态
+  const [taskContextMenu, setTaskContextMenu] = useState<TaskContextMenu>({
+    visible: false,
+    x: 0,
+    y: 0,
+    taskId: null
+  });
+
+  // 颜色选择器状态
+  const [colorPickerState, setColorPickerState] = useState<ColorPickerState>({
+    visible: false,
+    taskId: null
+  });
+
+  // 标签管理器状态
+  const [tagManagerState, setTagManagerState] = useState<TagManagerState>({
+    visible: false,
+    taskId: null,
+    newTag: ''
+  });
+
+  // 预定义颜色选项
+  const availableColors = [
+    '#4CAF50', '#2196F3', '#FF9800', '#f44336', '#9C27B0',
+    '#607D8B', '#795548', '#E91E63', '#00BCD4', '#8BC34A',
+    '#FFC107', '#FF5722', '#673AB7', '#3F51B5', '#009688'
+  ];
+
+  // 可用标签选项
+  const [availableTags, setAvailableTags] = useState<string[]>([
+    '重要', '紧急', '测试', '开发', '设计', '评审', '部署'
+  ]);
+
   const TITLE_COLUMN_WIDTH = 230; // Increased width for better spacing
   const CHART_WIDTH = 800;
   const MIN_CONTAINER_HEIGHT = 200; // 最小高度
@@ -503,6 +558,11 @@ const GanttChart: React.FC<GanttChartProps> = ({
   const handleContextMenu = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     
+    // 如果任务条右键菜单正在显示，不处理容器右键菜单
+    if (taskContextMenu.visible) {
+      return;
+    }
+    
     const rect = e.currentTarget.getBoundingClientRect();
     const chartAreaX = e.clientX - rect.left; // 容器内的相对X坐标
     const chartAreaY = e.clientY - rect.top; // 容器内的相对Y坐标
@@ -522,7 +582,7 @@ const GanttChart: React.FC<GanttChartProps> = ({
         y: isInTimelineArea ? 0 : taskAreaY // 如果在时间轴区域，任务创建位置设为第一行
       }
     });
-  }, [timelineHeight]);
+  }, [timelineHeight, taskContextMenu.visible]);
 
   // 隐藏右键菜单
   const hideContextMenu = useCallback(() => {
@@ -614,6 +674,106 @@ const GanttChart: React.FC<GanttChartProps> = ({
     setTasks(prev => [...prev, newMilestone]);
     hideContextMenu();
   }, [contextMenu.clickPosition.x, contextMenu.clickPosition.y, pixelToDate, taskHeight, leftPanelTasks, hideContextMenu]);
+
+  // 任务条右键菜单事件处理
+  const handleTaskContextMenu = useCallback((e: React.MouseEvent, taskId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // 隐藏容器右键菜单
+    hideContextMenu();
+    
+    setTaskContextMenu({
+      visible: true,
+      x: e.clientX,
+      y: e.clientY,
+      taskId: taskId
+    });
+  }, [hideContextMenu]);
+
+  // 隐藏任务条右键菜单
+  const hideTaskContextMenu = useCallback(() => {
+    setTaskContextMenu(prev => ({ ...prev, visible: false, taskId: null }));
+  }, []);
+
+  // 更改任务颜色
+  const handleColorChange = useCallback((taskId: string, color: string) => {
+    console.log('Changing color for task:', taskId, 'to color:', color); // 调试信息
+    setTasks(prev => prev.map(task => {
+      if (task.id === taskId) {
+        console.log('Updated task:', { ...task, color: color }); // 调试信息
+        return { ...task, color: color };
+      }
+      return task;
+    }));
+    setColorPickerState({ visible: false, taskId: null });
+  }, []);
+
+  // 添加标签
+  const handleTagAdd = useCallback((taskId: string, tag: string) => {
+    if (!tag.trim()) return;
+    
+    setTasks(prev => prev.map(task => {
+      if (task.id === taskId) {
+        const currentTags = task.tags || [];
+        if (!currentTags.includes(tag)) {
+          return { ...task, tags: [...currentTags, tag] };
+        }
+      }
+      return task;
+    }));
+    
+    // 将新标签添加到可用标签列表
+    if (!availableTags.includes(tag)) {
+      setAvailableTags(prev => [...prev, tag]);
+    }
+  }, [availableTags]);
+
+  // 移除标签
+  const handleTagRemove = useCallback((taskId: string, tag: string) => {
+    setTasks(prev => prev.map(task => {
+      if (task.id === taskId) {
+        const currentTags = task.tags || [];
+        return { ...task, tags: currentTags.filter(t => t !== tag) };
+      }
+      return task;
+    }));
+  }, []);
+
+  // 删除任务
+  const handleTaskDelete = useCallback((taskId: string) => {
+    setTasks(prev => {
+      const taskToDelete = prev.find(task => task.id === taskId);
+      if (!taskToDelete) return prev;
+      
+      // 获取所有需要删除的任务ID（包括子任务）
+      const tasksToDelete = new Set<string>();
+      
+      const collectChildTasks = (parentId: string) => {
+        tasksToDelete.add(parentId);
+        const childTasks = prev.filter(task => task.parentId === parentId);
+        childTasks.forEach(child => collectChildTasks(child.id));
+      };
+      
+      collectChildTasks(taskId);
+      
+      // 更新父任务的children数组
+      const updatedTasks = prev.map(task => {
+        if (task.children && task.children.includes(taskId)) {
+          return {
+            ...task,
+            children: task.children.filter(childId => childId !== taskId)
+          };
+        }
+        return task;
+      });
+      
+      // 删除所有相关任务
+      return updatedTasks.filter(task => !tasksToDelete.has(task.id));
+    });
+    
+    hideTaskContextMenu();
+  }, [hideTaskContextMenu]);
 
   // 移除自动更新任务位置的useEffect，改为在渲染时计算
   // 避免无限循环：updateTaskPositions -> setTasks -> sortedTasks -> updateTaskPositions
@@ -904,13 +1064,22 @@ const GanttChart: React.FC<GanttChartProps> = ({
       if (contextMenu.visible) {
         hideContextMenu();
       }
+      if (taskContextMenu.visible) {
+        hideTaskContextMenu();
+      }
+      if (colorPickerState.visible) {
+        setColorPickerState({ visible: false, taskId: null });
+      }
+      if (tagManagerState.visible) {
+        setTagManagerState({ visible: false, taskId: null, newTag: '' });
+      }
     };
 
-    if (contextMenu.visible) {
+    if (contextMenu.visible || taskContextMenu.visible || colorPickerState.visible || tagManagerState.visible) {
       document.addEventListener('click', handleClickOutside);
       return () => document.removeEventListener('click', handleClickOutside);
     }
-  }, [contextMenu.visible, hideContextMenu]);
+  }, [contextMenu.visible, taskContextMenu.visible, colorPickerState.visible, tagManagerState.visible, hideContextMenu, hideTaskContextMenu]);
 
   const timeScales = useMemo(() => {
     const scales = [];
@@ -1243,12 +1412,29 @@ const GanttChart: React.FC<GanttChartProps> = ({
                       left: milestoneX - 8, // 减去图标宽度的一半，让它居中对齐
                       top: index * (taskHeight + 10) + (taskHeight - 16) / 2, // 居中对齐
                     }}
-                    onMouseDown={(e) => handleMouseDown(e, task.id)}
-                    onClick={() => setSelectedTaskId(task.id)}
+                    onMouseDown={(e) => {
+                      if (e.button === 0) { // 只处理左键
+                        handleMouseDown(e, task.id);
+                      }
+                    }}
+                    onClick={(e) => {
+                      if (e.button === 0) { // 只处理左键点击
+                        setSelectedTaskId(task.id);
+                      }
+                    }}
+                    onContextMenu={(e) => handleTaskContextMenu(e, task.id)}
                   >
-                    <div className="milestone-icon">
+                    <div className="milestone-icon custom-color" style={{ '--custom-milestone-color': task.color } as React.CSSProperties}>
                       <Target size={16} />
                     </div>
+                    {/* 显示里程碑标签 */}
+                    {task.tags && task.tags.length > 0 && (
+                      <div className="milestone-tags">
+                        {task.tags.map(tag => (
+                          <span key={tag} className="milestone-tag">{tag}</span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 );
               }
@@ -1257,26 +1443,43 @@ const GanttChart: React.FC<GanttChartProps> = ({
               return (
                 <div
                   key={task.id}
-                  className={`gantt-task-bar ${isBeingDragged ? 'dragging' : ''} ${isSelected ? 'selected' : ''} status-${task.status} type-${task.type} ${isHoveringEdge ? `edge-hover-${isHoveringEdge}` : ''}`}
+                  className={`gantt-task-bar custom-color ${isBeingDragged ? 'dragging' : ''} ${isSelected ? 'selected' : ''} status-${task.status} type-${task.type} ${isHoveringEdge ? `edge-hover-${isHoveringEdge}` : ''}`}
                   style={{
                     left: displayX,
                     top: index * (taskHeight + 10),
                     width: displayWidth,
                     height: taskHeight,
+                    '--custom-task-color': task.color,
                     cursor: isHoveringEdge === 'left' ? 'w-resize' : isHoveringEdge === 'right' ? 'e-resize' : 'grab'
+                  } as React.CSSProperties}
+                  onMouseDown={(e) => {
+                    if (e.button === 0) { // 只处理左键
+                      handleMouseDown(e, task.id);
+                    }
                   }}
-                  onMouseDown={(e) => handleMouseDown(e, task.id)}
                   onMouseMove={(e) => handleEdgeHover(e, task)}
                   onMouseLeave={() => {
                     if (!isDragging) {
                       setIsHoveringEdge(null);
                     }
                   }}
-                  onClick={() => setSelectedTaskId(task.id)}
+                  onClick={(e) => {
+                    if (e.button === 0) { // 只处理左键点击
+                      setSelectedTaskId(task.id);
+                    }
+                  }}
+                  onContextMenu={(e) => handleTaskContextMenu(e, task.id)}
                 >
                   {/* 任务内容 */}
                   <div className="gantt-task-content">
-                    {/* 移除里程碑的 ◆ 符号，因为现在使用独立节点 */}
+                    {/* 显示任务标签 */}
+                    {task.tags && task.tags.length > 0 && (
+                      <div className="task-tags">
+                        {task.tags.map(tag => (
+                          <span key={tag} className="task-tag">{tag}</span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               );
@@ -1337,6 +1540,310 @@ const GanttChart: React.FC<GanttChartProps> = ({
           onClick={handleCreateMilestone}
         >
           新建节点
+        </div>
+      </div>
+    )}
+
+    {/* 任务条右键菜单 */}
+    {taskContextMenu.visible && (
+      <div
+        className="task-context-menu"
+        style={{
+          position: 'fixed',
+          top: taskContextMenu.y,
+          left: taskContextMenu.x,
+          backgroundColor: '#fff',
+          border: '1px solid #ddd',
+          borderRadius: '8px',
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+          zIndex: 1000,
+          minWidth: '160px',
+          overflow: 'hidden'
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div
+          className="menu-item"
+          style={{
+            padding: '10px 16px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            borderBottom: '1px solid #eee',
+            fontSize: '14px'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = '#f5f5f5';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = 'transparent';
+          }}
+          onClick={() => {
+            setColorPickerState({ visible: true, taskId: taskContextMenu.taskId });
+            hideTaskContextMenu();
+          }}
+        >
+          <div style={{ width: '16px', height: '16px', backgroundColor: '#4CAF50', borderRadius: '50%' }} />
+          更改颜色
+        </div>
+        <div
+          className="menu-item"
+          style={{
+            padding: '10px 16px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            borderBottom: '1px solid #eee',
+            fontSize: '14px'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = '#f5f5f5';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = 'transparent';
+          }}
+          onClick={() => {
+            setTagManagerState({ visible: true, taskId: taskContextMenu.taskId, newTag: '' });
+            hideTaskContextMenu();
+          }}
+        >
+          <span style={{ fontSize: '12px' }}>🏷️</span>
+          管理标签
+        </div>
+        <div
+          className="menu-item"
+          style={{
+            padding: '10px 16px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            fontSize: '14px',
+            color: '#f44336'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = '#ffebee';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = 'transparent';
+          }}
+          onClick={() => {
+            if (taskContextMenu.taskId) {
+              handleTaskDelete(taskContextMenu.taskId);
+            }
+          }}
+        >
+          <span style={{ fontSize: '12px' }}>🗑️</span>
+          删除任务
+        </div>
+      </div>
+    )}
+
+    {/* 颜色选择器 */}
+    {colorPickerState.visible && (
+      <div
+        className="color-picker-panel"
+        style={{
+          position: 'fixed',
+          top: taskContextMenu.y,
+          left: taskContextMenu.x + 180,
+          backgroundColor: '#fff',
+          border: '1px solid #ddd',
+          borderRadius: '8px',
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+          zIndex: 1001,
+          padding: '16px',
+          minWidth: '200px'
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div style={{ marginBottom: '12px', fontSize: '14px', fontWeight: '500' }}>选择颜色</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '8px' }}>
+          {availableColors.map(color => (
+            <div
+              key={color}
+              className="color-option"
+              style={{
+                width: '32px',
+                height: '32px',
+                backgroundColor: color,
+                borderRadius: '6px',
+                cursor: 'pointer',
+                border: '2px solid transparent',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.border = '2px solid #333';
+                e.currentTarget.style.transform = 'scale(1.1)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.border = '2px solid transparent';
+                e.currentTarget.style.transform = 'scale(1)';
+              }}
+                             onClick={() => {
+                 console.log('Color clicked:', color, 'for task:', colorPickerState.taskId); // 调试信息
+                 if (colorPickerState.taskId) {
+                   handleColorChange(colorPickerState.taskId, color);
+                 }
+               }}
+            />
+          ))}
+        </div>
+      </div>
+    )}
+
+    {/* 标签管理器 */}
+    {tagManagerState.visible && (
+      <div
+        className="tag-manager-panel"
+        style={{
+          position: 'fixed',
+          top: taskContextMenu.y,
+          left: taskContextMenu.x + 180,
+          backgroundColor: '#fff',
+          border: '1px solid #ddd',
+          borderRadius: '8px',
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+          zIndex: 1001,
+          padding: '16px',
+          minWidth: '250px',
+          maxHeight: '300px',
+          overflowY: 'auto'
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div style={{ marginBottom: '12px', fontSize: '14px', fontWeight: '500' }}>管理标签</div>
+        
+        {/* 当前任务的标签 */}
+        {tagManagerState.taskId && (() => {
+          const currentTask = tasks.find(task => task.id === tagManagerState.taskId);
+          const currentTags = currentTask?.tags || [];
+          
+          return (
+            <div style={{ marginBottom: '16px' }}>
+              <div style={{ fontSize: '12px', color: '#666', marginBottom: '8px' }}>当前标签：</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                {currentTags.length > 0 ? (
+                  currentTags.map(tag => (
+                    <span
+                      key={tag}
+                      className="tag-item"
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        padding: '4px 8px',
+                        backgroundColor: '#e3f2fd',
+                        color: '#1976d2',
+                        borderRadius: '12px',
+                        fontSize: '12px',
+                        gap: '4px'
+                      }}
+                    >
+                      {tag}
+                      <button
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: '#1976d2',
+                          cursor: 'pointer',
+                          fontSize: '12px',
+                          padding: '0'
+                        }}
+                        onClick={() => {
+                          if (tagManagerState.taskId) {
+                            handleTagRemove(tagManagerState.taskId, tag);
+                          }
+                        }}
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))
+                ) : (
+                  <span style={{ color: '#999', fontSize: '12px' }}>无标签</span>
+                )}
+              </div>
+            </div>
+          );
+        })()}
+        
+        {/* 添加新标签 */}
+        <div style={{ marginBottom: '12px' }}>
+          <input
+            type="text"
+            placeholder="输入新标签..."
+            value={tagManagerState.newTag}
+            onChange={(e) => setTagManagerState(prev => ({ ...prev, newTag: e.target.value }))}
+            onKeyPress={(e) => {
+              if (e.key === 'Enter' && tagManagerState.taskId) {
+                handleTagAdd(tagManagerState.taskId, tagManagerState.newTag);
+                setTagManagerState(prev => ({ ...prev, newTag: '' }));
+              }
+            }}
+            style={{
+              width: '100%',
+              padding: '6px 8px',
+              border: '1px solid #ddd',
+              borderRadius: '4px',
+              fontSize: '12px'
+            }}
+          />
+          <button
+            style={{
+              marginTop: '6px',
+              padding: '6px 12px',
+              backgroundColor: '#2196F3',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              fontSize: '12px',
+              cursor: 'pointer'
+            }}
+            onClick={() => {
+              if (tagManagerState.taskId && tagManagerState.newTag) {
+                handleTagAdd(tagManagerState.taskId, tagManagerState.newTag);
+                setTagManagerState(prev => ({ ...prev, newTag: '' }));
+              }
+            }}
+          >
+            添加标签
+          </button>
+        </div>
+        
+        {/* 可用标签 */}
+        <div>
+          <div style={{ fontSize: '12px', color: '#666', marginBottom: '8px' }}>快速添加：</div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+            {availableTags.map(tag => (
+              <span
+                key={tag}
+                style={{
+                  padding: '4px 8px',
+                  backgroundColor: '#f5f5f5',
+                  color: '#333',
+                  borderRadius: '12px',
+                  fontSize: '12px',
+                  cursor: 'pointer',
+                  border: '1px solid #ddd'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = '#e0e0e0';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = '#f5f5f5';
+                }}
+                onClick={() => {
+                  if (tagManagerState.taskId) {
+                    handleTagAdd(tagManagerState.taskId, tag);
+                  }
+                }}
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
         </div>
       </div>
     )}
