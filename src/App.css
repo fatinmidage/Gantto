@@ -964,27 +964,7 @@ html, body {
   }
 }
 
-@keyframes slideInRight {
-  from {
-    opacity: 0;
-    transform: translateX(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
 
-@keyframes scaleIn {
-  from {
-    opacity: 0;
-    transform: scale(0.9);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
 
 @keyframes bounce {
   0%, 20%, 53%, 80%, 100% {
@@ -1023,9 +1003,6 @@ html, body {
   animation: slideInLeft 0.6s ease-out;
 }
 
-.gantt-task-bar {
-  animation: slideInRight 0.8s ease-out;
-}
 
 
 /* 加载动画 */
@@ -1058,11 +1035,6 @@ html, body {
   animation: fadeIn 0.8s ease-out;
 }
 
-/* 按钮点击动画 */
-.action-btn:active,
-.toolbar-btn:active {
-  animation: scaleIn 0.1s ease-out;
-}
 
 /* 任务选中动画 */
 .gantt-task-bar.selected {
