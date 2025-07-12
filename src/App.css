@@ -596,15 +596,9 @@
   letter-spacing: -0.01em;
 }
 
-.gantt-task-bar:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  border-color: rgba(255, 255, 255, 0.3);
-}
 
 .gantt-task-bar:active {
   cursor: grabbing;
-  transform: translateY(0);
 }
 
 .gantt-task-bar.dragging {
@@ -728,19 +722,12 @@
 
 /* 里程碑样式增强 */
 .milestone {
-  transition: all 0.2s ease !important;
+  transition: none !important;
   border: 2px solid rgba(255, 255, 255, 0.2);
   backdrop-filter: blur(4px);
 }
 
-.milestone:hover {
-  transform: translateY(-2px) !important;
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2) !important;
-}
 
-.milestone:active {
-  transform: translateY(0) !important;
-}
 
 /* 新增优化样式类 */
 .milestone-dragging {
@@ -1035,10 +1022,6 @@
   animation: slideInRight 0.8s ease-out;
 }
 
-/* 悬停动画增强 */
-.gantt-task-bar:hover {
-  animation: bounce 0.6s ease-in-out;
-}
 
 /* 加载动画 */
 .loading-shimmer {
@@ -1222,7 +1205,7 @@
 
 /* 平滑的状态转换 */
 .gantt-task-bar {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: none;
 }
 
 .timeline-scale {
