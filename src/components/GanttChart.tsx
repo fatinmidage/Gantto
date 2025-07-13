@@ -3,59 +3,16 @@ import { Target } from 'lucide-react';
 import Toolbar from './Toolbar';
 import TaskIcon, { DragHandle } from './TaskIcon';
 
-// Type definitions
+// 导入新的统一类型定义
+import {
+  Task,
+  ProjectRow,
+  VerticalDragState,
+  TaskContextMenu,
+  ColorPickerState,
+  TagManagerState
+} from '../types';
 
-// 项目行定义 - 左侧任务列表的固定行结构
-interface ProjectRow {
-  id: string;
-  title: string;
-  order: number;
-  type?: 'milestone' | 'development' | 'testing' | 'delivery' | 'default';
-  level?: number; // 层级深度，0为根任务
-  parentId?: string; // 父行ID
-  children?: string[]; // 子行ID数组
-  isExpanded?: boolean; // 是否展开显示子行
-}
-
-// 图表任务 - 右侧绘图区的任务条/节点
-interface ChartTask {
-  id: string;
-  title: string;
-  startDate: Date;
-  endDate: Date;
-  color: string;
-  x: number;
-  width: number;
-  rowId: string; // 关联到ProjectRow的ID
-  type?: 'milestone' | 'development' | 'testing' | 'delivery' | 'default';
-  status?: 'pending' | 'in-progress' | 'completed' | 'overdue';
-  progress?: number; // 进度百分比 0-100
-  tags?: string[]; // 标签数组字段
-}
-
-// 兼容性类型 - 保持现有代码正常工作的临时接口
-interface Task {
-  id: string;
-  title: string;
-  startDate: Date;
-  endDate: Date;
-  color: string;
-  x: number;
-  width: number;
-  order: number; // 添加排序字段
-  type?: 'milestone' | 'development' | 'testing' | 'delivery' | 'default';
-  status?: 'pending' | 'in-progress' | 'completed' | 'overdue';
-  progress?: number; // 进度百分比 0-100
-  // 子任务支持
-  parentId?: string; // 父任务ID
-  children?: string[]; // 子任务ID数组
-  level?: number; // 层级深度，0为根任务
-  isExpanded?: boolean; // 是否展开显示子任务
-  rowId?: string; // 行ID，同一行的任务有相同的rowId
-  isCreatedFromContext?: boolean; // 是否通过右键菜单创建，用于区分原始任务和新创建的任务
-  isPlaceholder?: boolean; // 是否为占位符任务，用于显示仅包含右键创建任务的行
-  tags?: string[]; // 新增标签数组字段
-}
 
 interface GanttChartProps {
   startDate?: Date;
@@ -64,37 +21,6 @@ interface GanttChartProps {
   taskHeight?: number;
 }
 
-// 添加垂直拖拽类型
-interface VerticalDragState {
-  isDragging: boolean;
-  draggedTaskId: string | null;
-  draggedTaskIndex: number | null;
-  targetIndex: number | null;
-  startY: number;
-  currentY: number;
-  shouldShowIndicator: boolean; // 是否应该显示提示线
-}
-
-// 任务条右键菜单状态
-interface TaskContextMenu {
-  visible: boolean;
-  x: number;
-  y: number;
-  taskId: string | null;
-}
-
-// 颜色选择器状态
-interface ColorPickerState {
-  visible: boolean;
-  taskId: string | null;
-}
-
-// 标签管理器状态
-interface TagManagerState {
-  visible: boolean;
-  taskId: string | null;
-  newTag: string;
-}
 
 // --- Project Row Hierarchy Helpers ---
 
@@ -329,8 +255,8 @@ const GanttChart: React.FC<GanttChartProps> = ({
     }
   ]);
 
-  // 2. 图表任务 - 右侧绘图区的任务条/节点
-  const [chartTasks, setChartTasks] = useState<ChartTask[]>([
+  // 2. 图表任务 - 右侧绘图区的任务条/节点 (使用统一的Task类型)
+  const [chartTasks, setChartTasks] = useState<Task[]>([
     {
       id: 'chart-1',
       title: '项目里程碑',
@@ -807,7 +733,7 @@ const GanttChart: React.FC<GanttChartProps> = ({
   // 添加任务排序辅助函数，同时计算位置信息
   const sortedTasks = useMemo(() => {
     return [...tasks]
-      .sort((a, b) => a.order - b.order)
+      .sort((a, b) => (a.order || 0) - (b.order || 0))
       .map(task => {
         const x = dateToPixel(task.startDate);
         const width = dateToPixel(task.endDate) - x;
@@ -885,7 +811,7 @@ const GanttChart: React.FC<GanttChartProps> = ({
 
   // 基于新的数据结构：按rowId分组图表任务
   const chartTaskRows = useMemo(() => {
-    const rowMap = new Map<string, ChartTask[]>();
+    const rowMap = new Map<string, Task[]>();
     
     // 为每个可见项目行创建一个空的任务数组
     visibleProjectRows.forEach(row => {
@@ -894,7 +820,7 @@ const GanttChart: React.FC<GanttChartProps> = ({
     
     // 将图表任务分组到对应的行
     sortedChartTasks.forEach(task => {
-      if (rowMap.has(task.rowId)) {
+      if (task.rowId && rowMap.has(task.rowId)) {
         rowMap.get(task.rowId)!.push(task);
       }
     });
@@ -912,7 +838,7 @@ const GanttChart: React.FC<GanttChartProps> = ({
     const rowMap = new Map<string, Task[]>();
     
     visibleTasks.forEach(task => {
-      const rowId = task.rowId || `row-${Math.floor(task.order)}`;
+      const rowId = task.rowId || `row-${Math.floor(task.order || 0)}`;
       if (!rowMap.has(rowId)) {
         rowMap.set(rowId, []);
       }
@@ -922,8 +848,8 @@ const GanttChart: React.FC<GanttChartProps> = ({
     // 按order排序行，同一行内按startDate排序任务
     return Array.from(rowMap.entries())
       .sort(([, tasksA], [, tasksB]) => {
-        const orderA = Math.min(...tasksA.map(t => t.order));
-        const orderB = Math.min(...tasksB.map(t => t.order));
+        const orderA = Math.min(...tasksA.map(t => t.order || 0));
+        const orderB = Math.min(...tasksB.map(t => t.order || 0));
         return orderA - orderB;
       })
       .map(([rowId, tasks]) => ({
@@ -1005,7 +931,7 @@ const GanttChart: React.FC<GanttChartProps> = ({
       targetRowId = lastRow ? lastRow.id : 'row-0';
     }
     
-    const newChartTask: ChartTask = {
+    const newTask: Task = {
       id: `chart-${Date.now()}`,
       title: '新任务',
       startDate: clickDate,
@@ -1015,10 +941,15 @@ const GanttChart: React.FC<GanttChartProps> = ({
       width: 0,
       rowId: targetRowId,
       type: 'default',
-      status: 'pending'
+      status: 'pending',
+      progress: 0,
+      children: [],
+      level: 0,
+      order: Date.now(),
+      tags: []
     };
     
-    setChartTasks(prev => [...prev, newChartTask]);
+    setChartTasks(prev => [...prev, newTask]);
     hideContextMenu();
   }, [contextMenu.clickPosition.x, contextMenu.clickPosition.y, pixelToDate, taskHeight, leftPanelTasks, hideContextMenu]);
 
@@ -1043,7 +974,7 @@ const GanttChart: React.FC<GanttChartProps> = ({
       targetRowId = lastRow ? lastRow.id : 'row-0';
     }
     
-    const newMilestone: ChartTask = {
+    const newMilestone: Task = {
       id: `milestone-${Date.now()}`,
       title: '新节点',
       startDate: clickDate,
@@ -1053,7 +984,12 @@ const GanttChart: React.FC<GanttChartProps> = ({
       width: 0,
       rowId: targetRowId,
       type: 'milestone',
-      status: 'pending'
+      status: 'pending',
+      progress: 0,
+      children: [],
+      level: 0,
+      order: Date.now(),
+      tags: []
     };
     
     setChartTasks(prev => [...prev, newMilestone]);
@@ -1385,7 +1321,7 @@ const GanttChart: React.FC<GanttChartProps> = ({
         });
       } else if (dragType === 'resize-left') {
         // 拖拽左边界
-        const originalRight = draggedTaskData.x + draggedTaskData.width;
+        const originalRight = (draggedTaskData.x || 0) + (draggedTaskData.width || 0);
         const newLeft = Math.max(0, Math.min(mouseX, originalRight - minWidth));
         const newWidth = originalRight - newLeft;
         
@@ -1396,11 +1332,11 @@ const GanttChart: React.FC<GanttChartProps> = ({
         });
       } else if (dragType === 'resize-right') {
         // 拖拽右边界
-        const newWidth = Math.max(minWidth, Math.min(mouseX - draggedTaskData.x, CHART_WIDTH - draggedTaskData.x));
+        const newWidth = Math.max(minWidth, Math.min(mouseX - (draggedTaskData.x || 0), CHART_WIDTH - (draggedTaskData.x || 0)));
         
         setTempDragPosition({
           id: draggedTask,
-          x: draggedTaskData.x,
+          x: draggedTaskData.x || 0,
           width: newWidth
         });
       }
