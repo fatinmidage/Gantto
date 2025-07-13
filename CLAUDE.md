@@ -45,7 +45,7 @@ src/                          # Frontend source code
 ├── App.tsx                   # Main application component with theme management
 ├── main.tsx                  # React application entry point
 ├── components/               # React components
-│   ├── GanttChart.tsx        # Main Gantt chart component (complex, 1000+ lines)
+│   ├── GanttChart.tsx        # Main Gantt chart component (complex, 2000+ lines)
 │   ├── Header.tsx            # Application header with project controls
 │   ├── TaskIcon.tsx          # Task type icons and drag handles
 │   └── Toolbar.tsx           # Chart toolbar with zoom/view controls
@@ -137,3 +137,17 @@ The project includes Cursor AI rules (`.cursor/rules/commandplan.mdc`) that enfo
 - Horizontal dragging: Modify `handleMouseMoveCore()` and related handlers
 - Vertical dragging: Extend `VerticalDragState` and related mouse handlers
 - Performance: Use the existing `useDragCache()` and `useThrottledMouseMove()` hooks
+
+## Testing and Quality
+
+### Testing Commands
+```bash
+# Currently no test setup - tests need to be configured
+# Project uses TypeScript strict mode for type checking
+pnpm run build            # Validates TypeScript compilation
+```
+
+### Code Quality
+- TypeScript strict mode enabled for type safety
+- Use Chinese language for UI text and comments
+- Follow existing component patterns and performance optimizations
