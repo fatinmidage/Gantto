@@ -4,11 +4,11 @@ import TaskTitleColumn from './gantt/TaskTitleColumn';
 import TimelineHeader from './gantt/TimelineHeader';
 import TaskBars from './gantt/TaskBars';
 
-// 导入新的统一类型定义
-import {
-  Task,
-  ProjectRow
-} from '../types';
+// 导入类型定义
+import { Task, ProjectRow } from '../types';
+
+// 导入初始数据
+import { initialProjectRows, initialChartTasks } from '../data/initialData';
 
 // 导入自定义 Hooks
 import {
@@ -16,7 +16,9 @@ import {
   useTaskManager,
   useTimeline,
   useGanttUI,
-  useThrottledMouseMove
+  useThrottledMouseMove,
+  useGanttEvents,
+  useGanttInteractions
 } from '../hooks';
 
 // 导入层级帮助函数
@@ -45,150 +47,6 @@ const GanttChart: React.FC<GanttChartProps> = ({
   timelineHeight = 40,
   taskHeight = 30
 }) => {
-  // === 初始数据定义 ===
-  const initialProjectRows = [
-    {
-      id: 'row-0',
-      title: '项目里程碑',
-      order: 0,
-      type: 'milestone' as const,
-      level: 0,
-      isExpanded: false
-    },
-    {
-      id: 'row-1',
-      title: '交付计划',
-      order: 1,
-      type: 'delivery' as const,
-      level: 0,
-      isExpanded: false
-    },
-    {
-      id: 'row-2',
-      title: '产品开发',
-      order: 2,
-      type: 'development' as const,
-      level: 0,
-      children: ['row-3', 'row-4', 'row-5'],
-      isExpanded: true
-    },
-    {
-      id: 'row-3',
-      title: 'A样开发',
-      order: 3,
-      type: 'development' as const,
-      level: 1,
-      parentId: 'row-2',
-      isExpanded: false
-    },
-    {
-      id: 'row-4',
-      title: 'B样开发',
-      order: 4,
-      type: 'development' as const,
-      level: 1,
-      parentId: 'row-2',
-      isExpanded: false
-    },
-    {
-      id: 'row-5',
-      title: 'C样开发',
-      order: 5,
-      type: 'development' as const,
-      level: 1,
-      parentId: 'row-2',
-      isExpanded: false
-    },
-    {
-      id: 'row-6',
-      title: '验证计划',
-      order: 6,
-      type: 'testing' as const,
-      level: 0,
-      isExpanded: false
-    }
-  ];
-
-  const initialChartTasks = [
-    {
-      id: 'chart-1',
-      title: '项目里程碑',
-      startDate: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
-      endDate: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
-      color: '#4CAF50',
-      x: 0,
-      width: 0,
-      rowId: 'row-0',
-      type: 'milestone' as const,
-      status: 'completed' as const,
-      progress: 100
-    },
-    {
-      id: 'chart-2',
-      title: '交付计划',
-      startDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
-      endDate: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
-      color: '#2196F3',
-      x: 0,
-      width: 0,
-      rowId: 'row-1',
-      type: 'delivery' as const,
-      status: 'in-progress' as const,
-      progress: 65
-    },
-    {
-      id: 'chart-3-1',
-      title: 'A样开发',
-      startDate: new Date(Date.now() + 12 * 24 * 60 * 60 * 1000),
-      endDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000),
-      color: '#FFB74D',
-      x: 0,
-      width: 0,
-      rowId: 'row-3',
-      type: 'development' as const,
-      status: 'in-progress' as const,
-      progress: 40
-    },
-    {
-      id: 'chart-3-2',
-      title: 'B样开发',
-      startDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
-      endDate: new Date(Date.now() + 17 * 24 * 60 * 60 * 1000),
-      color: '#FFB74D',
-      x: 0,
-      width: 0,
-      rowId: 'row-4',
-      type: 'development' as const,
-      status: 'pending' as const,
-      progress: 0
-    },
-    {
-      id: 'chart-3-3',
-      title: 'C样开发',
-      startDate: new Date(Date.now() + 16 * 24 * 60 * 60 * 1000),
-      endDate: new Date(Date.now() + 19 * 24 * 60 * 60 * 1000),
-      color: '#FFB74D',
-      x: 0,
-      width: 0,
-      rowId: 'row-5',
-      type: 'development' as const,
-      status: 'pending' as const,
-      progress: 0
-    },
-    {
-      id: 'chart-4',
-      title: '验证计划',
-      startDate: new Date(Date.now() + 22 * 24 * 60 * 60 * 1000),
-      endDate: new Date(Date.now() + 28 * 24 * 60 * 60 * 1000),
-      color: '#f44336',
-      x: 0,
-      width: 0,
-      rowId: 'row-6',
-      type: 'testing' as const,
-      status: 'pending' as const,
-      progress: 0
-    }
-  ];
 
   // === 使用自定义 Hooks ===
   
@@ -218,6 +76,24 @@ const GanttChart: React.FC<GanttChartProps> = ({
     setChartTasks, 
     setTasks 
   } = taskManager;
+
+  // 事件处理 Hooks
+  const ganttEvents = useGanttEvents({
+    tasks,
+    chartTasks,
+    projectRows,
+    setTasks,
+    setChartTasks,
+    setProjectRows
+  });
+
+  const ganttInteractions = useGanttInteractions({
+    setTasks,
+    setChartTasks,
+    setProjectRows,
+    deleteTaskCore: ganttEvents.deleteTaskCore,
+    projectRows
+  });
   
   
   // 拖拽状态和方法
@@ -253,23 +129,12 @@ const GanttChart: React.FC<GanttChartProps> = ({
   
   // UI状态和方法
   const {
-    selectedTitleTaskId,
     selectedChartTaskId,
-    contextMenu,
-    taskContextMenu,
-    colorPickerState,
-    tagManagerState,
-    setSelectedTitleTaskId,
-    setSelectedChartTaskId,
-    setContextMenu,
-    setTaskContextMenu,
-    setColorPickerState,
-    setTagManagerState
+    setSelectedChartTaskId
   } = ganttUI;
 
   // 其他状态和配置
   const containerRef = useRef<HTMLDivElement>(null);
-  const [currentView, setCurrentView] = useState<'timeline' | 'list' | 'grid'>('timeline');
   
   // 预定义颜色选项
   const availableColors = [
@@ -283,207 +148,9 @@ const GanttChart: React.FC<GanttChartProps> = ({
     '重要', '紧急', '测试', '开发', '设计', '评审', '部署'
   ]);
 
-  const TITLE_COLUMN_WIDTH = 230; // Increased width for better spacing
+  const TITLE_COLUMN_WIDTH = 230;
   const CHART_WIDTH = 800;
-  const MIN_CONTAINER_HEIGHT = 200; // 最小高度
-
-
-  // 工具栏事件处理函数
-  const handleAddTask = useCallback(() => {
-    const newTask: Task = {
-      id: Date.now().toString(),
-      title: '新任务',
-      startDate: new Date(),
-      endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-      color: '#9C27B0',
-      x: 0,
-      width: 0,
-      order: tasks.length,
-      type: 'default',
-      status: 'pending'
-    };
-    setTasks(prev => [...prev, newTask]);
-  }, [tasks.length]);
-
-  // 新的删除逻辑：分别处理图表任务删除和项目行删除
-  const deleteChartTask = useCallback((taskId: string) => {
-    setChartTasks(prev => prev.filter(task => task.id !== taskId));
-  }, []);
-
-  // @ts-ignore - 保留以备将来使用
-  const deleteProjectRow = useCallback((rowId: string) => {
-    setProjectRows(prev => {
-      const rowToDelete = prev.find(row => row.id === rowId);
-      if (!rowToDelete) return prev;
-      
-      // 获取所有需要删除的行ID（包括子行）
-      const rowsToDelete = new Set<string>();
-      
-      const collectChildRows = (parentId: string) => {
-        rowsToDelete.add(parentId);
-        const childRows = prev.filter(row => row.parentId === parentId);
-        childRows.forEach(child => collectChildRows(child.id));
-      };
-      
-      collectChildRows(rowId);
-      
-      // 更新父行的children数组，清理对被删除行的引用
-      const updatedRows = prev.map(row => {
-        if (row.children && row.children.includes(rowId)) {
-          return {
-            ...row,
-            children: row.children.filter(childId => childId !== rowId)
-          };
-        }
-        return row;
-      });
-      
-      // 删除选中的行和其子行
-      return updatedRows.filter(row => !rowsToDelete.has(row.id));
-    });
-
-    // 同时删除该行的所有图表任务
-    setChartTasks(prev => prev.filter(task => task.rowId !== rowId));
-  }, []);
-
-  // 兼容性删除函数：根据任务类型决定删除逻辑
-  const deleteTaskCore = useCallback((taskId: string) => {
-    // 首先检查是否为图表任务
-    const chartTask = chartTasks.find(task => task.id === taskId);
-    if (chartTask) {
-      deleteChartTask(taskId);
-      return;
-    }
-
-    // 然后检查是否为项目行
-    const projectRow = projectRows.find(row => row.id === taskId);
-    if (projectRow) {
-      // 注意：根据新需求，删除项目行的任务不应该删除行本身
-      // 只删除该行对应的图表任务，保持左侧行结构不变
-      setChartTasks(prev => prev.filter(task => task.rowId !== taskId));
-      return;
-    }
-
-    // 兼容性：处理旧的tasks数据
-    setTasks(prev => {
-      const taskToDelete = prev.find(task => task.id === taskId);
-      if (!taskToDelete) return prev;
-      
-      // 获取所有需要删除的任务ID（包括子任务）
-      const tasksToDelete = new Set<string>();
-      
-      const collectChildTasks = (parentId: string) => {
-        tasksToDelete.add(parentId);
-        const childTasks = prev.filter(task => task.parentId === parentId);
-        childTasks.forEach(child => collectChildTasks(child.id));
-      };
-      
-      collectChildTasks(taskId);
-      
-      // 更新父任务的children数组，清理对被删除任务的引用
-      const updatedTasks = prev.map(task => {
-        if (task.children && task.children.includes(taskId)) {
-          return {
-            ...task,
-            children: task.children.filter(childId => childId !== taskId)
-          };
-        }
-        return task;
-      });
-      
-      // 删除选中的任务和其子任务
-      return updatedTasks.filter(task => !tasksToDelete.has(task.id));
-    });
-  }, [chartTasks, projectRows, deleteChartTask]);
-
-  const handleDeleteTask = useCallback(() => {
-    if (selectedTitleTaskId) {
-      deleteTaskCore(selectedTitleTaskId);
-      setSelectedTitleTaskId(null);
-    }
-  }, [selectedTitleTaskId, deleteTaskCore]);
-
-  const handleEditTask = useCallback(() => {
-    if (selectedTitleTaskId) {
-      // TODO: 实现编辑任务功能
-    }
-  }, [selectedTitleTaskId]);
-
-
-  const handleViewChange = useCallback((view: 'timeline' | 'list' | 'grid') => {
-    setCurrentView(view);
-  }, []);
-
-  // 处理展开/折叠
-  const handleToggleExpand = useCallback((taskId: string) => {
-    // 更新项目行状态
-    setProjectRows(prev => prev.map(row => 
-      row.id === taskId 
-        ? { ...row, isExpanded: !row.isExpanded }
-        : row
-    ));
-    
-    // 同时更新任务状态以保持兼容性
-    setTasks(prev => prev.map(task => 
-      task.id === taskId 
-        ? { ...task, isExpanded: !task.isExpanded }
-        : task
-    ));
-  }, []);
-
-  // 创建子任务
-  const handleCreateSubtask = useCallback((parentId: string) => {
-    // 检查父行是否存在且不是子行（防止创建孙任务）
-    const parentRow = projectRows.find(row => row.id === parentId);
-    if (!parentRow || parentRow.level !== 0) {
-      return;
-    }
-
-    // 创建新的子项目行
-    const newSubRowId = `${parentId}-sub-${Date.now()}`;
-    
-    // 计算新子任务的order值：应该在父任务的现有子任务之后
-    const existingChildren = parentRow.children || [];
-    
-    // 找到父任务的最后一个子任务的order值
-    let newOrder = parentRow.order + 0.1; // 默认在父任务后面一点
-    if (existingChildren.length > 0) {
-      // 如果有现有子任务，找到最后一个子任务的order值
-      const lastChildId = existingChildren[existingChildren.length - 1];
-      const lastChild = projectRows.find(row => row.id === lastChildId);
-      if (lastChild) {
-        newOrder = lastChild.order + 0.1;
-      }
-    }
-    
-    const newSubRow = {
-      id: newSubRowId,
-      title: '新子任务',
-      order: newOrder,
-      type: 'development' as const,
-      level: 1,
-      parentId: parentId,
-      isExpanded: false
-    };
-
-    // 更新项目行
-    setProjectRows(prev => {
-      const updatedRows = prev.map(row => {
-        if (row.id === parentId) {
-          return {
-            ...row,
-            children: [...(row.children || []), newSubRowId],
-            isExpanded: true // 自动展开父行以显示新子行
-          };
-        }
-        return row;
-      });
-      
-      // 将新子任务插入到正确位置，然后按order排序
-      const newRows = [...updatedRows, newSubRow];
-      return newRows.sort((a, b) => a.order - b.order);
-    });
-  }, [projectRows]);
+  const MIN_CONTAINER_HEIGHT = 200;
 
 
   // 添加任务排序辅助函数，同时计算位置信息
@@ -630,7 +297,7 @@ const GanttChart: React.FC<GanttChartProps> = ({
   }, [containerHeight]);
 
 
-  // 右键菜单事件处理
+  // 计算内容高度
   const handleContextMenu = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     
@@ -1130,17 +797,17 @@ const GanttChart: React.FC<GanttChartProps> = ({
         <Toolbar
           onZoomIn={handleZoomIn}
           onZoomOut={handleZoomOut}
-          onAddTask={handleAddTask}
-          onDeleteTask={handleDeleteTask}
-          onEditTask={handleEditTask}
+          onAddTask={ganttEvents.addNewTask}
+          onDeleteTask={() => ganttInteractions.selectedTitleTaskId && ganttEvents.deleteTaskCore(ganttInteractions.selectedTitleTaskId)}
+          onEditTask={() => {/* TODO: 实现编辑功能 */}}
           onViewToday={handleViewToday}
-          onViewChange={handleViewChange}
-          currentView={currentView}
+          onViewChange={ganttInteractions.handleViewChange}
+          currentView={ganttInteractions.currentView}
           zoomLevel={zoomLevel}
           canZoomIn={zoomLevel < 3}
           canZoomOut={zoomLevel > 0.25}
-          onAddSubtask={() => selectedTitleTaskId && handleCreateSubtask(selectedTitleTaskId)}
-          canAddSubtask={!!selectedTitleTaskId}
+          onAddSubtask={() => ganttInteractions.selectedTitleTaskId && ganttInteractions.handleCreateSubtask(ganttInteractions.selectedTitleTaskId)}
+          canAddSubtask={!!ganttInteractions.selectedTitleTaskId}
         />
         
         <div className="gantt-container" style={{ 
@@ -1154,15 +821,15 @@ const GanttChart: React.FC<GanttChartProps> = ({
         {/* Title Column */}
         <TaskTitleColumn
           tasks={leftPanelTasks}
-          selectedTitleTaskId={selectedTitleTaskId}
+          selectedTitleTaskId={ganttInteractions.selectedTitleTaskId}
           verticalDragState={verticalDragState}
           titleColumnWidth={TITLE_COLUMN_WIDTH}
           timelineHeight={timelineHeight}
           taskHeight={taskHeight}
           taskContentHeight={taskContentHeight}
-          onTaskSelect={setSelectedTitleTaskId}
-          onTaskToggle={handleToggleExpand}
-          onTaskCreateSubtask={handleCreateSubtask}
+          onTaskSelect={ganttInteractions.setSelectedTitleTaskId}
+          onTaskToggle={ganttInteractions.handleToggleExpand}
+          onTaskCreateSubtask={ganttInteractions.handleCreateSubtask}
           onTitleMouseDown={handleTitleMouseDown}
         />
 
@@ -1178,7 +845,7 @@ const GanttChart: React.FC<GanttChartProps> = ({
             backgroundColor: 'transparent',
             overflow: 'hidden'
           }}
-          onContextMenu={handleContextMenu}
+          onContextMenu={ganttInteractions.handleContextMenu}
         >
           {/* Timeline Header */}
           <TimelineHeader
@@ -1201,7 +868,7 @@ const GanttChart: React.FC<GanttChartProps> = ({
             isDragging={isDragging}
             onMouseDown={handleMouseDown}
             onTaskSelect={setSelectedChartTaskId}
-            onTaskContextMenu={handleTaskContextMenu}
+            onTaskContextMenu={ganttInteractions.handleTaskContextMenu}
             onEdgeHover={handleEdgeHover}
             onMouseLeave={() => setIsHoveringEdge(null)}
           />
@@ -1211,12 +878,12 @@ const GanttChart: React.FC<GanttChartProps> = ({
     </div>
 
     {/* 右键菜单 */}
-    {contextMenu.visible && (
+    {ganttInteractions.contextMenu.visible && (
       <div
         style={{
           position: 'fixed',
-          top: contextMenu.y,
-          left: contextMenu.x,
+          top: ganttInteractions.contextMenu.y,
+          left: ganttInteractions.contextMenu.x,
           backgroundColor: '#fff',
           border: '1px solid #ddd',
           borderRadius: '4px',
@@ -1237,7 +904,24 @@ const GanttChart: React.FC<GanttChartProps> = ({
           onMouseLeave={(e) => {
             e.currentTarget.style.backgroundColor = 'transparent';
           }}
-          onClick={handleCreateTask}
+          onClick={() => {
+            // 简化版创建任务逻辑
+            const newTask: Task = {
+              id: `chart-${Date.now()}`,
+              title: '新任务',
+              startDate: new Date(),
+              endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+              color: '#9C27B0',
+              x: 0,
+              width: 0,
+              rowId: leftPanelTasks[0]?.id || 'row-0',
+              type: 'default',
+              status: 'pending',
+              progress: 0
+            };
+            setChartTasks(prev => [...prev, newTask]);
+            ganttInteractions.setContextMenu({ visible: false, x: 0, y: 0 });
+          }}
         >
           新建任务条
         </div>
@@ -1252,7 +936,24 @@ const GanttChart: React.FC<GanttChartProps> = ({
           onMouseLeave={(e) => {
             e.currentTarget.style.backgroundColor = 'transparent';
           }}
-          onClick={handleCreateMilestone}
+          onClick={() => {
+            // 简化版创建里程碑逻辑
+            const newMilestone: Task = {
+              id: `milestone-${Date.now()}`,
+              title: '新里程碑',
+              startDate: new Date(),
+              endDate: new Date(),
+              color: '#FFD700',
+              x: 0,
+              width: 0,
+              rowId: leftPanelTasks[0]?.id || 'row-0',
+              type: 'milestone',
+              status: 'pending',
+              progress: 0
+            };
+            setChartTasks(prev => [...prev, newMilestone]);
+            ganttInteractions.setContextMenu({ visible: false, x: 0, y: 0 });
+          }}
         >
           新建节点
         </div>
