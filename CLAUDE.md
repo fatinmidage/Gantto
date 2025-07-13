@@ -91,23 +91,35 @@ interface Task {
 }
 ```
 
-## Development Notes
+## Claude Code 开发指导原则
 
-### Chinese Language Support
-- The project uses Chinese for UI text and comments
-- Use appropriate Chinese localization patterns when adding new features
-- Follow existing naming conventions in Chinese comments
+### 代码简洁性要求
+- **严格控制文件长度**: 任何单个文件不应超过 200 行代码
+- **组件拆分原则**: 复杂组件必须拆分为多个小组件，每个组件职责单一
+- **函数长度限制**: 单个函数不超过 30 行，复杂逻辑需要拆分
+- **避免深度嵌套**: 最多 3 层嵌套，超出需要提取子组件或函数
 
-### Tauri Development
-- Use `pnpm run tauri dev` for development (not just `pnpm run dev`)
-- Frontend runs on http://localhost:1420 during development
-- Tauri configuration is in `src-tauri/tauri.conf.json`
+### 模块化开发策略
+- **功能导向拆分**: 按功能将大组件拆分为独立的小组件
+- **Hook 抽离**: 复杂状态逻辑抽离为自定义 hooks
+- **工具函数分离**: 纯函数逻辑放在单独的 utils 文件中
+- **类型定义集中**: 共享类型放在 types/ 目录下
 
-### Code Style and Patterns
-- Uses functional React components with hooks
-- Extensive use of `useCallback`, `useMemo` for performance optimization
-- Custom hooks for drag functionality and performance optimizations
-- TypeScript with strict typing throughout
+### Claude Code 最佳实践
+- **优先重构而非新建**: 总是优先考虑重构现有代码而非创建新文件
+- **逐步迭代**: 大功能分解为多个小的可验证步骤
+- **保持一致性**: 严格遵循现有的代码风格和组织结构
+- **中文注释**: 使用中文进行代码注释和文档编写
+
+### 中文本地化
+- 项目使用中文进行 UI 文本和注释
+- 遵循现有的中文命名规范
+- 新功能添加时使用合适的中文本地化模式
+
+### Tauri 开发
+- 使用 `pnpm run tauri dev` 进行开发（而非仅 `pnpm run dev`）
+- 开发时前端运行在 http://localhost:1420
+- Tauri 配置位于 `src-tauri/tauri.conf.json`
 
 ### Performance Considerations
 - The GanttChart component uses throttled mouse events for smooth dragging
@@ -121,22 +133,35 @@ The project includes Cursor AI rules (`.cursor/rules/commandplan.mdc`) that enfo
 - Chinese language responses with structured planning approach
 - Systematic code analysis and implementation phases
 
-## Common Development Tasks
+## Claude Code 重构指导
 
-### Adding New Task Types
-1. Update the `Task` interface type union in `GanttChart.tsx:15`
-2. Add corresponding icon handling in `TaskIcon.tsx`
-3. Update styling in CSS for the new type class
+### 当前重构优先级
+1. **GanttChart.tsx 拆分** (2000+ 行 → 多个 <200 行组件)
+   - 提取任务渲染逻辑为独立组件
+   - 拆分拖拽功能为自定义 hooks
+   - 分离时间轴和网格渲染逻辑
 
-### Modifying Task Hierarchy
-- Tasks support unlimited nesting via `parentId`/`children` relationships
-- Use helper functions `getVisibleTasks()` and `calculateParentProgress()` 
-- Maintain task ordering when implementing hierarchy changes
+2. **状态管理优化**
+   - 复杂状态逻辑抽离为 custom hooks
+   - 拖拽状态单独管理
+   - 任务数据操作函数模块化
 
-### Extending Drag Functionality
-- Horizontal dragging: Modify `handleMouseMoveCore()` and related handlers
-- Vertical dragging: Extend `VerticalDragState` and related mouse handlers
-- Performance: Use the existing `useDragCache()` and `useThrottledMouseMove()` hooks
+3. **组件职责分离**
+   - 每个组件只负责单一功能
+   - 避免在一个文件中混合多种逻辑
+   - UI 组件与业务逻辑完全分离
+
+### 代码质量控制
+- **文件大小监控**: 任何文件超过 200 行立即重构
+- **函数复杂度**: 单个函数超过 30 行需要拆分
+- **嵌套深度**: 超过 3 层嵌套必须提取子组件
+- **重复代码**: 发现重复立即抽离为共享函数
+
+### 开发任务模式
+- **小步骤迭代**: 每次只修改一个小功能点
+- **验证驱动**: 每个修改后立即验证功能正常
+- **渐进式重构**: 在添加新功能时同步重构相关代码
+- **保持简洁**: 宁可多创建几个小文件也不要单个大文件
 
 ## Testing and Quality
 
@@ -151,3 +176,22 @@ pnpm run build            # Validates TypeScript compilation
 - TypeScript strict mode enabled for type safety
 - Use Chinese language for UI text and comments
 - Follow existing component patterns and performance optimizations
+
+## Claude Code 工作流程
+
+### 开发前检查
+1. 使用 `Grep` 搜索相关代码模式
+2. 用 `Read` 工具了解现有组件结构
+3. 评估当前文件长度，超过 200 行优先重构
+
+### 编码原则
+- **单一职责**: 每个文件/函数只做一件事
+- **可读性优先**: 代码要易于理解，避免复杂逻辑
+- **渐进式开发**: 小步骤迭代，频繁验证
+- **保持简洁**: 优先选择简单方案而非复杂实现
+
+### 质量验证命令
+每次修改后必须运行:
+```bash
+pnpm run build     # TypeScript 编译检查
+```
