@@ -1,7 +1,7 @@
 import React, { useState, useRef, useCallback, useMemo, useEffect } from 'react';
 import { Target } from 'lucide-react';
 import Toolbar from './Toolbar';
-import TaskIcon, { DragHandle } from './TaskIcon';
+import TaskTitleColumn from './gantt/TaskTitleColumn';
 
 // 导入新的统一类型定义
 import {
@@ -14,8 +14,16 @@ import {
   useDragAndDrop,
   useTaskManager,
   useTimeline,
-  useGanttUI
+  useGanttUI,
+  useThrottledMouseMove
 } from '../hooks';
+
+// 导入层级帮助函数
+import {
+  getVisibleProjectRows,
+  getVisibleTasks,
+  getAllDescendantRows
+} from './gantt/GanttHelpers';
 
 
 interface GanttChartProps {
@@ -26,116 +34,6 @@ interface GanttChartProps {
 }
 
 
-// --- Project Row Hierarchy Helpers ---
-
-/**
- * 获取可见项目行列表（考虑展开/折叠状态）
- */
-const getVisibleProjectRows = (rows: ProjectRow[], rowMap: Map<string, ProjectRow>): ProjectRow[] => {
-  const visibleRows: ProjectRow[] = [];
-  
-  // 检查行是否可见（递归检查所有父行的展开状态）
-  const isRowVisible = (row: ProjectRow): boolean => {
-    if (!row.parentId) {
-      return true; // 根行总是可见
-    }
-    
-    const parentRow = rowMap.get(row.parentId);
-    if (!parentRow) {
-      return false; // 找不到父行
-    }
-    
-    // 父行必须展开，并且父行本身也必须可见
-    return (parentRow.isExpanded || false) && isRowVisible(parentRow);
-  };
-  
-  for (const row of rows) {
-    if (isRowVisible(row)) {
-      visibleRows.push(row);
-    }
-  }
-  
-  return visibleRows;
-};
-
-// --- Task Hierarchy Helpers (兼容性) ---
-
-/**
- * 获取可见任务列表（考虑展开/折叠状态）
- */
-const getVisibleTasks = (tasks: Task[], taskMap: Map<string, Task>): Task[] => {
-  const visibleTasks: Task[] = [];
-  
-  // 检查任务是否可见（递归检查所有父任务的展开状态）
-  const isTaskVisible = (task: Task): boolean => {
-    if (!task.parentId) {
-      return true; // 根任务总是可见
-    }
-    
-    const parentTask = taskMap.get(task.parentId);
-    if (!parentTask) {
-      return false; // 找不到父任务
-    }
-    
-    // 父任务必须展开，并且父任务本身也必须可见
-    return (parentTask.isExpanded || false) && isTaskVisible(parentTask);
-  };
-  
-  for (const task of tasks) {
-    if (isTaskVisible(task)) {
-      visibleTasks.push(task);
-    }
-  }
-  
-  return visibleTasks;
-};
-
-/**
- * 递归获取项目行的所有子行（包括子行的子行）
- */
-const getAllDescendantRows = (rowId: string, rows: ProjectRow[]): ProjectRow[] => {
-  const descendants: ProjectRow[] = [];
-  
-  const collectDescendants = (parentId: string) => {
-    for (const row of rows) {
-      if (row.parentId === parentId) {
-        descendants.push(row);
-        collectDescendants(row.id); // 递归收集子行的子行
-      }
-    }
-  };
-  
-  collectDescendants(rowId);
-  return descendants;
-};
-
-
-// --- Custom Hooks ---
-
-const useThrottledMouseMove = (
-  callback: (event: MouseEvent) => void,
-  deps: React.DependencyList
-) => {
-  const requestRef = useRef<number>();
-  const throttledCallback = useCallback((event: MouseEvent) => {
-    if (requestRef.current) {
-      cancelAnimationFrame(requestRef.current);
-    }
-    requestRef.current = requestAnimationFrame(() => {
-      callback(event);
-    });
-  }, deps);
-
-  useEffect(() => {
-    return () => {
-      if (requestRef.current) {
-        cancelAnimationFrame(requestRef.current);
-      }
-    };
-  }, []);
-
-  return throttledCallback;
-};
 
 
 // --- GanttChart Component ---
@@ -515,6 +413,14 @@ const GanttChart: React.FC<GanttChartProps> = ({
 
   // 处理展开/折叠
   const handleToggleExpand = useCallback((taskId: string) => {
+    // 更新项目行状态
+    setProjectRows(prev => prev.map(row => 
+      row.id === taskId 
+        ? { ...row, isExpanded: !row.isExpanded }
+        : row
+    ));
+    
+    // 同时更新任务状态以保持兼容性
     setTasks(prev => prev.map(task => 
       task.id === taskId 
         ? { ...task, isExpanded: !task.isExpanded }
@@ -524,41 +430,58 @@ const GanttChart: React.FC<GanttChartProps> = ({
 
   // 创建子任务
   const handleCreateSubtask = useCallback((parentId: string) => {
-    const parentTask = tasks.find(task => task.id === parentId);
-    if (!parentTask) return;
+    // 检查父行是否存在且不是子行（防止创建孙任务）
+    const parentRow = projectRows.find(row => row.id === parentId);
+    if (!parentRow || parentRow.level !== 0) {
+      console.log('只能为顶级项目行创建子任务');
+      return;
+    }
 
-    const newSubtask: Task = {
-      id: `${parentId}-${Date.now()}`,
+    // 创建新的子项目行
+    const newSubRowId = `${parentId}-sub-${Date.now()}`;
+    
+    // 计算新子任务的order值：应该在父任务的现有子任务之后
+    const existingChildren = parentRow.children || [];
+    
+    // 找到父任务的最后一个子任务的order值
+    let newOrder = parentRow.order + 0.1; // 默认在父任务后面一点
+    if (existingChildren.length > 0) {
+      // 如果有现有子任务，找到最后一个子任务的order值
+      const lastChildId = existingChildren[existingChildren.length - 1];
+      const lastChild = projectRows.find(row => row.id === lastChildId);
+      if (lastChild) {
+        newOrder = lastChild.order + 0.1;
+      }
+    }
+    
+    const newSubRow = {
+      id: newSubRowId,
       title: '新子任务',
-      startDate: new Date(parentTask.startDate),
-      endDate: new Date(parentTask.startDate.getTime() + 3 * 24 * 60 * 60 * 1000), // 默认3天
-      color: parentTask.color,
-      x: 0,
-      width: 0,
-      order: tasks.length,
-      type: parentTask.type,
-      status: 'pending',
-      progress: 0,
-      level: (parentTask.level || 0) + 1,
+      order: newOrder,
+      type: 'development' as const,
+      level: 1,
       parentId: parentId,
       isExpanded: false
     };
 
-    setTasks(prev => {
-      const newTasks = [...prev, newSubtask];
-      // 更新父任务的children数组
-      return newTasks.map(task => {
-        if (task.id === parentId) {
+    // 更新项目行
+    setProjectRows(prev => {
+      const updatedRows = prev.map(row => {
+        if (row.id === parentId) {
           return {
-            ...task,
-            children: [...(task.children || []), newSubtask.id],
-            isExpanded: true // 自动展开父任务
+            ...row,
+            children: [...(row.children || []), newSubRowId],
+            isExpanded: true // 自动展开父行以显示新子行
           };
         }
-        return task;
+        return row;
       });
+      
+      // 将新子任务插入到正确位置，然后按order排序
+      const newRows = [...updatedRows, newSubRow];
+      return newRows.sort((a, b) => a.order - b.order);
     });
-  }, [tasks]);
+  }, [projectRows]);
 
 
   // 添加任务排序辅助函数，同时计算位置信息
@@ -628,7 +551,7 @@ const GanttChart: React.FC<GanttChartProps> = ({
       x: 0,
       width: 0,
       order: row.order,
-      type: row.type,
+      type: row.type || 'default',
       status: 'pending' as const,
       level: row.level,
       parentId: row.parentId,
@@ -1191,46 +1114,7 @@ const GanttChart: React.FC<GanttChartProps> = ({
   }, [contextMenu.visible, taskContextMenu.visible, colorPickerState.visible, tagManagerState.visible, hideContextMenu, hideTaskContextMenu]);
 
 
-  // --- Styles ---
-  const titleColumnStyle: React.CSSProperties = {
-    width: TITLE_COLUMN_WIDTH,
-    borderRight: '1px solid #e0e0e0', // Lighter border
-    backgroundColor: '#fafafa', // Light background color
-    display: 'flex',
-    flexDirection: 'column'
-  };
-
-  const titleHeaderStyle: React.CSSProperties = {
-    height: timelineHeight,
-    borderBottom: '1px solid #e0e0e0',
-    display: 'flex',
-    alignItems: 'center',
-    padding: '0 20px', // Increased padding
-    boxSizing: 'border-box',
-    backgroundColor: '#f5f5f5',
-    color: '#333',
-    fontWeight: 600, // Bolder font
-    fontSize: '16px'
-  };
-
-  const taskTitlesContainerStyle: React.CSSProperties = {
-    paddingTop: '10px',
-    height: taskContentHeight,
-    overflow: 'auto' // 添加滚动条以防内容超出
-  };
-
-  const taskTitleStyle: React.CSSProperties = {
-    height: taskHeight,
-    marginBottom: 10,
-    display: 'flex',
-    alignItems: 'center',
-    padding: '0 20px',
-    fontSize: '14px',
-    color: '#555',
-    borderBottom: '1px solid #f0f0f0', // Subtle bottom border
-    transition: 'all 0.2s ease', // 添加过渡动画
-    position: 'relative'
-  };
+  // --- Chart Area Styles ---
 
   return (
     <>
@@ -1261,176 +1145,19 @@ const GanttChart: React.FC<GanttChartProps> = ({
           cursor: verticalDragState.isDragging ? 'grabbing' : 'default' // 添加全局拖拽光标
         }}>
         {/* Title Column */}
-        <div className="title-column" style={titleColumnStyle}>
-          <div className="title-header" style={titleHeaderStyle}>
-            <span>任务列表</span>
-          </div>
-          <div className="task-titles" style={taskTitlesContainerStyle}>
-            {leftPanelTasks.map((task, index) => {
-              const isDraggedTask = verticalDragState.draggedTaskId === task.id;
-              const isTargetPosition = verticalDragState.isDragging && verticalDragState.targetIndex === index && verticalDragState.shouldShowIndicator;
-              const isDraggingDown = verticalDragState.isDragging && 
-                verticalDragState.draggedTaskIndex !== null && 
-                verticalDragState.targetIndex !== null &&
-                verticalDragState.targetIndex > verticalDragState.draggedTaskIndex;
-              
-              const hasChildren = task.children && task.children.length > 0;
-              const level = task.level || 0;
-              const indentWidth = level * 20; // 每级缩进20px
-              
-              return (
-                <div key={task.id}>
-                  {/* 拖拽指示器 - 向上拖拽时在目标位置上方显示 */}
-                  {isTargetPosition && 
-                   !isDraggingDown &&
-                   verticalDragState.draggedTaskIndex !== index && (
-                    <div style={{
-                      height: '2px',
-                      backgroundColor: '#2196F3',
-                      margin: '0 10px',
-                      borderRadius: '1px',
-                      boxShadow: '0 0 4px rgba(33, 150, 243, 0.6)',
-                    }} />
-                  )}
-                  
-                  <div
-                    className="task-title"
-                    style={{
-                      ...taskTitleStyle,
-                      backgroundColor: isDraggedTask ? '#e3f2fd' : 'transparent',
-                      opacity: isDraggedTask ? 0.7 : 1,
-                      cursor: task.isPlaceholder ? 'default' : (verticalDragState.isDragging ? 'grabbing' : 'grab'),
-                      userSelect: 'none',
-                      transform: isDraggedTask ? 'scale(1.02)' : 'scale(1)',
-                      boxShadow: isDraggedTask ? '0 4px 8px rgba(0,0,0,0.15)' : 'none',
-                      zIndex: isDraggedTask ? 10 : 1,
-                      paddingLeft: `${20 + indentWidth}px` // 添加层级缩进
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!verticalDragState.isDragging) {
-                        e.currentTarget.style.backgroundColor = '#f0f0f0';
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!verticalDragState.isDragging && !isDraggedTask) {
-                        e.currentTarget.style.backgroundColor = 'transparent';
-                      }
-                    }}
-                    onMouseDown={(e) => !task.isPlaceholder && handleTitleMouseDown(e, task.id)}
-                    onClick={() => !task.isPlaceholder && setSelectedTitleTaskId(task.id)}
-                  >
-                    <DragHandle size={14} />
-                    
-                    {/* 展开/折叠按钮 */}
-                    {hasChildren && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleToggleExpand(task.id);
-                        }}
-                        style={{
-                          background: 'none',
-                          border: 'none',
-                          cursor: 'pointer',
-                          padding: '2px',
-                          marginRight: '4px',
-                          fontSize: '12px',
-                          color: '#666'
-                        }}
-                      >
-                        {task.isExpanded ? '▼' : '▶'}
-                      </button>
-                    )}
-                    
-                    {/* 如果没有子任务，添加占位符保持对齐 */}
-                    {!hasChildren && (
-                      <div style={{ width: '16px', marginRight: '4px' }} />
-                    )}
-                    
-                    <TaskIcon 
-                      type={task.type} 
-                      size={16} 
-                      className={`task-icon-${task.type}`}
-                      level={task.level}
-                    />
-                    <span 
-                      className="task-title-text"
-                      style={{ 
-                        color: task.isPlaceholder ? '#999' : 'inherit',
-                        fontStyle: task.isPlaceholder ? 'italic' : 'normal'
-                      }}
-                    >
-                      {task.title}
-                    </span>
-                    
-                    {/* 创建子任务按钮 - 占位符任务不显示 */}
-                    {!task.isPlaceholder && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleCreateSubtask(task.id);
-                        }}
-                        style={{
-                          background: 'none',
-                          border: 'none',
-                          cursor: 'pointer',
-                          padding: '2px 4px',
-                          marginLeft: 'auto',
-                          fontSize: '12px',
-                          color: '#666',
-                          opacity: 0.7,
-                          borderRadius: '2px'
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor = '#f0f0f0';
-                          e.currentTarget.style.opacity = '1';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor = 'transparent';
-                          e.currentTarget.style.opacity = '0.7';
-                        }}
-                        title="创建子任务"
-                      >
-                        +
-                      </button>
-                    )}
-                    
-                    {selectedTitleTaskId === task.id && (
-                      <div className="task-selected-indicator" />
-                    )}
-                  </div>
-                  
-                  {/* 拖拽指示器 - 向下拖拽时在目标位置下方显示 */}
-                  {isTargetPosition && 
-                   isDraggingDown &&
-                   verticalDragState.draggedTaskIndex !== index && (
-                    <div style={{
-                      height: '2px',
-                      backgroundColor: '#2196F3',
-                      margin: '0 10px',
-                      borderRadius: '1px',
-                      boxShadow: '0 0 4px rgba(33, 150, 243, 0.6)',
-                    }} />
-                  )}
-                </div>
-              );
-            })}
-            
-            {/* 拖拽指示器 - 拖拽到最后位置时显示 */}
-            {verticalDragState.isDragging && 
-             verticalDragState.targetIndex === leftPanelTasks.length && 
-             verticalDragState.shouldShowIndicator && (
-              <div style={{
-                height: '2px',
-                backgroundColor: '#2196F3',
-                margin: '0 10px',
-                borderRadius: '1px',
-                boxShadow: '0 0 4px rgba(33, 150, 243, 0.6)',
-                animation: 'pulse 1s infinite'
-              }} />
-            )}
-          </div>
-        </div>
+        <TaskTitleColumn
+          tasks={leftPanelTasks}
+          selectedTitleTaskId={selectedTitleTaskId}
+          verticalDragState={verticalDragState}
+          titleColumnWidth={TITLE_COLUMN_WIDTH}
+          timelineHeight={timelineHeight}
+          taskHeight={taskHeight}
+          taskContentHeight={taskContentHeight}
+          onTaskSelect={setSelectedTitleTaskId}
+          onTaskToggle={handleToggleExpand}
+          onTaskCreateSubtask={handleCreateSubtask}
+          onTitleMouseDown={handleTitleMouseDown}
+        />
 
         {/* Gantt Chart Area */}
         <div 
