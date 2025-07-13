@@ -12,10 +12,12 @@ export const useGanttUI = () => {
     visible: boolean;
     x: number;
     y: number;
+    clickPosition: { x: number; y: number };
   }>({
     visible: false,
     x: 0,
-    y: 0
+    y: 0,
+    clickPosition: { x: 0, y: 0 }
   });
 
   const [taskContextMenu, setTaskContextMenu] = useState<TaskContextMenu>({
@@ -64,7 +66,8 @@ export const useGanttUI = () => {
     setContextMenu({
       visible: true,
       x: e.clientX,
-      y: e.clientY
+      y: e.clientY,
+      clickPosition: { x: e.clientX, y: e.clientY }
     });
   }, []);
 
@@ -72,7 +75,8 @@ export const useGanttUI = () => {
     setContextMenu({
       visible: false,
       x: 0,
-      y: 0
+      y: 0,
+      clickPosition: { x: 0, y: 0 }
     });
   }, []);
 

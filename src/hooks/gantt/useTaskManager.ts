@@ -1,11 +1,18 @@
 import { useState, useCallback, useMemo } from 'react';
 import { Task, ProjectRow } from '../../types';
 
+// 初始化数据接口
+interface InitialTaskData {
+  tasks?: Task[];
+  projectRows?: ProjectRow[];
+  chartTasks?: Task[];
+}
+
 // 任务管理Hook
-export const useTaskManager = () => {
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [projectRows, setProjectRows] = useState<ProjectRow[]>([]);
-  const [chartTasks, setChartTasks] = useState<Task[]>([]);
+export const useTaskManager = (initialData?: InitialTaskData) => {
+  const [tasks, setTasks] = useState<Task[]>(initialData?.tasks || []);
+  const [projectRows, setProjectRows] = useState<ProjectRow[]>(initialData?.projectRows || []);
+  const [chartTasks, setChartTasks] = useState<Task[]>(initialData?.chartTasks || []);
 
   // 创建任务映射
   const taskMap = useMemo(() => {

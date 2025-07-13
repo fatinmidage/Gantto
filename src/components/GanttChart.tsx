@@ -6,12 +6,16 @@ import TaskIcon, { DragHandle } from './TaskIcon';
 // 导入新的统一类型定义
 import {
   Task,
-  ProjectRow,
-  VerticalDragState,
-  TaskContextMenu,
-  ColorPickerState,
-  TagManagerState
+  ProjectRow
 } from '../types';
+
+// 导入自定义 Hooks
+import {
+  useDragAndDrop,
+  useTaskManager,
+  useTimeline,
+  useGanttUI
+} from '../hooks';
 
 
 interface GanttChartProps {
@@ -133,54 +137,6 @@ const useThrottledMouseMove = (
   return throttledCallback;
 };
 
-const useDragCache = () => {
-  const containerBounds = useRef<DOMRect | null>(null);
-  const dragMetrics = useRef<{
-    duration: number;
-    pixelPerDay: number;
-    minWidth: number;
-  } | null>(null);
-  
-  const updateContainerBounds = useCallback((element: HTMLElement | null) => {
-    if (element) {
-      containerBounds.current = element.getBoundingClientRect();
-    }
-  }, []);
-
-  const updateDragMetrics = useCallback((task: Task, pixelPerDay: number) => {
-    if (task) {
-      const duration = task.endDate.getTime() - task.startDate.getTime();
-      dragMetrics.current = {
-        duration,
-        pixelPerDay,
-        minWidth: Math.max(20, (duration / (24 * 60 * 60 * 1000)) * pixelPerDay)
-      };
-    }
-  }, []);
-
-  const clearCache = useCallback(() => {
-    containerBounds.current = null;
-    dragMetrics.current = null;
-  }, []);
-
-  return {
-    containerBounds,
-    dragMetrics,
-    updateContainerBounds,
-    updateDragMetrics,
-    clearCache
-  };
-};
-
-const useBatchedUpdates = () => {
-  return useCallback((fn: () => void) => {
-    if (typeof (React as any).unstable_batchedUpdates === 'function') {
-      (React as any).unstable_batchedUpdates(fn);
-    } else {
-      fn();
-    }
-  }, []);
-};
 
 // --- GanttChart Component ---
 
@@ -190,14 +146,13 @@ const GanttChart: React.FC<GanttChartProps> = ({
   timelineHeight = 40,
   taskHeight = 30
 }) => {
-  // 新的分离数据结构
-  // 1. 项目行结构 - 固定不变的左侧任务列表
-  const [projectRows, setProjectRows] = useState<ProjectRow[]>([
+  // === 初始数据定义 ===
+  const initialProjectRows = [
     {
       id: 'row-0',
       title: '项目里程碑',
       order: 0,
-      type: 'milestone',
+      type: 'milestone' as const,
       level: 0,
       isExpanded: false
     },
@@ -205,7 +160,7 @@ const GanttChart: React.FC<GanttChartProps> = ({
       id: 'row-1',
       title: '交付计划',
       order: 1,
-      type: 'delivery',
+      type: 'delivery' as const,
       level: 0,
       isExpanded: false
     },
@@ -213,7 +168,7 @@ const GanttChart: React.FC<GanttChartProps> = ({
       id: 'row-2',
       title: '产品开发',
       order: 2,
-      type: 'development',
+      type: 'development' as const,
       level: 0,
       children: ['row-3', 'row-4', 'row-5'],
       isExpanded: true
@@ -222,7 +177,7 @@ const GanttChart: React.FC<GanttChartProps> = ({
       id: 'row-3',
       title: 'A样开发',
       order: 3,
-      type: 'development',
+      type: 'development' as const,
       level: 1,
       parentId: 'row-2',
       isExpanded: false
@@ -231,7 +186,7 @@ const GanttChart: React.FC<GanttChartProps> = ({
       id: 'row-4',
       title: 'B样开发',
       order: 4,
-      type: 'development',
+      type: 'development' as const,
       level: 1,
       parentId: 'row-2',
       isExpanded: false
@@ -240,7 +195,7 @@ const GanttChart: React.FC<GanttChartProps> = ({
       id: 'row-5',
       title: 'C样开发',
       order: 5,
-      type: 'development',
+      type: 'development' as const,
       level: 1,
       parentId: 'row-2',
       isExpanded: false
@@ -249,14 +204,13 @@ const GanttChart: React.FC<GanttChartProps> = ({
       id: 'row-6',
       title: '验证计划',
       order: 6,
-      type: 'testing',
+      type: 'testing' as const,
       level: 0,
       isExpanded: false
     }
-  ]);
+  ];
 
-  // 2. 图表任务 - 右侧绘图区的任务条/节点 (使用统一的Task类型)
-  const [chartTasks, setChartTasks] = useState<Task[]>([
+  const initialChartTasks = [
     {
       id: 'chart-1',
       title: '项目里程碑',
@@ -266,8 +220,8 @@ const GanttChart: React.FC<GanttChartProps> = ({
       x: 0,
       width: 0,
       rowId: 'row-0',
-      type: 'milestone',
-      status: 'completed',
+      type: 'milestone' as const,
+      status: 'completed' as const,
       progress: 100
     },
     {
@@ -279,8 +233,8 @@ const GanttChart: React.FC<GanttChartProps> = ({
       x: 0,
       width: 0,
       rowId: 'row-1',
-      type: 'delivery',
-      status: 'in-progress',
+      type: 'delivery' as const,
+      status: 'in-progress' as const,
       progress: 65
     },
     {
@@ -292,8 +246,8 @@ const GanttChart: React.FC<GanttChartProps> = ({
       x: 0,
       width: 0,
       rowId: 'row-3',
-      type: 'development',
-      status: 'in-progress',
+      type: 'development' as const,
+      status: 'in-progress' as const,
       progress: 40
     },
     {
@@ -305,8 +259,8 @@ const GanttChart: React.FC<GanttChartProps> = ({
       x: 0,
       width: 0,
       rowId: 'row-4',
-      type: 'development',
-      status: 'pending',
+      type: 'development' as const,
+      status: 'pending' as const,
       progress: 0
     },
     {
@@ -318,8 +272,8 @@ const GanttChart: React.FC<GanttChartProps> = ({
       x: 0,
       width: 0,
       rowId: 'row-5',
-      type: 'development',
-      status: 'pending',
+      type: 'development' as const,
+      status: 'pending' as const,
       progress: 0
     },
     {
@@ -331,192 +285,90 @@ const GanttChart: React.FC<GanttChartProps> = ({
       x: 0,
       width: 0,
       rowId: 'row-6',
-      type: 'testing',
-      status: 'pending',
+      type: 'testing' as const,
+      status: 'pending' as const,
       progress: 0
     }
-  ]);
+  ];
 
-  // 兼容性数据 - 临时保持现有代码工作
-  const [tasks, setTasks] = useState<Task[]>([
-    {
-      id: '1',
-      title: '项目里程碑',
-      startDate: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
-      endDate: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
-      color: '#4CAF50',
-      x: 0,
-      width: 0,
-      order: 0,
-      type: 'milestone',
-      status: 'completed',
-      progress: 100,
-      level: 0,
-      isExpanded: false,
-      rowId: 'row-0'
-    },
-    {
-      id: '2',
-      title: '交付计划',
-      startDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
-      endDate: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
-      color: '#2196F3',
-      x: 0,
-      width: 0,
-      order: 1,
-      type: 'delivery',
-      status: 'in-progress',
-      progress: 65,
-      level: 0,
-      isExpanded: false
-    },
-    {
-      id: '3',
-      title: '产品开发',
-      startDate: new Date(Date.now() + 12 * 24 * 60 * 60 * 1000),
-      endDate: new Date(Date.now() + 20 * 24 * 60 * 60 * 1000),
-      color: '#FF9800',
-      x: 0,
-      width: 0,
-      order: 2,
-      type: 'development',
-      status: 'in-progress',
-      progress: 13, // 将根据子任务自动计算：(40 + 0 + 0) / 3 = 13
-      level: 0,
-      children: ['3-1', '3-2', '3-3'],
-      isExpanded: true
-    },
-    {
-      id: '3-1',
-      title: 'A样开发',
-      startDate: new Date(Date.now() + 12 * 24 * 60 * 60 * 1000),
-      endDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000),
-      color: '#FFB74D',
-      x: 0,
-      width: 0,
-      order: 3,
-      type: 'development',
-      status: 'in-progress',
-      progress: 40,
-      level: 1,
-      parentId: '3',
-      isExpanded: false
-    },
-    {
-      id: '3-2',
-      title: 'B样开发',
-      startDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
-      endDate: new Date(Date.now() + 17 * 24 * 60 * 60 * 1000),
-      color: '#FFB74D',
-      x: 0,
-      width: 0,
-      order: 4,
-      type: 'development',
-      status: 'pending',
-      progress: 0,
-      level: 1,
-      parentId: '3',
-      isExpanded: false
-    },
-    {
-      id: '3-3',
-      title: 'C样开发',
-      startDate: new Date(Date.now() + 16 * 24 * 60 * 60 * 1000),
-      endDate: new Date(Date.now() + 19 * 24 * 60 * 60 * 1000),
-      color: '#FFB74D',
-      x: 0,
-      width: 0,
-      order: 5,
-      type: 'development',
-      status: 'pending',
-      progress: 0,
-      level: 1,
-      parentId: '3',
-      isExpanded: false
-    },
-    {
-      id: '4',
-      title: '验证计划',
-      startDate: new Date(Date.now() + 22 * 24 * 60 * 60 * 1000),
-      endDate: new Date(Date.now() + 28 * 24 * 60 * 60 * 1000),
-      color: '#f44336',
-      x: 0,
-      width: 0,
-      order: 6,
-      type: 'testing',
-      status: 'pending',
-      progress: 0,
-      level: 0,
-      isExpanded: false
-    }
-  ]);
+  // === 使用自定义 Hooks ===
+  
+  // 任务管理
+  const taskManager = useTaskManager({
+    projectRows: initialProjectRows,
+    chartTasks: initialChartTasks
+  });
+  
+  // 拖拽功能
+  const dragAndDrop = useDragAndDrop();
+  
+  // 时间轴管理
+  const timeline = useTimeline(startDate, endDate);
+  
+  // UI 状态管理
+  const ganttUI = useGanttUI();
 
-  const [draggedTask, setDraggedTask] = useState<string | null>(null);
-  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
-  const [isDragging, setIsDragging] = useState(false);
-  const [tempDragPosition, setTempDragPosition] = useState<{ id: string; x: number; width: number } | null>(null);
+  // === 从 Hooks 解构状态和方法 ===
+  
+  // 数据状态
+  const { 
+    projectRows, 
+    chartTasks, 
+    tasks, 
+    setProjectRows, 
+    setChartTasks, 
+    setTasks 
+  } = taskManager;
+  
+  // 拖拽状态和方法
+  const {
+    draggedTask,
+    isDragging,
+    tempDragPosition,
+    verticalDragState,
+    draggedTaskData,
+    dragType,
+    isHoveringEdge,
+    setIsHoveringEdge,
+    startHorizontalDrag,
+    startVerticalDrag,
+    updateHorizontalDragPosition,
+    updateVerticalDragPosition,
+    resetHorizontalDrag,
+    resetVerticalDrag
+  } = dragAndDrop;
+  
+  // 时间轴状态和方法
+  const {
+    zoomLevel,
+    dateToPixel,
+    pixelToDate,
+    handleZoomIn,
+    handleZoomOut,
+    handleViewToday,
+    timeScales
+  } = timeline;
+  
+  // UI状态和方法
+  const {
+    selectedTitleTaskId,
+    selectedChartTaskId,
+    contextMenu,
+    taskContextMenu,
+    colorPickerState,
+    tagManagerState,
+    setSelectedTitleTaskId,
+    setSelectedChartTaskId,
+    setContextMenu,
+    setTaskContextMenu,
+    setColorPickerState,
+    setTagManagerState
+  } = ganttUI;
+
+  // 其他状态和配置
   const containerRef = useRef<HTMLDivElement>(null);
-
-  // 添加垂直拖拽状态
-  const [verticalDragState, setVerticalDragState] = useState<VerticalDragState>({
-    isDragging: false,
-    draggedTaskId: null,
-    draggedTaskIndex: null,
-    targetIndex: null,
-    startY: 0,
-    currentY: 0,
-    shouldShowIndicator: false
-  });
-
-  const [draggedTaskData, setDraggedTaskData] = useState<Task | null>(null);
-  
-  // 边界拖拽状态
-  const [dragType, setDragType] = useState<'move' | 'resize-left' | 'resize-right' | null>(null);
-  const [isHoveringEdge, setIsHoveringEdge] = useState<'left' | 'right' | null>(null);
-  
-  const dragCache = useDragCache();
-  const batchedUpdates = useBatchedUpdates();
-  
-  // 工具栏状态
-  const [zoomLevel, setZoomLevel] = useState(1);
   const [currentView, setCurrentView] = useState<'timeline' | 'list' | 'grid'>('timeline');
-  const [selectedTitleTaskId, setSelectedTitleTaskId] = useState<string | null>(null); // 左侧任务标题选中状态
-  const [selectedChartTaskId, setSelectedChartTaskId] = useState<string | null>(null); // 右侧图表任务选中状态
-
-  // 右键菜单状态
-  const [contextMenu, setContextMenu] = useState<{
-    visible: boolean;
-    x: number;
-    y: number;
-    clickPosition: { x: number; y: number };
-  }>({
-    visible: false,
-    x: 0,
-    y: 0,
-    clickPosition: { x: 0, y: 0 }
-  });
-
-  // 任务条右键菜单状态
-  const [taskContextMenu, setTaskContextMenu] = useState<TaskContextMenu>({
-    visible: false,
-    x: 0,
-    y: 0,
-    taskId: null
-  });
-
-  // 颜色选择器状态
-  const [colorPickerState, setColorPickerState] = useState<ColorPickerState>({
-    visible: false,
-    taskId: null
-  });
-
-  // 标签管理器状态
-  const [tagManagerState, setTagManagerState] = useState<TagManagerState>({
-    visible: false,
-    taskId: null,
-    newTag: ''
-  });
-
+  
   // 预定义颜色选项
   const availableColors = [
     '#4CAF50', '#2196F3', '#FF9800', '#f44336', '#9C27B0',
@@ -533,11 +385,6 @@ const GanttChart: React.FC<GanttChartProps> = ({
   const CHART_WIDTH = 800;
   const MIN_CONTAINER_HEIGHT = 200; // 最小高度
 
-  const dateRange = useMemo(() => {
-    const totalDays = (endDate.getTime() - startDate.getTime()) / (24 * 60 * 60 * 1000);
-    const pixelPerDay = CHART_WIDTH / totalDays;
-    return { totalDays, pixelPerDay };
-  }, [startDate, endDate]);
 
   // 工具栏事件处理函数
   const handleAddTask = useCallback(() => {
@@ -661,18 +508,6 @@ const GanttChart: React.FC<GanttChartProps> = ({
     }
   }, [selectedTitleTaskId]);
 
-  const handleViewToday = useCallback(() => {
-    console.log('定位到今天');
-    // TODO: 实现定位到今天的功能
-  }, []);
-
-  const handleZoomIn = useCallback(() => {
-    setZoomLevel(prev => Math.min(prev + 0.25, 3));
-  }, []);
-
-  const handleZoomOut = useCallback(() => {
-    setZoomLevel(prev => Math.max(prev - 0.25, 0.25));
-  }, []);
 
   const handleViewChange = useCallback((view: 'timeline' | 'list' | 'grid') => {
     setCurrentView(view);
@@ -725,10 +560,6 @@ const GanttChart: React.FC<GanttChartProps> = ({
     });
   }, [tasks]);
 
-  const dateToPixel = useCallback((date: Date): number => {
-    const daysPassed = (date.getTime() - startDate.getTime()) / (24 * 60 * 60 * 1000);
-    return daysPassed * dateRange.pixelPerDay;
-  }, [startDate, dateRange.pixelPerDay]);
 
   // 添加任务排序辅助函数，同时计算位置信息
   const sortedTasks = useMemo(() => {
@@ -870,10 +701,6 @@ const GanttChart: React.FC<GanttChartProps> = ({
     return containerHeight; // 左侧任务列表区域的内容高度
   }, [containerHeight]);
 
-  const pixelToDate = useCallback((pixel: number): Date => {
-    const daysPassed = pixel / dateRange.pixelPerDay;
-    return new Date(startDate.getTime() + daysPassed * 24 * 60 * 60 * 1000);
-  }, [startDate, dateRange.pixelPerDay]);
 
   // 右键菜单事件处理
   const handleContextMenu = useCallback((e: React.MouseEvent) => {
@@ -1099,12 +926,10 @@ const GanttChart: React.FC<GanttChartProps> = ({
     
     // 优先查找chartTask
     let task: any = sortedChartTasks.find(t => t.id === taskId);
-    let isChartTask = true;
     
     // 如果不是chartTask，查找兼容性task
     if (!task) {
       task = taskMapMemo.get(taskId);
-      isChartTask = false;
     }
     
     if (!task || !containerRef.current) return;
@@ -1116,35 +941,15 @@ const GanttChart: React.FC<GanttChartProps> = ({
       return edgeType ? `resize-${edgeType}` as 'resize-left' | 'resize-right' : 'move';
     })();
     
-    setDraggedTask(taskId);
-    setDraggedTaskData(task);
-    setIsDragging(true);
-    setDragType(currentDragType);
-    
-    dragCache.updateContainerBounds(containerRef.current);
-    
-    // 为chartTask创建适当的metrics
-    if (isChartTask) {
-      const duration = task.endDate.getTime() - task.startDate.getTime();
-      const metrics = {
-        duration,
-        pixelPerDay: dateRange.pixelPerDay,
-        minWidth: Math.max(20, (duration / (24 * 60 * 60 * 1000)) * dateRange.pixelPerDay)
-      };
-      dragCache.dragMetrics.current = metrics;
-    } else {
-      dragCache.updateDragMetrics(task, dateRange.pixelPerDay);
-    }
-    
-    const bounds = dragCache.containerBounds.current;
-    if (bounds) {
-      // 对里程碑使用正确的位置计算
-      const taskX = task.type === 'milestone' ? dateToPixel(task.startDate) : task.x;
-      setDragOffset({
-        x: e.clientX - bounds.left - taskX,
-        y: e.clientY - bounds.top
-      });
-    }
+    // 使用 Hook 方法开始水平拖拽
+    startHorizontalDrag(
+      taskId,
+      task,
+      e.clientX,
+      e.clientY,
+      currentDragType,
+      containerRef.current
+    );
   };
 
   // 添加垂直拖拽事件处理器
@@ -1155,37 +960,19 @@ const GanttChart: React.FC<GanttChartProps> = ({
     const taskIndex = leftPanelTasks.findIndex(task => task.id === taskId);
     if (taskIndex === -1) return;
     
-    setVerticalDragState({
-      isDragging: true,
-      draggedTaskId: taskId,
-      draggedTaskIndex: taskIndex,
-      targetIndex: taskIndex,
-      startY: e.clientY,
-      currentY: e.clientY,
-      shouldShowIndicator: false
-    });
+    // 使用 Hook 方法开始垂直拖拽
+    startVerticalDrag(taskId, taskIndex, e.clientY);
   };
 
   const handleTitleMouseMove = useCallback((e: MouseEvent) => {
     if (!verticalDragState.isDragging) return;
     
-    const deltaY = e.clientY - verticalDragState.startY;
-    const taskHeight = 30 + 10; // taskHeight + margin
-    const newTargetIndex = Math.max(0, Math.min(
-      leftPanelTasks.length, // 允许拖拽到最后位置
-      verticalDragState.draggedTaskIndex! + Math.floor(deltaY / taskHeight + 0.5)
-    ));
-    
-    // 计算拖拽距离是否超过0.8行
-    const dragDistance = Math.abs(deltaY / taskHeight);
-    const shouldShowIndicator = dragDistance >= 0.8 && newTargetIndex !== verticalDragState.draggedTaskIndex;
-    
-    setVerticalDragState(prev => ({
-      ...prev,
-      currentY: e.clientY,
-      targetIndex: newTargetIndex,
-      shouldShowIndicator
-    }));
+    // 使用 Hook 方法更新垂直拖拽位置
+    updateVerticalDragPosition(
+      e.clientY,
+      40,                       // 任务行高度 (taskHeight + margin)
+      leftPanelTasks.length     // 总任务数
+    );
   }, [verticalDragState.isDragging, verticalDragState.startY, verticalDragState.draggedTaskIndex, leftPanelTasks.length]);
 
   const handleTitleMouseUp = useCallback(() => {
@@ -1229,15 +1016,7 @@ const GanttChart: React.FC<GanttChartProps> = ({
             if (verticalDragState.targetIndex! < validRange.start || 
                 verticalDragState.targetIndex! > validRange.end) {
               // 子行不能拖拽到父行层级外，取消拖拽
-              setVerticalDragState({
-                isDragging: false,
-                draggedTaskId: null,
-                draggedTaskIndex: null,
-                targetIndex: null,
-                startY: 0,
-                currentY: 0,
-                shouldShowIndicator: false
-              });
+              resetVerticalDrag();
               return prev;
             }
           }
@@ -1285,65 +1064,22 @@ const GanttChart: React.FC<GanttChartProps> = ({
       });
     }
     
-    setVerticalDragState({
-      isDragging: false,
-      draggedTaskId: null,
-      draggedTaskIndex: null,
-      targetIndex: null,
-      startY: 0,
-      currentY: 0,
-      shouldShowIndicator: false
-    });
+    // 使用 Hook 方法重置垂直拖拽状态
+    resetVerticalDrag();
   }, [verticalDragState, leftPanelTasks]);
 
   const handleMouseMoveCore = useCallback((e: MouseEvent) => {
-    if (!isDragging || !draggedTask || !draggedTaskData || !dragType) return;
-
-    const bounds = dragCache.containerBounds.current;
-    const metrics = dragCache.dragMetrics.current;
-    if (!bounds || !metrics) return;
-
-    const mouseX = e.clientX - bounds.left;
-    const minWidth = 20; // 最小任务条宽度
+    if (!isDragging) return;
     
-    batchedUpdates(() => {
-      if (dragType === 'move') {
-        // 移动整个任务条
-        const newX = mouseX - dragOffset.x;
-        // 里程碑可以拖拽到整个时间线范围，普通任务需要保留最小宽度空间
-        const maxX = draggedTaskData.type === 'milestone' ? CHART_WIDTH : CHART_WIDTH - metrics.minWidth;
-        const constrainedX = Math.max(0, Math.min(newX, maxX));
-        
-        setTempDragPosition({
-          id: draggedTask,
-          x: constrainedX,
-          width: metrics.minWidth
-        });
-      } else if (dragType === 'resize-left') {
-        // 拖拽左边界
-        const originalRight = (draggedTaskData.x || 0) + (draggedTaskData.width || 0);
-        const newLeft = Math.max(0, Math.min(mouseX, originalRight - minWidth));
-        const newWidth = originalRight - newLeft;
-        
-        setTempDragPosition({
-          id: draggedTask,
-          x: newLeft,
-          width: newWidth
-        });
-      } else if (dragType === 'resize-right') {
-        // 拖拽右边界
-        const newWidth = Math.max(minWidth, Math.min(mouseX - (draggedTaskData.x || 0), CHART_WIDTH - (draggedTaskData.x || 0)));
-        
-        setTempDragPosition({
-          id: draggedTask,
-          x: draggedTaskData.x || 0,
-          width: newWidth
-        });
-      }
-    });
-  }, [isDragging, draggedTask, draggedTaskData, dragType, dragOffset, dragCache, batchedUpdates]);
+    // 使用 Hook 方法更新水平拖拽位置
+    updateHorizontalDragPosition(
+      e.clientX,
+      CHART_WIDTH,  // 图表宽度
+      20            // 最小宽度
+    );
+  }, [isDragging, updateHorizontalDragPosition]);
 
-  const handleMouseMove = useThrottledMouseMove(handleMouseMoveCore, [isDragging, draggedTask, draggedTaskData, dragOffset, dragCache]);
+  const handleMouseMove = useThrottledMouseMove(handleMouseMoveCore, [isDragging]);
 
   const handleMouseUp = useCallback(() => {
     if (tempDragPosition && draggedTask && draggedTaskData && dragType) {
@@ -1404,13 +1140,9 @@ const GanttChart: React.FC<GanttChartProps> = ({
       }
     }
     
-    setIsDragging(false);
-    setDraggedTask(null);
-    setDraggedTaskData(null);
-    setTempDragPosition(null);
-    setDragType(null);
-    dragCache.clearCache();
-  }, [tempDragPosition, draggedTask, draggedTaskData, dragType, pixelToDate, dragCache, sortedChartTasks]);
+    // 使用 Hook 方法重置拖拽状态
+    resetHorizontalDrag();
+  }, [tempDragPosition, draggedTask, draggedTaskData, dragType, pixelToDate, resetHorizontalDrag, sortedChartTasks]);
 
   useEffect(() => {
     if (isDragging) {
@@ -1458,21 +1190,6 @@ const GanttChart: React.FC<GanttChartProps> = ({
     }
   }, [contextMenu.visible, taskContextMenu.visible, colorPickerState.visible, tagManagerState.visible, hideContextMenu, hideTaskContextMenu]);
 
-  const timeScales = useMemo(() => {
-    const scales = [];
-    const interval = Math.max(1, Math.floor(dateRange.totalDays / 10));
-    
-    for (let i = 0; i <= dateRange.totalDays; i += interval) {
-      const date = new Date(startDate.getTime() + i * 24 * 60 * 60 * 1000);
-      const x = dateToPixel(date);
-      scales.push({
-        x,
-        date,
-        label: date.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })
-      });
-    }
-    return scales;
-  }, [dateRange.totalDays, startDate, dateToPixel]);
 
   // --- Styles ---
   const titleColumnStyle: React.CSSProperties = {
@@ -2221,6 +1938,6 @@ const GanttChart: React.FC<GanttChartProps> = ({
     )}
     </>
   );
-};
+}
 
 export default GanttChart;
