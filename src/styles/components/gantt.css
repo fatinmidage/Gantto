@@ -1,0 +1,135 @@
+/* 甘特图样式 */
+.gantt-chart {
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 20px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-secondary);
+}
+
+/* 时间轴样式优化 */
+.gantt-timeline {
+  background: var(--bg-glass);
+  border-bottom: 2px solid var(--border-secondary);
+  box-shadow: var(--shadow-sm);
+  position: relative;
+  overflow: hidden;
+}
+
+.gantt-timeline::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border-primary), transparent);
+}
+
+.timeline-scale {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  padding-left: 8px;
+  border-left: 1px solid var(--border-tertiary);
+  background: var(--bg-glass);
+  backdrop-filter: blur(4px);
+  transition: all 0.2s ease;
+}
+
+.timeline-scale:hover {
+  transform: translateY(-1px);
+}
+
+/* 网格线样式优化 */
+.gantt-grid-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: linear-gradient(to bottom, 
+    transparent 0%, 
+    rgba(203, 213, 225, 0.3) 20%, 
+    rgba(203, 213, 225, 0.5) 50%, 
+    rgba(203, 213, 225, 0.3) 80%, 
+    transparent 100%
+  );
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+/* 当前日期指示线样式优化 */
+.gantt-current-date-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(to bottom, #ef4444, #dc2626);
+  pointer-events: none;
+  z-index: 10;
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.6);
+  border-radius: 1px;
+}
+
+.gantt-current-date-line::before {
+  content: "";
+  position: absolute;
+  top: -4px;
+  left: -2px;
+  width: 6px;
+  height: 6px;
+  background: #ef4444;
+  border-radius: 50%;
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.8);
+}
+
+/* 当前日期线样式（兼容性） */
+.gantt-chart > div:last-child {
+  background: linear-gradient(to bottom, #ff5722, #d84315) !important;
+  box-shadow: 0 0 8px rgba(255, 87, 34, 0.4);
+}
+
+/* 网格线样式（兼容性） */
+.grid-lines > div {
+  background: linear-gradient(to bottom, transparent 0%, #f1f3f4 50%, transparent 100%) !important;
+}
+
+/* 性能优化的拖动状态 */
+.gantt-chart.dragging {
+  user-select: none;
+  cursor: grabbing !important;
+}
+
+.gantt-chart.dragging * {
+  pointer-events: none;
+}
+
+.gantt-chart.dragging .milestone-dragging {
+  pointer-events: auto;
+}
+
+/* 滚动条样式 */
+.gantt-chart::-webkit-scrollbar {
+  height: 8px;
+}
+
+.gantt-chart::-webkit-scrollbar-track {
+  background: var(--bg-hover);
+  border-radius: 4px;
+}
+
+.gantt-chart::-webkit-scrollbar-thumb {
+  background: var(--text-tertiary);
+  border-radius: 4px;
+  transition: background 0.3s ease;
+}
+
+.gantt-chart::-webkit-scrollbar-thumb:hover {
+  transform: scaleY(1.1);
+}

@@ -1,0 +1,111 @@
+/* 里程碑标签样式 */
+.milestone-tags {
+  position: absolute;
+  top: 20px;
+  left: -10px;
+  display: flex;
+  gap: 2px;
+  flex-wrap: wrap;
+  max-width: 80px;
+}
+
+.milestone-tag {
+  background-color: rgba(255, 255, 255, 0.95);
+  color: #333;
+  padding: 1px 4px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 500;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  white-space: nowrap;
+  max-width: 40px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 里程碑节点样式增强 */
+.gantt-milestone-node {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  z-index: 10;
+  transition: all 0.2s ease;
+}
+
+.gantt-milestone-node:hover {
+  transform: scale(1.2);
+}
+
+.gantt-milestone-node.selected {
+  box-shadow: 0 0 0 2px #2196F3;
+  border-radius: 50%;
+}
+
+.milestone-icon {
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  border-radius: 50%;
+}
+
+.milestone-icon.custom-color {
+  background-color: var(--custom-milestone-color) !important;
+}
+
+.gantt-milestone-node .milestone-icon {
+  color: var(--accent-warning);
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+.gantt-milestone-node:hover .milestone-icon {
+  color: var(--accent-warning);
+  transform: scale(1.1);
+}
+
+.gantt-milestone-node.selected .milestone-icon {
+  color: var(--accent-warning);
+  transform: scale(1.2);
+  filter: drop-shadow(0 4px 8px rgba(245, 158, 11, 0.3));
+}
+
+.gantt-milestone-node.dragging .milestone-icon {
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.2));
+}
+
+/* 里程碑样式增强（保留原有的里程碑相关样式） */
+.milestone {
+  transition: none !important;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(4px);
+}
+
+/* 选中状态样式 */
+.milestone.selected {
+  border: 2px solid #4299e1 !important;
+  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2) !important;
+}
+
+/* 新增优化样式类 */
+.milestone-dragging {
+  will-change: transform, box-shadow !important;
+  pointer-events: none !important;
+  transition: none !important;
+  z-index: 100 !important;
+}
+
+.milestone-optimized {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  will-change: transform, box-shadow;
+  contain: layout style paint;
+}
+
+.milestone-hardware-accelerated {
+  transform: translateZ(0);
+  will-change: transform;
+  backface-visibility: hidden;
+}

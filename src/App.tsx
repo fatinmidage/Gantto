@@ -1,6 +1,6 @@
 import GanttChart from './components/GanttChart';
 import Header from './components/Header';
-import './App.css';
+import './styles/index.css';
 
 function App() {
   const handleNewProject = () => {

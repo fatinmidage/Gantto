@@ -1,0 +1,119 @@
+/* 工具栏样式 */
+.gantt-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background: var(--bg-glass);
+  border-bottom: 1px solid var(--border-tertiary);
+  backdrop-filter: blur(10px);
+  margin-bottom: 1rem;
+  border-radius: 8px;
+  box-shadow: var(--shadow-sm);
+}
+
+.toolbar-section {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.toolbar-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  border: none;
+  border-radius: 8px;
+  background: var(--bg-hover);
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid var(--border-tertiary);
+  letter-spacing: -0.01em;
+}
+
+.toolbar-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.toolbar-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.toolbar-btn.primary {
+  background: linear-gradient(45deg, var(--accent-primary), #2563eb);
+  color: var(--text-inverse);
+  border: 1px solid var(--border-primary);
+}
+
+.toolbar-btn.primary:hover {
+  transform: translateY(-1px);
+}
+
+.toolbar-btn.danger {
+  background: linear-gradient(45deg, var(--accent-danger), #dc2626);
+  color: var(--text-inverse);
+  border: 1px solid var(--border-primary);
+}
+
+.toolbar-btn.danger:hover {
+  transform: translateY(-1px);
+}
+
+.toolbar-separator {
+  width: 1px;
+  height: 24px;
+  background: var(--border-tertiary);
+  margin: 0 0.5rem;
+}
+
+.zoom-level {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  min-width: 40px;
+  text-align: center;
+}
+
+.view-switcher {
+  display: flex;
+  background: var(--bg-glass);
+  border-radius: 8px;
+  padding: 2px;
+  border: 1px solid var(--border-tertiary);
+}
+
+.view-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.view-btn:hover {
+  transform: translateY(-1px);
+}
+
+.view-btn.active {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-sm);
+}

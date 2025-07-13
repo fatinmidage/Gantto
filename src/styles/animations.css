@@ -1,0 +1,229 @@
+/* 动画效果 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes bounce {
+  0%, 20%, 53%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40%, 43% {
+    transform: translateY(-10px);
+  }
+  70% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+@keyframes focusRing {
+  0% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.5);
+  }
+  100% {
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes taskPulse {
+  0% {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+  50% {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  }
+  100% {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+}
+
+/* 页面加载动画 */
+.app {
+  animation: fadeIn 0.8s ease-out;
+}
+
+.gantt-container-wrapper {
+  animation: fadeIn 0.6s ease-out;
+}
+
+.app-header {
+  animation: fadeInDown 0.5s ease-out;
+}
+
+.gantt-toolbar {
+  animation: fadeInUp 0.7s ease-out;
+}
+
+.task-title {
+  animation: slideInLeft 0.6s ease-out;
+}
+
+/* 任务选中动画 */
+.gantt-task-bar.selected {
+  animation: bounce 0.4s ease-in-out;
+}
+
+.gantt-task-bar.pulse {
+  animation: taskPulse 2s ease-in-out infinite;
+}
+
+/* 工具提示动画 */
+.tooltip {
+  animation: fadeInUp 0.3s ease-out;
+}
+
+/* 当前日期线动画 */
+.gantt-current-date-line {
+  animation: fadeIn 1s ease-out;
+}
+
+.gantt-current-date-line::before {
+  animation: bounce 2s infinite;
+}
+
+/* 加载动画 */
+.loading-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--bg-secondary) 0%,
+    var(--bg-hover) 50%,
+    var(--bg-secondary) 100%
+  );
+  background-size: 1000px 100%;
+  animation: shimmer 2s infinite;
+}
+
+.loading-task {
+  opacity: 0.7;
+  animation: pulse 2s infinite;
+}
+
+/* 交互反馈动画 */
+.interactive-element {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.interactive-element:hover {
+  transform: translateY(-2px);
+}
+
+.interactive-element:active {
+  transform: translateY(0);
+  transition: all 0.1s ease;
+}
+
+/* 渐进式动画延迟 */
+.task-title:nth-child(1) {
+  animation-delay: 0.1s;
+}
+
+.task-title:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.task-title:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+.task-title:nth-child(4) {
+  animation-delay: 0.4s;
+}
+
+.task-title:nth-child(5) {
+  animation-delay: 0.5s;
+}
+
+.gantt-task-bar:nth-child(1) {
+  animation-delay: 0.2s;
+}
+
+.gantt-task-bar:nth-child(2) {
+  animation-delay: 0.3s;
+}
+
+.gantt-task-bar:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+.gantt-task-bar:nth-child(4) {
+  animation-delay: 0.5s;
+}
+
+.gantt-task-bar:nth-child(5) {
+  animation-delay: 0.6s;
+}
+
+/* 平滑的状态转换 */
+.gantt-task-bar {
+  transition: none;
+}
+
+.timeline-scale {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.task-title {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
