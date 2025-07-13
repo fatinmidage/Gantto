@@ -1,8 +1,8 @@
 import React, { useState, useRef, useCallback, useMemo, useEffect } from 'react';
-import { Target } from 'lucide-react';
 import Toolbar from './Toolbar';
 import TaskTitleColumn from './gantt/TaskTitleColumn';
 import TimelineHeader from './gantt/TimelineHeader';
+import TaskBars from './gantt/TaskBars';
 
 // 导入新的统一类型定义
 import {
@@ -219,6 +219,7 @@ const GanttChart: React.FC<GanttChartProps> = ({
     setTasks 
   } = taskManager;
   
+  
   // 拖拽状态和方法
   const {
     draggedTask,
@@ -233,6 +234,7 @@ const GanttChart: React.FC<GanttChartProps> = ({
     startVerticalDrag,
     updateHorizontalDragPosition,
     updateVerticalDragPosition,
+    updateDragMetrics,
     resetHorizontalDrag,
     resetVerticalDrag
   } = dragAndDrop;
@@ -240,6 +242,7 @@ const GanttChart: React.FC<GanttChartProps> = ({
   // 时间轴状态和方法
   const {
     zoomLevel,
+    dateRange,
     dateToPixel,
     pixelToDate,
     handleZoomIn,
@@ -402,7 +405,6 @@ const GanttChart: React.FC<GanttChartProps> = ({
 
   const handleEditTask = useCallback(() => {
     if (selectedTitleTaskId) {
-      console.log('编辑任务:', selectedTitleTaskId);
       // TODO: 实现编辑任务功能
     }
   }, [selectedTitleTaskId]);
@@ -434,7 +436,6 @@ const GanttChart: React.FC<GanttChartProps> = ({
     // 检查父行是否存在且不是子行（防止创建孙任务）
     const parentRow = projectRows.find(row => row.id === parentId);
     if (!parentRow || parentRow.level !== 0) {
-      console.log('只能为顶级项目行创建子任务');
       return;
     }
 
@@ -566,6 +567,7 @@ const GanttChart: React.FC<GanttChartProps> = ({
 
   // 基于新的数据结构：按rowId分组图表任务
   const chartTaskRows = useMemo(() => {
+    
     const rowMap = new Map<string, Task[]>();
     
     // 为每个可见项目行创建一个空的任务数组
@@ -581,10 +583,12 @@ const GanttChart: React.FC<GanttChartProps> = ({
     });
     
     // 按项目行顺序排序，同一行内按startDate排序任务
-    return visibleProjectRows.map(row => ({
+    const result = visibleProjectRows.map(row => ({
       rowId: row.id,
       tasks: rowMap.get(row.id)!.sort((a, b) => a.startDate.getTime() - b.startDate.getTime())
     }));
+    
+    return result;
   }, [visibleProjectRows, sortedChartTasks]);
 
   // 兼容性：按rowId分组任务，支持同一行显示多个任务
@@ -770,10 +774,8 @@ const GanttChart: React.FC<GanttChartProps> = ({
 
   // 更改任务颜色
   const handleColorChange = useCallback((taskId: string, color: string) => {
-    console.log('Changing color for task:', taskId, 'to color:', color); // 调试信息
     setTasks(prev => prev.map(task => {
       if (task.id === taskId) {
-        console.log('Updated task:', { ...task, color: color }); // 调试信息
         return { ...task, color: color };
       }
       return task;
@@ -864,6 +866,10 @@ const GanttChart: React.FC<GanttChartProps> = ({
       const edgeType = detectEdgeHover(e, task);
       return edgeType ? `resize-${edgeType}` as 'resize-left' | 'resize-right' : 'move';
     })();
+    
+    
+    // 更新拖拽度量缓存
+    updateDragMetrics(task, dateRange.pixelPerDay);
     
     // 使用 Hook 方法开始水平拖拽
     startHorizontalDrag(
@@ -1183,109 +1189,22 @@ const GanttChart: React.FC<GanttChartProps> = ({
           />
 
           {/* Task Bars */}
-          <div className="tasks" style={{
-            position: 'absolute',
-            top: timelineHeight + 10,
-            left: 0,
-            right: 0,
-            bottom: 0
-          }}>
-            {chartTaskRows.map((row, rowIndex) => 
-              row.tasks.map((chartTask) => {
-                // 直接使用rowIndex，因为chartTaskRows已经按照visibleProjectRows的顺序排列
-                const index = rowIndex;
-                
-              const isBeingDragged = draggedTask === chartTask.id;
-              const displayX = isBeingDragged && tempDragPosition ? tempDragPosition.x : chartTask.x;
-              const displayWidth = isBeingDragged && tempDragPosition ? tempDragPosition.width : chartTask.width;
-              const isSelected = selectedChartTaskId === chartTask.id;
-              
-              // 里程碑节点渲染
-              if (chartTask.type === 'milestone') {
-                // 里程碑节点基于开始时间定位，不使用任务条宽度
-                const milestoneX = isBeingDragged && tempDragPosition ? tempDragPosition.x : dateToPixel(chartTask.startDate);
-                return (
-                  <div
-                    key={chartTask.id}
-                    className={`gantt-milestone-node ${isBeingDragged ? 'dragging' : ''} ${isSelected ? 'selected' : ''} status-${chartTask.status}`}
-                    style={{
-                      left: milestoneX - 8, // 减去图标宽度的一半，让它居中对齐
-                      top: index * (taskHeight + 10) + (taskHeight - 16) / 2, // 居中对齐
-                    }}
-                    onMouseDown={(e) => {
-                      if (e.button === 0) { // 只处理左键
-                        handleMouseDown(e, chartTask.id);
-                      }
-                    }}
-                    onClick={(e) => {
-                      if (e.button === 0) { // 只处理左键点击
-                        setSelectedChartTaskId(chartTask.id);
-                      }
-                    }}
-                    onContextMenu={(e) => handleTaskContextMenu(e, chartTask.id)}
-                  >
-                    <div className="milestone-icon custom-color" style={{ '--custom-milestone-color': chartTask.color } as React.CSSProperties}>
-                      <Target size={16} />
-                    </div>
-                    {/* 显示里程碑标签 */}
-                    {chartTask.tags && chartTask.tags.length > 0 && (
-                      <div className="milestone-tags">
-                        {chartTask.tags.map(tag => (
-                          <span key={tag} className="milestone-tag">{tag}</span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                );
-              }
-              
-              // 普通任务条渲染
-              return (
-                <div
-                  key={chartTask.id}
-                  className={`gantt-task-bar custom-color ${isBeingDragged ? 'dragging' : ''} ${isSelected ? 'selected' : ''} status-${chartTask.status} type-${chartTask.type} ${isHoveringEdge ? `edge-hover-${isHoveringEdge}` : ''}`}
-                  style={{
-                    left: displayX,
-                    top: index * (taskHeight + 10),
-                    width: displayWidth,
-                    height: taskHeight,
-                    '--custom-task-color': chartTask.color,
-                    cursor: isHoveringEdge === 'left' ? 'w-resize' : isHoveringEdge === 'right' ? 'e-resize' : 'grab'
-                  } as React.CSSProperties}
-                  onMouseDown={(e) => {
-                    if (e.button === 0) { // 只处理左键
-                      handleMouseDown(e, chartTask.id);
-                    }
-                  }}
-                  onMouseMove={(e) => handleEdgeHover(e, chartTask)}
-                  onMouseLeave={() => {
-                    if (!isDragging) {
-                      setIsHoveringEdge(null);
-                    }
-                  }}
-                  onClick={(e) => {
-                    if (e.button === 0) { // 只处理左键点击
-                      setSelectedChartTaskId(chartTask.id);
-                    }
-                  }}
-                  onContextMenu={(e) => handleTaskContextMenu(e, chartTask.id)}
-                >
-                  {/* 任务内容 */}
-                  <div className="gantt-task-content">
-                    {/* 显示任务标签 */}
-                    {chartTask.tags && chartTask.tags.length > 0 && (
-                      <div className="task-tags">
-                        {chartTask.tags.map(tag => (
-                          <span key={tag} className="task-tag">{tag}</span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })
-            )}
-          </div>
+          <TaskBars
+            chartTaskRows={chartTaskRows}
+            taskHeight={taskHeight}
+            timelineHeight={timelineHeight}
+            draggedTask={draggedTask}
+            tempDragPosition={tempDragPosition}
+            selectedChartTaskId={selectedChartTaskId}
+            isHoveringEdge={isHoveringEdge}
+            dateToPixel={dateToPixel}
+            isDragging={isDragging}
+            onMouseDown={handleMouseDown}
+            onTaskSelect={setSelectedChartTaskId}
+            onTaskContextMenu={handleTaskContextMenu}
+            onEdgeHover={handleEdgeHover}
+            onMouseLeave={() => setIsHoveringEdge(null)}
+          />
 
         </div>
       </div>
@@ -1479,7 +1398,6 @@ const GanttChart: React.FC<GanttChartProps> = ({
                 e.currentTarget.style.transform = 'scale(1)';
               }}
                              onClick={() => {
-                 console.log('Color clicked:', color, 'for task:', colorPickerState.taskId); // 调试信息
                  if (colorPickerState.taskId) {
                    handleColorChange(colorPickerState.taskId, color);
                  }

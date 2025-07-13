@@ -146,14 +146,18 @@ export const useDragAndDrop = () => {
 
   // 更新水平拖拽位置
   const updateHorizontalDragPosition = useCallback((
-    mouseX: number,
+    clientX: number,
     CHART_WIDTH: number = 800,
     minWidth: number = 20
   ) => {
     if (!isDragging || !draggedTask || !draggedTaskData || !dragType) return;
 
     const metrics = dragMetrics.current;
-    if (!metrics) return;
+    const bounds = containerBounds.current;
+    if (!metrics || !bounds) return;
+
+    // 计算相对于容器的鼠标位置
+    const mouseX = clientX - bounds.left;
 
     if (dragType === 'move') {
       // 移动整个任务条
@@ -164,7 +168,7 @@ export const useDragAndDrop = () => {
       setTempDragPosition({
         id: draggedTask,
         x: constrainedX,
-        width: metrics.minWidth
+        width: draggedTaskData.type === 'milestone' ? 16 : metrics.minWidth
       });
     } else if (dragType === 'resize-left') {
       // 拖拽左边界
