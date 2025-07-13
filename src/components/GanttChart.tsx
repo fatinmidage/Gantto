@@ -2,6 +2,7 @@ import React, { useState, useRef, useCallback, useMemo, useEffect } from 'react'
 import { Target } from 'lucide-react';
 import Toolbar from './Toolbar';
 import TaskTitleColumn from './gantt/TaskTitleColumn';
+import TimelineHeader from './gantt/TimelineHeader';
 
 // 导入新的统一类型定义
 import {
@@ -1162,41 +1163,24 @@ const GanttChart: React.FC<GanttChartProps> = ({
         {/* Gantt Chart Area */}
         <div 
           ref={containerRef}
-          className={`gantt-chart ${isDragging ? 'dragging' : ''}`}
+          className={`gantt-chart-container ${isDragging ? 'dragging' : ''}`}
           style={{
             width: CHART_WIDTH,
             height: timelineHeight + taskContentHeight,
             position: 'relative',
-            cursor: isDragging ? 'grabbing' : 'default'
+            cursor: isDragging ? 'grabbing' : 'default',
+            backgroundColor: 'transparent',
+            overflow: 'hidden'
           }}
           onContextMenu={handleContextMenu}
         >
-          {/* Timeline */}
-          <div className="gantt-timeline" style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            height: timelineHeight
-          }}>
-            {timeScales.map((scale, index) => (
-              <div key={index} className="timeline-scale" style={{
-                left: scale.x
-              }}>
-                {scale.label}
-              </div>
-            ))}
-          </div>
-
-          {/* Grid Lines */}
-          <div className="gantt-grid-lines">
-            {timeScales.map((scale, index) => (
-              <div key={index} className="gantt-grid-line" style={{
-                left: scale.x,
-                top: timelineHeight
-              }} />
-            ))}
-          </div>
+          {/* Timeline Header */}
+          <TimelineHeader
+            timelineHeight={timelineHeight}
+            timeScales={timeScales}
+            dateToPixel={dateToPixel}
+            containerHeight={timelineHeight + taskContentHeight}
+          />
 
           {/* Task Bars */}
           <div className="tasks" style={{
@@ -1303,10 +1287,6 @@ const GanttChart: React.FC<GanttChartProps> = ({
             )}
           </div>
 
-          {/* Current Date Line */}
-          <div className="gantt-current-date-line" style={{
-            left: dateToPixel(new Date())
-          }} />
         </div>
       </div>
     </div>
