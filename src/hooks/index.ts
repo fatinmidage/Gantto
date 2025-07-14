@@ -8,6 +8,8 @@ export { useGanttUI } from './gantt/useGanttUI';
 export { useThrottledMouseMove } from './gantt/useThrottledMouseMove';
 export { useGanttEvents } from './gantt/useGanttEvents';
 export { useGanttInteractions } from './gantt/useGanttInteractions';
+export { useGanttKeyboard } from './gantt/useGanttKeyboard';
+export { useGanttMouseEvents } from './gantt/useGanttMouseEvents';
 
 // 通用Hooks
 export { useThrottle } from './common/useThrottle';

@@ -22,15 +22,22 @@ import {
   useGanttUI,
   useThrottledMouseMove,
   useGanttEvents,
-  useGanttInteractions
+  useGanttInteractions,
+  useGanttKeyboard
 } from '../hooks';
 
 // 导入层级帮助函数
 import {
   getVisibleProjectRows,
-  getVisibleTasks,
-  getAllDescendantRows
+  getVisibleTasks
 } from './gantt/GanttHelpers';
+
+// 导入样式常量
+import {
+  LAYOUT_CONSTANTS,
+  COLOR_CONSTANTS,
+  COMPONENT_STYLES
+} from './gantt/ganttStyles';
 
 
 interface GanttChartProps {
@@ -99,6 +106,11 @@ const GanttChart: React.FC<GanttChartProps> = ({
     setTasks 
   } = taskManager;
 
+  // 可用标签选项
+  const [availableTags, setAvailableTags] = useState<string[]>([
+    '重要', '紧急', '测试', '开发', '设计', '评审', '部署'
+  ]);
+
   // 事件处理 Hooks
   const ganttEvents = useGanttEvents({
     tasks,
@@ -106,7 +118,9 @@ const GanttChart: React.FC<GanttChartProps> = ({
     projectRows,
     setTasks,
     setChartTasks,
-    setProjectRows
+    setProjectRows,
+    availableTags,
+    setAvailableTags
   });
 
   const ganttInteractions = useGanttInteractions({
@@ -155,24 +169,26 @@ const GanttChart: React.FC<GanttChartProps> = ({
     setSelectedChartTaskId
   } = ganttUI;
 
+  // 键盘事件处理
+  useGanttKeyboard({
+    selectedTaskId: selectedChartTaskId || undefined,
+    selectedTitleTaskId: ganttInteractions.selectedTitleTaskId || undefined,
+    onTaskDelete: ganttEvents.deleteTaskCore,
+    onTaskCreate: ganttEvents.addNewTask,
+    onZoomIn: handleZoomIn,
+    onZoomOut: handleZoomOut,
+    enabled: true
+  });
+
   // 其他状态和配置
   const containerRef = useRef<HTMLDivElement>(null);
   
   // 预定义颜色选项
-  const availableColors = [
-    '#4CAF50', '#2196F3', '#FF9800', '#f44336', '#9C27B0',
-    '#607D8B', '#795548', '#E91E63', '#00BCD4', '#8BC34A',
-    '#FFC107', '#FF5722', '#673AB7', '#3F51B5', '#009688'
-  ];
+  const availableColors = [...COLOR_CONSTANTS.AVAILABLE_COLORS];
 
-  // 可用标签选项
-  const [availableTags, setAvailableTags] = useState<string[]>([
-    '重要', '紧急', '测试', '开发', '设计', '评审', '部署'
-  ]);
-
-  const TITLE_COLUMN_WIDTH = 230;
-  const CHART_WIDTH = 800;
-  const MIN_CONTAINER_HEIGHT = 200;
+  const TITLE_COLUMN_WIDTH = LAYOUT_CONSTANTS.TITLE_COLUMN_WIDTH;
+  const CHART_WIDTH = LAYOUT_CONSTANTS.CHART_WIDTH;
+  const MIN_CONTAINER_HEIGHT = LAYOUT_CONSTANTS.MIN_CONTAINER_HEIGHT;
 
 
   // 添加任务排序辅助函数，同时计算位置信息
@@ -322,12 +338,12 @@ const GanttChart: React.FC<GanttChartProps> = ({
 
   // 右键菜单事件处理
   const handleCreateTask = useCallback((task: Task) => {
-    setChartTasks(prev => [...prev, task]);
-  }, []);
+    ganttEvents.createTask(task);
+  }, [ganttEvents]);
 
   const handleCreateMilestone = useCallback((milestone: Task) => {
-    setChartTasks(prev => [...prev, milestone]);
-  }, []);
+    ganttEvents.createMilestone(milestone);
+  }, [ganttEvents]);
 
   const handleShowColorPicker = useCallback((taskId: string) => {
     const task = tasks.find(t => t.id === taskId);
@@ -357,65 +373,32 @@ const GanttChart: React.FC<GanttChartProps> = ({
 
   // 更改任务颜色
   const handleColorChange = useCallback((taskId: string, color: string) => {
-    setTasks(prev => prev.map(task => {
-      if (task.id === taskId) {
-        return { ...task, color: color };
-      }
-      return task;
-    }));
+    ganttEvents.handleColorChange(taskId, color);
     setColorPickerState({ visible: false, x: 0, y: 0 });
-  }, []);
+  }, [ganttEvents]);
 
   // 添加标签
   const handleTagAdd = useCallback((taskId: string, tag: string) => {
-    if (!tag.trim()) return;
-    
-    setTasks(prev => prev.map(task => {
-      if (task.id === taskId) {
-        const currentTags = task.tags || [];
-        if (!currentTags.includes(tag)) {
-          return { ...task, tags: [...currentTags, tag] };
-        }
-      }
-      return task;
-    }));
-    
-    // 将新标签添加到可用标签列表
-    if (!availableTags.includes(tag)) {
-      setAvailableTags(prev => [...prev, tag]);
-    }
-  }, [availableTags]);
+    ganttEvents.handleTagAdd(taskId, tag);
+  }, [ganttEvents]);
 
   // 移除标签
   const handleTagRemove = useCallback((taskId: string, tag: string) => {
-    setTasks(prev => prev.map(task => {
-      if (task.id === taskId) {
-        const currentTags = task.tags || [];
-        return { ...task, tags: currentTags.filter(t => t !== tag) };
-      }
-      return task;
-    }));
-  }, []);
+    ganttEvents.handleTagRemove(taskId, tag);
+  }, [ganttEvents]);
 
 
-  // 移除自动更新任务位置的useEffect，改为在渲染时计算
-  // 避免无限循环：updateTaskPositions -> setTasks -> sortedTasks -> updateTaskPositions
-
-  // 检测是否在任务条边界附近
-  const detectEdgeHover = (e: React.MouseEvent, _task: any): 'left' | 'right' | null => {
+  // 边界检测处理器
+  const detectEdgeHover = useCallback((e: React.MouseEvent, _task: any): 'left' | 'right' | null => {
     const rect = e.currentTarget.getBoundingClientRect();
     const mouseX = e.clientX - rect.left;
-    const edgeZone = 8; // 8px边界检测区域
+    const edgeZone = LAYOUT_CONSTANTS.EDGE_DETECTION_ZONE;
     
-    if (mouseX <= edgeZone) {
-      return 'left';
-    } else if (mouseX >= rect.width - edgeZone) {
-      return 'right';
-    }
+    if (mouseX <= edgeZone) return 'left';
+    if (mouseX >= rect.width - edgeZone) return 'right';
     return null;
-  };
+  }, []);
 
-  // 简化的边界检测处理器
   const handleEdgeHover = useCallback((e: React.MouseEvent, task: any) => {
     if (!isDragging) {
       const edgeType = detectEdgeHover(e, task);
@@ -423,234 +406,97 @@ const GanttChart: React.FC<GanttChartProps> = ({
         setIsHoveringEdge(edgeType);
       }
     }
-  }, [isDragging, isHoveringEdge]);
+  }, [isDragging, isHoveringEdge, detectEdgeHover]);
 
-  const handleMouseDown = (e: React.MouseEvent, taskId: string) => {
+  const handleMouseDown = useCallback((e: React.MouseEvent, taskId: string) => {
     e.preventDefault();
     
-    // 优先查找chartTask
-    let task: any = sortedChartTasks.find(t => t.id === taskId);
-    
-    // 如果不是chartTask，查找兼容性task
-    if (!task) {
-      task = taskMapMemo.get(taskId);
-    }
-    
+    const task = sortedChartTasks.find(t => t.id === taskId) || taskMapMemo.get(taskId);
     if (!task || !containerRef.current) return;
     
-    // 检测拖拽类型
-    // 里程碑始终是移动操作，不支持resize
     const currentDragType = task.type === 'milestone' ? 'move' : (() => {
       const edgeType = detectEdgeHover(e, task);
       return edgeType ? `resize-${edgeType}` as 'resize-left' | 'resize-right' : 'move';
     })();
     
-    
-    // 更新拖拽度量缓存
     updateDragMetrics(task, dateRange.pixelPerDay);
-    
-    // 使用 Hook 方法开始水平拖拽
-    startHorizontalDrag(
-      taskId,
-      task,
-      e.clientX,
-      e.clientY,
-      currentDragType,
-      containerRef.current
-    );
-  };
+    startHorizontalDrag(taskId, task, e.clientX, e.clientY, currentDragType, containerRef.current);
+  }, [sortedChartTasks, taskMapMemo, detectEdgeHover, updateDragMetrics, dateRange.pixelPerDay, startHorizontalDrag]);
 
-  // 添加垂直拖拽事件处理器
-  const handleTitleMouseDown = (e: React.MouseEvent, taskId: string) => {
+  const handleTitleMouseDown = useCallback((e: React.MouseEvent, taskId: string) => {
     e.preventDefault();
     e.stopPropagation();
     
     const taskIndex = leftPanelTasks.findIndex(task => task.id === taskId);
-    if (taskIndex === -1) return;
-    
-    // 使用 Hook 方法开始垂直拖拽
-    startVerticalDrag(taskId, taskIndex, e.clientY);
-  };
+    if (taskIndex !== -1) {
+      startVerticalDrag(taskId, taskIndex, e.clientY);
+    }
+  }, [leftPanelTasks, startVerticalDrag]);
 
   const handleTitleMouseMove = useCallback((e: MouseEvent) => {
-    if (!verticalDragState.isDragging) return;
-    
-    // 使用 Hook 方法更新垂直拖拽位置
-    updateVerticalDragPosition(
-      e.clientY,
-      40,                       // 任务行高度 (taskHeight + margin)
-      leftPanelTasks.length     // 总任务数
-    );
-  }, [verticalDragState.isDragging, verticalDragState.startY, verticalDragState.draggedTaskIndex, leftPanelTasks.length]);
+    if (verticalDragState.isDragging) {
+      updateVerticalDragPosition(e.clientY, LAYOUT_CONSTANTS.TASK_ROW_HEIGHT, leftPanelTasks.length);
+    }
+  }, [verticalDragState.isDragging, updateVerticalDragPosition, leftPanelTasks.length]);
 
   const handleTitleMouseUp = useCallback(() => {
-    if (!verticalDragState.isDragging) return;
-    
-    if (verticalDragState.targetIndex !== null && 
+    if (verticalDragState.isDragging && 
+        verticalDragState.targetIndex !== null && 
         verticalDragState.draggedTaskIndex !== null &&
         verticalDragState.targetIndex !== verticalDragState.draggedTaskIndex) {
       
-      // 重新排序项目行
+      // 简化的重排序逻辑
       setProjectRows(prev => {
         const newRows = [...prev];
-        const draggedRowData = leftPanelTasks[verticalDragState.draggedTaskIndex!];
-        const targetRowData = verticalDragState.targetIndex! < leftPanelTasks.length 
-          ? leftPanelTasks[verticalDragState.targetIndex!]
-          : null;
+        const draggedIndex = verticalDragState.draggedTaskIndex!;
+        const targetIndex = verticalDragState.targetIndex!;
         
-        if (!draggedRowData) return prev;
-        
-        // 找到对应的ProjectRow
-        const draggedRow = newRows.find(row => row.id === draggedRowData.id);
-        if (!draggedRow) return prev;
-        
-        // 获取被拖拽行的所有子行
-        const draggedDescendants = getAllDescendantRows(draggedRow.id, newRows);
-        const allDraggedRows = [draggedRow, ...draggedDescendants];
-        
-        // 检查子行拖拽限制：子行不能拖拽到父行层级外
-        if (draggedRow.parentId) {
-          const parentRow = newRows.find(r => r.id === draggedRow.parentId);
-          if (parentRow) {
-            // 获取父行的所有子行（在左侧面板中的位置）
-            const parentDescendants = getAllDescendantRows(parentRow.id, newRows);
-            const parentRowIndex = leftPanelTasks.findIndex(t => t.id === parentRow.id);
-            const validRange = {
-              start: parentRowIndex + 1,
-              end: parentRowIndex + parentDescendants.length
-            };
-            
-            // 检查目标位置是否在有效范围内
-            if (verticalDragState.targetIndex! < validRange.start || 
-                verticalDragState.targetIndex! > validRange.end) {
-              // 子行不能拖拽到父行层级外，取消拖拽
-              resetVerticalDrag();
-              return prev;
-            }
-          }
-        }
-        
-        // 计算新的order值
-        let newOrder: number;
-        if (!targetRowData) {
-          // 拖拽到最后位置
-          const maxOrder = Math.max(...newRows.map(r => r.order));
-          newOrder = maxOrder + 1;
-        } else {
-          const targetRow = newRows.find(row => row.id === targetRowData.id);
-          if (!targetRow) return prev;
+        // 重新排序
+        const draggedRow = newRows.find(row => row.id === leftPanelTasks[draggedIndex].id);
+        if (draggedRow) {
+          // 简单的order调整
+          const targetOrder = targetIndex < newRows.length ? newRows[targetIndex].order : newRows.length;
+          const orderDelta = targetOrder - draggedRow.order;
           
-          const targetOrder = targetRow.order;
-          if (verticalDragState.targetIndex! > verticalDragState.draggedTaskIndex!) {
-            // 向下拖拽，插入到目标行之后
-            newOrder = targetOrder + 0.5;
-          } else {
-            // 向上拖拽，插入到目标行之前
-            newOrder = targetOrder - 0.5;
-          }
+          return newRows.map(row => {
+            if (row.id === draggedRow.id) {
+              return { ...row, order: row.order + orderDelta };
+            }
+            return row;
+          }).sort((a, b) => a.order - b.order).map((row, index) => ({
+            ...row,
+            order: index
+          }));
         }
-        
-        // 计算移动距离
-        const orderDelta = newOrder - draggedRow.order;
-        
-        // 更新被拖拽行及其所有子行的order
-        const updatedRows = newRows.map(row => {
-          // 检查是否是被拖拽的行或其子行
-          const isDraggedOrDescendant = allDraggedRows.some(draggedRow => draggedRow.id === row.id);
-          if (isDraggedOrDescendant) {
-            return { ...row, order: row.order + orderDelta };
-          }
-          return row;
-        });
-        
-        // 重新标准化order值（确保是连续的整数）
-        const sortedByOrder = [...updatedRows].sort((a, b) => a.order - b.order);
-        return sortedByOrder.map((row, index) => ({
-          ...row,
-          order: index
-        }));
+        return prev;
       });
     }
-    
-    // 使用 Hook 方法重置垂直拖拽状态
     resetVerticalDrag();
-  }, [verticalDragState, leftPanelTasks]);
+  }, [verticalDragState, leftPanelTasks, setProjectRows, resetVerticalDrag]);
 
   const handleMouseMoveCore = useCallback((e: MouseEvent) => {
-    if (!isDragging) return;
-    
-    // 使用 Hook 方法更新水平拖拽位置
-    updateHorizontalDragPosition(
-      e.clientX,
-      CHART_WIDTH,  // 图表宽度
-      20            // 最小宽度
-    );
+    if (isDragging) {
+      updateHorizontalDragPosition(e.clientX, CHART_WIDTH, LAYOUT_CONSTANTS.MIN_TASK_WIDTH);
+    }
   }, [isDragging, updateHorizontalDragPosition]);
 
   const handleMouseMove = useThrottledMouseMove(handleMouseMoveCore, [isDragging]);
 
   const handleMouseUp = useCallback(() => {
     if (tempDragPosition && draggedTask && draggedTaskData && dragType) {
-      let newStartDate: Date;
-      let newEndDate: Date;
+      const newStartDate = pixelToDate(tempDragPosition.x);
+      const newEndDate = dragType === 'move' 
+        ? (draggedTaskData.type === 'milestone' 
+          ? newStartDate 
+          : new Date(newStartDate.getTime() + (draggedTaskData.endDate.getTime() - draggedTaskData.startDate.getTime())))
+        : dragType === 'resize-left' 
+        ? draggedTaskData.endDate 
+        : pixelToDate(tempDragPosition.x + tempDragPosition.width);
       
-      if (dragType === 'move') {
-        // 移动任务条：保持时间段长度，改变开始和结束时间
-        newStartDate = pixelToDate(tempDragPosition.x);
-        if (draggedTaskData.type === 'milestone') {
-          // 里程碑只更新开始时间，结束时间保持与开始时间相同
-          newEndDate = newStartDate;
-        } else {
-          // 普通任务保持时间段长度
-          const duration = draggedTaskData.endDate.getTime() - draggedTaskData.startDate.getTime();
-          newEndDate = new Date(newStartDate.getTime() + duration);
-        }
-      } else if (dragType === 'resize-left') {
-        // 左边界拖拽：改变开始时间，保持结束时间
-        newStartDate = pixelToDate(tempDragPosition.x);
-        newEndDate = draggedTaskData.endDate;
-      } else if (dragType === 'resize-right') {
-        // 右边界拖拽：保持开始时间，改变结束时间
-        newStartDate = draggedTaskData.startDate;
-        newEndDate = pixelToDate(tempDragPosition.x + tempDragPosition.width);
-      } else {
-        return; // 未知的拖拽类型
-      }
-      
-      // 优先更新chartTasks
-      const isChartTask = sortedChartTasks.find(t => t.id === draggedTask);
-      
-      if (isChartTask) {
-        setChartTasks(prev => prev.map(task => {
-          if (task.id === draggedTask) {
-            return {
-              ...task,
-              startDate: newStartDate,
-              endDate: newEndDate
-            };
-          }
-          return task;
-        }));
-      } else {
-        // 兼容性：更新旧的tasks数据
-        setTasks(prev => prev.map(m => {
-          if (m.id === draggedTask) {
-            return {
-              ...m,
-              startDate: newStartDate,
-              endDate: newEndDate,
-              x: tempDragPosition.x,
-              width: tempDragPosition.width
-            };
-          }
-          return m;
-        }));
-      }
+      ganttEvents.updateTaskDates(draggedTask, newStartDate, newEndDate);
     }
-    
-    // 使用 Hook 方法重置拖拽状态
     resetHorizontalDrag();
-  }, [tempDragPosition, draggedTask, draggedTaskData, dragType, pixelToDate, resetHorizontalDrag, sortedChartTasks]);
+  }, [tempDragPosition, draggedTask, draggedTaskData, dragType, pixelToDate, ganttEvents, resetHorizontalDrag]);
 
   useEffect(() => {
     if (isDragging) {
@@ -675,15 +521,8 @@ const GanttChart: React.FC<GanttChartProps> = ({
     }
   }, [verticalDragState.isDragging, handleTitleMouseMove, handleTitleMouseUp]);
 
-  // 监听全局点击事件，隐藏右键菜单（这个逻辑已经在上面的handleClickOutside中处理了）
-  // 这里删除重复的代码
-
-
-  // --- Chart Area Styles ---
-
   return (
     <>
-      
       <div className="gantt-container-wrapper">
         <Toolbar
           onZoomIn={handleZoomIn}
@@ -702,12 +541,8 @@ const GanttChart: React.FC<GanttChartProps> = ({
         />
         
         <div className="gantt-container" style={{ 
-          display: 'flex', 
-          border: '1px solid #ddd', 
-          backgroundColor: '#fff', 
-          borderRadius: '8px', 
-          overflow: 'hidden',
-          cursor: verticalDragState.isDragging ? 'grabbing' : 'default' // 添加全局拖拽光标
+          ...COMPONENT_STYLES.ganttContainer,
+          ...(verticalDragState.isDragging ? COMPONENT_STYLES.draggingContainer : {})
         }}>
         {/* Title Column */}
         <TaskTitleColumn
@@ -729,12 +564,10 @@ const GanttChart: React.FC<GanttChartProps> = ({
           ref={containerRef}
           className={`gantt-chart-container ${isDragging ? 'dragging' : ''}`}
           style={{
+            ...COMPONENT_STYLES.ganttChartArea,
             width: CHART_WIDTH,
             height: timelineHeight + taskContentHeight,
-            position: 'relative',
-            cursor: isDragging ? 'grabbing' : 'default',
-            backgroundColor: 'transparent',
-            overflow: 'hidden'
+            ...(isDragging ? COMPONENT_STYLES.draggingContainer : {})
           }}
           onContextMenu={ganttInteractions.handleContextMenu}
         >
