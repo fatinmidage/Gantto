@@ -10,6 +10,9 @@ export { useGanttEvents } from './gantt/useGanttEvents';
 export { useGanttInteractions } from './gantt/useGanttInteractions';
 export { useGanttKeyboard } from './gantt/useGanttKeyboard';
 export { useGanttMouseEvents } from './gantt/useGanttMouseEvents';
+export { useGanttState } from './gantt/useGanttState';
+export { useGanttCalculations } from './gantt/useGanttCalculations';
+export { useGanttHandlers } from './gantt/useGanttHandlers';
 
 // 通用Hooks
 export { useThrottle } from './common/useThrottle';
