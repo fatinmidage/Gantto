@@ -3,9 +3,10 @@
  * 负责渲染左侧任务列表，包括层级结构、拖拽交互和编辑功能
  */
 
-import React from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import TaskIcon, { DragHandle } from '../TaskIcon';
 import { Task } from '../../types';
+import { COLOR_CONSTANTS } from './ganttStyles';
 
 // 垂直拖拽状态接口
 interface VerticalDragState {
@@ -30,6 +31,7 @@ interface TaskTitleColumnProps {
   onTaskToggle: (taskId: string) => void;
   onTaskCreateSubtask: (taskId: string) => void;
   onTitleMouseDown: (e: React.MouseEvent, taskId: string) => void;
+  onWidthChange?: (width: number) => void;
 }
 
 const TaskTitleColumn: React.FC<TaskTitleColumnProps> = ({
@@ -43,20 +45,71 @@ const TaskTitleColumn: React.FC<TaskTitleColumnProps> = ({
   onTaskSelect,
   onTaskToggle,
   onTaskCreateSubtask,
-  onTitleMouseDown
+  onTitleMouseDown,
+  onWidthChange
 }) => {
+  // 宽度调整状态
+  const [isResizing, setIsResizing] = useState(false);
+  const [currentWidth, setCurrentWidth] = useState(titleColumnWidth);
+  const startXRef = useRef<number>(0);
+  const startWidthRef = useRef<number>(0);
+
+  // 同步外部宽度变化
+  useEffect(() => {
+    setCurrentWidth(titleColumnWidth);
+  }, [titleColumnWidth]);
+
+  // 开始拖拽调整宽度
+  const handleResizeStart = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsResizing(true);
+    startXRef.current = e.clientX;
+    startWidthRef.current = currentWidth;
+  }, [currentWidth]);
+
+  // 拖拽调整宽度
+  const handleResizeMove = useCallback((e: MouseEvent) => {
+    if (!isResizing) return;
+    
+    const deltaX = e.clientX - startXRef.current;
+    const newWidth = Math.max(260, Math.min(400, startWidthRef.current + deltaX)); // 限制最小260px，最大400px
+    
+    setCurrentWidth(newWidth);
+    onWidthChange?.(newWidth);
+  }, [isResizing, onWidthChange]);
+
+  // 结束拖拽
+  const handleResizeEnd = useCallback(() => {
+    setIsResizing(false);
+  }, []);
+
+  // 添加全局事件监听器
+  useEffect(() => {
+    if (isResizing) {
+      document.addEventListener('mousemove', handleResizeMove);
+      document.addEventListener('mouseup', handleResizeEnd);
+      return () => {
+        document.removeEventListener('mousemove', handleResizeMove);
+        document.removeEventListener('mouseup', handleResizeEnd);
+      };
+    }
+  }, [isResizing, handleResizeMove, handleResizeEnd]);
+
   // 样式定义
   const titleColumnStyle: React.CSSProperties = {
-    width: titleColumnWidth,
-    borderRight: '1px solid #e0e0e0',
+    width: currentWidth,
+    border: `1px solid ${COLOR_CONSTANTS.BORDER_COLOR}`,
+    borderTop: `1px solid ${COLOR_CONSTANTS.BORDER_COLOR}`,
+    borderRight: `1px solid ${COLOR_CONSTANTS.BORDER_COLOR}`,
     backgroundColor: '#fafafa',
     display: 'flex',
-    flexDirection: 'column'
+    flexDirection: 'column',
+    position: 'relative' // 确保可以包含绝对定位的手柄
   };
 
   const titleHeaderStyle: React.CSSProperties = {
     height: timelineHeight,
-    borderBottom: '1px solid #e0e0e0',
+    borderBottom: `1px solid ${COLOR_CONSTANTS.BORDER_COLOR}`,
     display: 'flex',
     alignItems: 'center',
     padding: '0 20px',
@@ -93,6 +146,21 @@ const TaskTitleColumn: React.FC<TaskTitleColumnProps> = ({
     margin: '0 10px',
     borderRadius: '1px',
     boxShadow: '0 0 4px rgba(33, 150, 243, 0.6)',
+  };
+
+  // 宽度调整手柄样式
+  const resizeHandleStyle: React.CSSProperties = {
+    position: 'absolute',
+    top: 0,
+    right: -4, // 向右偏移更多，让它更容易被触发
+    width: '4px', // 调整为4px宽度
+    height: '100%',
+    backgroundColor: isResizing ? '#2196F3' : 'transparent',
+    cursor: 'col-resize',
+    zIndex: 100, // 大幅提高层级
+    borderRadius: '0 4px 4px 0', // 右侧圆角
+    transition: 'all 0.2s ease',
+    border: 'none'
   };
 
   return (
@@ -256,6 +324,26 @@ const TaskTitleColumn: React.FC<TaskTitleColumnProps> = ({
           }} />
         )}
       </div>
+      
+      {/* 宽度调整手柄 */}
+      <div
+        className="resize-handle"
+        style={resizeHandleStyle}
+        onMouseDown={handleResizeStart}
+        onMouseEnter={(e) => {
+          console.log('Mouse enter resize handle'); // 调试信息
+          if (!isResizing) {
+            e.currentTarget.style.backgroundColor = 'rgba(33, 150, 243, 0.3)';
+          }
+        }}
+        onMouseLeave={(e) => {
+          console.log('Mouse leave resize handle'); // 调试信息
+          if (!isResizing) {
+            e.currentTarget.style.backgroundColor = 'transparent';
+          }
+        }}
+        title="拖拽调整列宽"
+      />
     </div>
   );
 };

@@ -6,6 +6,7 @@
 import React from 'react';
 import { Target } from 'lucide-react';
 import { Task } from '../../types';
+import { COLOR_CONSTANTS } from './ganttStyles';
 
 // 任务行数据接口
 interface TaskRow {
@@ -59,7 +60,9 @@ const TaskBars: React.FC<TaskBarsProps> = ({
       top: timelineHeight + 10,
       left: 0,
       right: 0,
-      bottom: 0
+      bottom: 0,
+      border: `1px solid ${COLOR_CONSTANTS.BORDER_COLOR}`,
+      borderTop: 'none' // 避免与时间轴重复边框
     }}>
       {chartTaskRows.map((row, rowIndex) => 
         row.tasks.map((chartTask) => {

@@ -4,6 +4,7 @@
  */
 
 import React from 'react';
+import { COLOR_CONSTANTS } from './ganttStyles';
 
 // 时间刻度接口
 interface TimeScale {
@@ -34,13 +35,14 @@ const TimelineHeader: React.FC<TimelineHeaderProps> = ({
         left: 0,
         right: 0,
         height: timelineHeight,
-        backgroundColor: '#ffffff !important',
-        borderBottom: '1px solid #ddd !important',
+        backgroundColor: '#ffffff',
+        border: `1px solid ${COLOR_CONSTANTS.BORDER_COLOR}`,
+        borderTop: `1px solid ${COLOR_CONSTANTS.BORDER_COLOR}`,
+        borderLeft: `1px solid ${COLOR_CONSTANTS.BORDER_COLOR}`,
+        borderRight: `1px solid ${COLOR_CONSTANTS.BORDER_COLOR}`,
+        borderBottom: `1px solid ${COLOR_CONSTANTS.BORDER_COLOR}`,
         zIndex: 20,
-        boxSizing: 'border-box',
-        boxShadow: 'none !important',
-        background: '#ffffff !important',
-        backdropFilter: 'none !important'
+        boxSizing: 'border-box'
       }}>
         {timeScales.map((scale, index) => (
           <div key={index} className="timeline-scale" style={{

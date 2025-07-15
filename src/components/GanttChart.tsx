@@ -169,6 +169,14 @@ const GanttChart: React.FC<GanttChartProps> = ({
     setSelectedChartTaskId
   } = ganttUI;
 
+  // 标题列宽度状态
+  const [titleColumnWidth, setTitleColumnWidth] = useState<number>(LAYOUT_CONSTANTS.TITLE_COLUMN_WIDTH);
+  
+  // 处理标题列宽度变化
+  const handleTitleColumnWidthChange = useCallback((width: number) => {
+    setTitleColumnWidth(width);
+  }, []);
+
   // 键盘事件处理
   useGanttKeyboard({
     selectedTaskId: selectedChartTaskId || undefined,
@@ -186,7 +194,8 @@ const GanttChart: React.FC<GanttChartProps> = ({
   // 预定义颜色选项
   const availableColors = [...COLOR_CONSTANTS.AVAILABLE_COLORS];
 
-  const TITLE_COLUMN_WIDTH = LAYOUT_CONSTANTS.TITLE_COLUMN_WIDTH;
+  // 移除固定宽度，使用状态管理
+  // const TITLE_COLUMN_WIDTH = LAYOUT_CONSTANTS.TITLE_COLUMN_WIDTH;
   const CHART_WIDTH = LAYOUT_CONSTANTS.CHART_WIDTH;
   const MIN_CONTAINER_HEIGHT = LAYOUT_CONSTANTS.MIN_CONTAINER_HEIGHT;
 
@@ -549,7 +558,7 @@ const GanttChart: React.FC<GanttChartProps> = ({
           tasks={leftPanelTasks}
           selectedTitleTaskId={ganttInteractions.selectedTitleTaskId}
           verticalDragState={verticalDragState}
-          titleColumnWidth={TITLE_COLUMN_WIDTH}
+          titleColumnWidth={titleColumnWidth}
           timelineHeight={timelineHeight}
           taskHeight={taskHeight}
           taskContentHeight={taskContentHeight}
@@ -557,6 +566,7 @@ const GanttChart: React.FC<GanttChartProps> = ({
           onTaskToggle={ganttInteractions.handleToggleExpand}
           onTaskCreateSubtask={ganttInteractions.handleCreateSubtask}
           onTitleMouseDown={handleTitleMouseDown}
+          onWidthChange={handleTitleColumnWidthChange}
         />
 
         {/* Gantt Chart Area */}
