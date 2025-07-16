@@ -35,7 +35,7 @@ export const useTimeline = (initialStartDate?: Date, initialEndDate?: Date) => {
     const start = initialStartDate || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
     const end = initialEndDate || new Date(Date.now() + 60 * 24 * 60 * 60 * 1000);
     const totalDays = Math.ceil((end.getTime() - start.getTime()) / (24 * 60 * 60 * 1000));
-    const pixelPerDay = Math.max(20, 80 * zoomLevel);
+    const pixelPerDay = Math.max(1, 80 * zoomLevel);
     
     return {
       startDate: start,
@@ -64,7 +64,7 @@ export const useTimeline = (initialStartDate?: Date, initialEndDate?: Date) => {
     const pixelPerDay = dateRange.pixelPerDay;
 
     // 根据缩放级别决定时间刻度类型
-    const scaleType = pixelPerDay > 50 ? 'day' : pixelPerDay > 20 ? 'week' : 'month';
+    const scaleType = pixelPerDay > 35 ? 'day' : pixelPerDay > 3 ? 'week' : 'month';
 
     if (scaleType === 'day') {
       // 按天显示
@@ -117,15 +117,15 @@ export const useTimeline = (initialStartDate?: Date, initialEndDate?: Date) => {
 
   // === 缩放控制 ===
   const handleZoomIn = useCallback(() => {
-    setZoomLevel(prev => Math.min(prev * 1.2, 5));
+    setZoomLevel(prev => Math.min(prev * 1.2, 1));
   }, []);
 
   const handleZoomOut = useCallback(() => {
-    setZoomLevel(prev => Math.max(prev / 1.2, 0.1));
+    setZoomLevel(prev => Math.max(prev / 1.2, 0.01));
   }, []);
 
   const setZoom = useCallback((zoom: number) => {
-    setZoomLevel(Math.max(0.1, Math.min(zoom, 5)));
+    setZoomLevel(Math.max(0.01, Math.min(zoom, 1)));
   }, []);
 
   // === 视图控制 ===

@@ -53,7 +53,7 @@ const TimelineHeader: React.FC<TimelineHeaderProps> = ({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'flex-start',
-            minWidth: '60px',
+            minWidth: 'auto',
             paddingLeft: '8px',
             fontSize: '12px',
             color: '#333',

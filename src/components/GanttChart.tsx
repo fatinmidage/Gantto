@@ -543,8 +543,8 @@ const GanttChart: React.FC<GanttChartProps> = ({
           onViewChange={ganttInteractions.handleViewChange}
           currentView={ganttInteractions.currentView}
           zoomLevel={zoomLevel}
-          canZoomIn={zoomLevel < 3}
-          canZoomOut={zoomLevel > 0.25}
+          canZoomIn={zoomLevel < 1}
+          canZoomOut={zoomLevel > 0.01}
           onAddSubtask={() => ganttInteractions.selectedTitleTaskId && ganttInteractions.handleCreateSubtask(ganttInteractions.selectedTitleTaskId)}
           canAddSubtask={!!ganttInteractions.selectedTitleTaskId}
         />
