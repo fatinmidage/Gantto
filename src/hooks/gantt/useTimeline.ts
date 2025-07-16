@@ -32,8 +32,8 @@ export const useTimeline = (initialStartDate?: Date, initialEndDate?: Date) => {
   
   // === 计算日期范围 ===
   const dateRange = useMemo((): DateRange => {
-    const start = initialStartDate || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-    const end = initialEndDate || new Date(Date.now() + 60 * 24 * 60 * 60 * 1000);
+    const start = initialStartDate || new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
+    const end = initialEndDate || new Date(Date.now() + 180 * 24 * 60 * 60 * 1000);
     const totalDays = Math.ceil((end.getTime() - start.getTime()) / (24 * 60 * 60 * 1000));
     const pixelPerDay = Math.max(1, 80 * zoomLevel);
     

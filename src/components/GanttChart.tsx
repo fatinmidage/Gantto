@@ -53,8 +53,8 @@ interface GanttChartProps {
 // --- GanttChart Component ---
 
 const GanttChart: React.FC<GanttChartProps> = ({
-  startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
-  endDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+  startDate = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000),
+  endDate = new Date(Date.now() + 180 * 24 * 60 * 60 * 1000),
   timelineHeight = 40,
   taskHeight = 30
 }) => {
