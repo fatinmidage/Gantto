@@ -2,9 +2,7 @@ import React from 'react';
 import { 
   ZoomIn, 
   ZoomOut, 
-  Calendar, 
-  List, 
-  Grid, 
+ 
   Plus, 
   Trash2,
   Edit3,
@@ -19,8 +17,6 @@ interface ToolbarProps {
   onDeleteTask?: () => void;
   onEditTask?: () => void;
   onViewToday?: () => void;
-  onViewChange?: (view: 'timeline' | 'list' | 'grid') => void;
-  currentView?: 'timeline' | 'list' | 'grid';
   zoomLevel?: number;
   canZoomIn?: boolean;
   canZoomOut?: boolean;
@@ -36,8 +32,6 @@ const Toolbar: React.FC<ToolbarProps> = ({
   onDeleteTask,
   onEditTask,
   onViewToday,
-  onViewChange,
-  currentView = 'timeline',
   zoomLevel = 1,
   canZoomIn = true,
   canZoomOut = true,
@@ -112,35 +106,6 @@ const Toolbar: React.FC<ToolbarProps> = ({
             title="放大"
           >
             <ZoomIn size={16} />
-          </button>
-        </div>
-      </div>
-      
-      <div className="toolbar-section">
-        <div className="view-switcher">
-          <button 
-            className={`view-btn ${currentView === 'timeline' ? 'active' : ''}`}
-            onClick={() => onViewChange?.('timeline')}
-            title="时间线视图"
-          >
-            <Calendar size={16} />
-            <span>时间线</span>
-          </button>
-          <button 
-            className={`view-btn ${currentView === 'list' ? 'active' : ''}`}
-            onClick={() => onViewChange?.('list')}
-            title="列表视图"
-          >
-            <List size={16} />
-            <span>列表</span>
-          </button>
-          <button 
-            className={`view-btn ${currentView === 'grid' ? 'active' : ''}`}
-            onClick={() => onViewChange?.('grid')}
-            title="网格视图"
-          >
-            <Grid size={16} />
-            <span>网格</span>
           </button>
         </div>
       </div>

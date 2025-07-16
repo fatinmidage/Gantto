@@ -540,8 +540,6 @@ const GanttChart: React.FC<GanttChartProps> = ({
           onDeleteTask={() => ganttInteractions.selectedTitleTaskId && ganttEvents.deleteTaskCore(ganttInteractions.selectedTitleTaskId)}
           onEditTask={() => {/* TODO: 实现编辑功能 */}}
           onViewToday={handleViewToday}
-          onViewChange={ganttInteractions.handleViewChange}
-          currentView={ganttInteractions.currentView}
           zoomLevel={zoomLevel}
           canZoomIn={zoomLevel < 1}
           canZoomOut={zoomLevel > 0.01}

@@ -65,12 +65,7 @@ export const useGanttInteractions = ({
 
   // 其他状态
   const [selectedTitleTaskId, setSelectedTitleTaskId] = useState<string | null>(null);
-  const [currentView, setCurrentView] = useState<'timeline' | 'list' | 'grid'>('timeline');
 
-  // 视图切换
-  const handleViewChange = useCallback((view: 'timeline' | 'list' | 'grid') => {
-    setCurrentView(view);
-  }, []);
 
   // 切换展开/折叠
   const handleToggleExpand = useCallback((taskId: string) => {
@@ -215,7 +210,6 @@ export const useGanttInteractions = ({
     colorPickerState,
     tagManagerState,
     selectedTitleTaskId,
-    currentView,
     
     // 状态设置函数
     setContextMenu,
@@ -225,7 +219,6 @@ export const useGanttInteractions = ({
     setSelectedTitleTaskId,
     
     // 事件处理函数
-    handleViewChange,
     handleToggleExpand,
     handleCreateSubtask,
     handleContextMenu,
