@@ -5,6 +5,10 @@ interface ContextMenuState {
   visible: boolean;
   x: number;
   y: number;
+  clickPosition?: {
+    x: number;
+    y: number;
+  };
 }
 
 interface TaskContextMenuState extends ContextMenuState {
@@ -28,6 +32,10 @@ interface UseGanttInteractionsProps {
   setProjectRows: React.Dispatch<React.SetStateAction<ProjectRow[]>>;
   deleteTaskCore: (taskId: string) => void;
   projectRows: ProjectRow[];
+  containerRef: React.RefObject<HTMLDivElement>;
+  pixelToDate: (pixel: number) => Date;
+  taskHeight: number;
+  timelineHeight: number;
 }
 
 export const useGanttInteractions = ({
@@ -35,14 +43,19 @@ export const useGanttInteractions = ({
   setChartTasks,
   setProjectRows,
   deleteTaskCore,
-  projectRows
+  projectRows,
+  containerRef,
+  pixelToDate: _pixelToDate,
+  taskHeight: _taskHeight,
+  timelineHeight
 }: UseGanttInteractionsProps) => {
   
   // 菜单状态
   const [contextMenu, setContextMenu] = useState<ContextMenuState>({
     visible: false,
     x: 0,
-    y: 0
+    y: 0,
+    clickPosition: { x: 0, y: 0 }
   });
 
   const [taskContextMenu, setTaskContextMenu] = useState<TaskContextMenuState>({
@@ -134,17 +147,38 @@ export const useGanttInteractions = ({
   // 右键菜单处理
   const handleContextMenu = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
+    
+    const rect = e.currentTarget.getBoundingClientRect();
+    const rawChartAreaX = e.clientX - rect.left;
+    const chartAreaY = e.clientY - rect.top;
+    
+    // 获取容器的滚动偏移量
+    const scrollLeft = containerRef.current?.scrollLeft || 0;
+    
+    // 修正X坐标，加上滚动偏移量
+    const chartAreaX = rawChartAreaX + scrollLeft;
+    
+    // 检查是否在时间轴区域内
+    const isInTimelineArea = chartAreaY < timelineHeight;
+    
+    // 任务区域的Y坐标
+    const taskAreaY = Math.max(0, chartAreaY - timelineHeight);
+    
     setContextMenu({
       visible: true,
       x: e.clientX,
-      y: e.clientY
+      y: e.clientY,
+      clickPosition: { 
+        x: chartAreaX, 
+        y: isInTimelineArea ? 0 : taskAreaY
+      }
     });
     
     // 隐藏其他菜单
     setTaskContextMenu(prev => ({ ...prev, visible: false }));
     setColorPickerState(prev => ({ ...prev, visible: false }));
     setTagManagerState(prev => ({ ...prev, visible: false }));
-  }, []);
+  }, [containerRef, timelineHeight]);
 
   // 任务右键菜单
   const handleTaskContextMenu = useCallback((e: React.MouseEvent, taskId: string) => {

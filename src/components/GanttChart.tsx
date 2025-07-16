@@ -1,4 +1,5 @@
 import React, { useState, useRef, useCallback, useMemo, useEffect } from 'react';
+import { calculateTargetRowId, calculateSmartTaskDuration } from '../utils/ganttUtils';
 import Toolbar from './Toolbar';
 import TaskTitleColumn from './gantt/TaskTitleColumn';
 import TimelineHeader from './gantt/TimelineHeader';
@@ -122,15 +123,6 @@ const GanttChart: React.FC<GanttChartProps> = ({
     availableTags,
     setAvailableTags
   });
-
-  const ganttInteractions = useGanttInteractions({
-    setTasks,
-    setChartTasks,
-    setProjectRows,
-    deleteTaskCore: ganttEvents.deleteTaskCore,
-    projectRows
-  });
-  
   
   // 拖拽状态和方法
   const {
@@ -177,6 +169,24 @@ const GanttChart: React.FC<GanttChartProps> = ({
     setTitleColumnWidth(width);
   }, []);
 
+  // 键盘事件处理将在 ganttInteractions 之后定义
+
+  // 其他状态和配置
+  const containerRef = useRef<HTMLDivElement>(null);
+  
+  // 甘特图交互功能
+  const ganttInteractions = useGanttInteractions({
+    setTasks,
+    setChartTasks,
+    setProjectRows,
+    deleteTaskCore: ganttEvents.deleteTaskCore,
+    projectRows,
+    containerRef,
+    pixelToDate,
+    taskHeight,
+    timelineHeight
+  });
+  
   // 键盘事件处理
   useGanttKeyboard({
     selectedTaskId: selectedChartTaskId || undefined,
@@ -187,9 +197,6 @@ const GanttChart: React.FC<GanttChartProps> = ({
     onZoomOut: handleZoomOut,
     enabled: true
   });
-
-  // 其他状态和配置
-  const containerRef = useRef<HTMLDivElement>(null);
   
   // 预定义颜色选项
   const availableColors = [...COLOR_CONSTANTS.AVAILABLE_COLORS];
@@ -347,12 +354,55 @@ const GanttChart: React.FC<GanttChartProps> = ({
 
   // 右键菜单事件处理
   const handleCreateTask = useCallback((task: Task) => {
-    ganttEvents.createTask(task);
-  }, [ganttEvents]);
+    // 如果有点击位置信息，使用点击位置的时间作为任务开始时间
+    if (ganttInteractions.contextMenu.clickPosition) {
+      const clickDate = pixelToDate(ganttInteractions.contextMenu.clickPosition.x);
+      
+      // 根据缩放级别智能调整默认任务宽度
+      const defaultDays = calculateSmartTaskDuration(zoomLevel);
+      
+      // 计算点击位置对应的行
+      const targetRowId = calculateTargetRowId(
+        ganttInteractions.contextMenu.clickPosition.y,
+        taskHeight,
+        projectRows
+      );
+      
+      const updatedTask = {
+        ...task,
+        startDate: clickDate,
+        endDate: new Date(clickDate.getTime() + defaultDays * 24 * 60 * 60 * 1000),
+        rowId: targetRowId
+      };
+      ganttEvents.createTask(updatedTask);
+    } else {
+      ganttEvents.createTask(task);
+    }
+  }, [ganttEvents, ganttInteractions.contextMenu.clickPosition, pixelToDate, zoomLevel, taskHeight, projectRows]);
 
   const handleCreateMilestone = useCallback((milestone: Task) => {
-    ganttEvents.createMilestone(milestone);
-  }, [ganttEvents]);
+    // 如果有点击位置信息，使用点击位置的时间作为里程碑时间
+    if (ganttInteractions.contextMenu.clickPosition) {
+      const clickDate = pixelToDate(ganttInteractions.contextMenu.clickPosition.x);
+      
+      // 计算点击位置对应的行
+      const targetRowId = calculateTargetRowId(
+        ganttInteractions.contextMenu.clickPosition.y,
+        taskHeight,
+        projectRows
+      );
+      
+      const updatedMilestone = {
+        ...milestone,
+        startDate: clickDate,
+        endDate: clickDate, // 里程碑开始和结束时间相同
+        rowId: targetRowId
+      };
+      ganttEvents.createMilestone(updatedMilestone);
+    } else {
+      ganttEvents.createMilestone(milestone);
+    }
+  }, [ganttEvents, ganttInteractions.contextMenu.clickPosition, pixelToDate, taskHeight, projectRows]);
 
   const handleShowColorPicker = useCallback((taskId: string) => {
     const task = tasks.find(t => t.id === taskId);
@@ -614,10 +664,12 @@ const GanttChart: React.FC<GanttChartProps> = ({
       visible={ganttInteractions.contextMenu.visible}
       x={ganttInteractions.contextMenu.x}
       y={ganttInteractions.contextMenu.y}
-      onClose={() => ganttInteractions.setContextMenu({ visible: false, x: 0, y: 0 })}
+      onClose={() => ganttInteractions.setContextMenu({ visible: false, x: 0, y: 0, clickPosition: { x: 0, y: 0 } })}
       onCreateTask={handleCreateTask}
       onCreateMilestone={handleCreateMilestone}
       defaultRowId={leftPanelTasks[0]?.id || 'row-0'}
+      clickPosition={ganttInteractions.contextMenu.clickPosition}
+      pixelToDate={pixelToDate}
     />
 
     {/* 任务条右键菜单组件 */}

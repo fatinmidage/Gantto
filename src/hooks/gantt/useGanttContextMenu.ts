@@ -18,6 +18,7 @@ interface UseGanttContextMenuProps {
   timelineHeight: number;
   pixelToDate: (pixel: number) => Date;
   taskContextMenuVisible: boolean;
+  containerRef: React.RefObject<HTMLDivElement>;
 }
 
 export const useGanttContextMenu = ({
@@ -26,7 +27,8 @@ export const useGanttContextMenu = ({
   taskHeight,
   timelineHeight,
   pixelToDate,
-  taskContextMenuVisible
+  taskContextMenuVisible,
+  containerRef
 }: UseGanttContextMenuProps) => {
   
   const [contextMenu, setContextMenu] = useState<ContextMenuState>({
@@ -46,8 +48,14 @@ export const useGanttContextMenu = ({
     }
     
     const rect = e.currentTarget.getBoundingClientRect();
-    const chartAreaX = e.clientX - rect.left; // 容器内的相对X坐标
+    const rawChartAreaX = e.clientX - rect.left; // 容器内的相对X坐标（未考虑滚动）
     const chartAreaY = e.clientY - rect.top; // 容器内的相对Y坐标
+    
+    // 获取容器的滚动偏移量
+    const scrollLeft = containerRef.current?.scrollLeft || 0;
+    
+    // 修正X坐标，加上滚动偏移量
+    const chartAreaX = rawChartAreaX + scrollLeft;
     
     // 检查是否在时间轴区域内
     const isInTimelineArea = chartAreaY < timelineHeight;
@@ -64,7 +72,7 @@ export const useGanttContextMenu = ({
         y: isInTimelineArea ? 0 : taskAreaY // 如果在时间轴区域，任务创建位置设为第一行
       }
     });
-  }, [timelineHeight, taskContextMenuVisible]);
+  }, [timelineHeight, taskContextMenuVisible, containerRef]);
 
   // 隐藏右键菜单
   const hideContextMenu = useCallback(() => {

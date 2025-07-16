@@ -1,5 +1,6 @@
 import React from 'react';
 import { Task } from '../../types';
+import { formatDateForDisplay } from '../../utils/ganttUtils';
 
 interface GanttContextMenuProps {
   visible: boolean;
@@ -9,6 +10,11 @@ interface GanttContextMenuProps {
   onCreateTask: (task: Task) => void;
   onCreateMilestone: (milestone: Task) => void;
   defaultRowId: string;
+  clickPosition?: {
+    x: number;
+    y: number;
+  };
+  pixelToDate?: (pixel: number) => Date;
 }
 
 const GanttContextMenu: React.FC<GanttContextMenuProps> = ({
@@ -18,9 +24,14 @@ const GanttContextMenu: React.FC<GanttContextMenuProps> = ({
   onClose,
   onCreateTask,
   onCreateMilestone,
-  defaultRowId
+  defaultRowId,
+  clickPosition,
+  pixelToDate
 }) => {
   if (!visible) return null;
+
+  // 计算点击位置的时间信息用于显示
+  const clickDate = clickPosition && pixelToDate ? pixelToDate(clickPosition.x) : new Date();
 
   const handleCreateTask = () => {
     const newTask: Task = {
@@ -93,7 +104,12 @@ const GanttContextMenu: React.FC<GanttContextMenuProps> = ({
         onMouseLeave={handleMouseLeave}
         onClick={handleCreateTask}
       >
-        新建任务条
+        <div>新建任务条</div>
+        {clickPosition && pixelToDate && (
+          <div style={{ fontSize: '10px', color: '#666', marginTop: '2px' }}>
+            开始时间: {formatDateForDisplay(clickDate)}
+          </div>
+        )}
       </div>
       <div
         style={menuItemStyle}
@@ -101,7 +117,12 @@ const GanttContextMenu: React.FC<GanttContextMenuProps> = ({
         onMouseLeave={handleMouseLeave}
         onClick={handleCreateMilestone}
       >
-        新建节点
+        <div>新建节点</div>
+        {clickPosition && pixelToDate && (
+          <div style={{ fontSize: '10px', color: '#666', marginTop: '2px' }}>
+            时间: {formatDateForDisplay(clickDate)}
+          </div>
+        )}
       </div>
     </div>
   );
