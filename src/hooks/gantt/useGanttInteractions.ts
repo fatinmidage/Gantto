@@ -96,9 +96,28 @@ export const useGanttInteractions = ({
     
     if (!parentRow) return;
     
-    // 计算新子任务的位置
-    const maxOrder = Math.max(...projectRows.map(row => row.order), -1);
-    const newOrder = maxOrder + 1;
+    // 计算新子任务的位置 - 应该插入到父任务的最后一个子任务后面
+    const sortedRows = [...projectRows].sort((a, b) => a.order - b.order);
+    const parentIndex = sortedRows.findIndex(row => row.id === parentId);
+    
+    // 找到父任务的所有现有子任务
+    const existingChildren = sortedRows.filter(row => row.parentId === parentId);
+    
+    let insertIndex: number;
+    if (existingChildren.length > 0) {
+      // 如果已有子任务，找到最后一个子任务的位置
+      const lastChildOrder = Math.max(...existingChildren.map(child => child.order));
+      const lastChildIndex = sortedRows.findIndex(row => row.order === lastChildOrder);
+      insertIndex = lastChildIndex + 1;
+    } else {
+      // 如果没有子任务，插入到父任务后面
+      insertIndex = parentIndex + 1;
+    }
+    
+    // 计算新的order值，在insertIndex位置插入
+    const newOrder = insertIndex < sortedRows.length ? 
+      (sortedRows[insertIndex - 1].order + sortedRows[insertIndex].order) / 2 :
+      sortedRows[insertIndex - 1].order + 1;
     
     // 创建新的子行
     const newSubRow: ProjectRow = {
@@ -123,7 +142,15 @@ export const useGanttInteractions = ({
         }
         return row;
       });
-      return [...updated, newSubRow];
+      
+      // 添加新子任务
+      const withNewSubtask = [...updated, newSubRow];
+      
+      // 按order排序并重新规范化order值
+      return withNewSubtask.sort((a, b) => a.order - b.order).map((row, index) => ({
+        ...row,
+        order: index
+      }));
     });
 
     // 创建对应的图表任务

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>缩放测试</title>
+    <style>
+        .container {
+            width: 800px;
+            height: 200px;
+            border: 1px solid #ccc;
+            position: relative;
+            overflow-x: auto;
+        }
+        .timeline {
+            height: 40px;
+            background: #f5f5f5;
+            border-bottom: 1px solid #ddd;
+            position: relative;
+        }
+        .task-bar {
+            height: 30px;
+            background: #4CAF50;
+            position: absolute;
+            top: 50px;
+        }
+        .scale-marker {
+            position: absolute;
+            top: 0;
+            height: 40px;
+            border-right: 1px solid #ccc;
+            padding: 5px;
+            font-size: 12px;
+        }
+        .controls {
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <h2>甘特图缩放测试</h2>
+    <div class="controls">
+        <button onclick="zoomIn()">放大 (+)</button>
+        <button onclick="zoomOut()">缩小 (-)</button>
+        <span>缩放级别: <span id="zoomLevel">1.0</span></span>
+    </div>
+    
+    <div class="container" id="container">
+        <div class="timeline" id="timeline"></div>
+        <div class="task-bar" id="taskBar"></div>
+    </div>
+
+    <script>
+        let zoomLevel = 1.0;
+        const basePixelPerDay = 80;
+
+        function updateDisplay() {
+            const pixelPerDay = Math.max(20, basePixelPerDay * zoomLevel);
+            const timeline = document.getElementById('timeline');
+            const taskBar = document.getElementById('taskBar');
+            
+            // 清除现有内容
+            timeline.innerHTML = '';
+            
+            // 生成时间刻度
+            const startDate = new Date();
+            for (let i = 0; i < 10; i++) {
+                const marker = document.createElement('div');
+                marker.className = 'scale-marker';
+                marker.style.left = (i * pixelPerDay) + 'px';
+                marker.textContent = `Day ${i + 1}`;
+                timeline.appendChild(marker);
+            }
+            
+            // 更新任务条
+            taskBar.style.left = pixelPerDay + 'px'; // 从第2天开始
+            taskBar.style.width = (pixelPerDay * 3) + 'px'; // 持续3天
+            
+            // 更新缩放级别显示
+            document.getElementById('zoomLevel').textContent = zoomLevel.toFixed(1);
+        }
+
+        function zoomIn() {
+            zoomLevel = Math.min(zoomLevel * 1.2, 3);
+            updateDisplay();
+        }
+
+        function zoomOut() {
+            zoomLevel = Math.max(zoomLevel / 1.2, 0.25);
+            updateDisplay();
+        }
+
+        // 初始化显示
+        updateDisplay();
+    </script>
+</body>
+</html>

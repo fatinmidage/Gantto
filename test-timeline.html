@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Timeline Test</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+    }
+    .test-container {
+      position: relative;
+      width: 800px;
+      height: 100px;
+      border: 2px solid #ccc;
+      background: #f0f0f0;
+    }
+    .timeline-header {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 40px;
+      background: white;
+      border: 1px solid #ddd;
+      overflow: hidden;
+    }
+    .timeline-scale {
+      position: absolute;
+      top: 0;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      padding-left: 8px;
+      font-size: 12px;
+      color: #333;
+      background: rgba(255, 0, 0, 0.1);
+      border-right: 1px solid #eee;
+    }
+  </style>
+</head>
+<body>
+  <h1>Timeline Header Test</h1>
+  <div class="test-container">
+    <div class="timeline-header">
+      <div class="timeline-scale" style="left: 0px; width: 80px;">7/16</div>
+      <div class="timeline-scale" style="left: 80px; width: 80px;">7/17</div>
+      <div class="timeline-scale" style="left: 160px; width: 80px;">7/18</div>
+      <div class="timeline-scale" style="left: 240px; width: 80px;">7/19</div>
+      <div class="timeline-scale" style="left: 320px; width: 80px;">7/20</div>
+    </div>
+  </div>
+  
+  <p>如果能看到上面的日期标签，说明TimelineHeader的基本结构是正确的。</p>
+</body>
+</html>
