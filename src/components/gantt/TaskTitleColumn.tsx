@@ -6,7 +6,7 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import TaskIcon, { DragHandle } from '../TaskIcon';
 import { Task } from '../../types';
-import { COLOR_CONSTANTS } from './ganttStyles';
+import { COLOR_CONSTANTS, LAYOUT_CONSTANTS } from './ganttStyles';
 
 // 垂直拖拽状态接口
 interface VerticalDragState {
@@ -72,7 +72,7 @@ const TaskTitleColumn: React.FC<TaskTitleColumnProps> = ({
     if (!isResizing) return;
     
     const deltaX = e.clientX - startXRef.current;
-    const newWidth = Math.max(260, Math.min(400, startWidthRef.current + deltaX)); // 限制最小260px，最大400px
+    const newWidth = Math.max(LAYOUT_CONSTANTS.MIN_TITLE_COLUMN_WIDTH, Math.min(400, startWidthRef.current + deltaX)); // 限制最小220px，最大400px
     
     setCurrentWidth(newWidth);
     onWidthChange?.(newWidth);

@@ -204,7 +204,6 @@ const GanttChart: React.FC<GanttChartProps> = ({
 
   // 移除固定宽度，使用状态管理
   // const TITLE_COLUMN_WIDTH = LAYOUT_CONSTANTS.TITLE_COLUMN_WIDTH;
-  const CHART_WIDTH = LAYOUT_CONSTANTS.CHART_WIDTH;
   const MIN_CONTAINER_HEIGHT = LAYOUT_CONSTANTS.MIN_CONTAINER_HEIGHT;
 
 
@@ -574,8 +573,9 @@ const GanttChart: React.FC<GanttChartProps> = ({
   }, [verticalDragState, setProjectRows, resetVerticalDrag]);
 
   const handleMouseMoveCore = useCallback((e: MouseEvent) => {
-    if (isDragging) {
-      updateHorizontalDragPosition(e.clientX, CHART_WIDTH, LAYOUT_CONSTANTS.MIN_TASK_WIDTH);
+    if (isDragging && containerRef.current) {
+      const chartWidth = containerRef.current.clientWidth;
+      updateHorizontalDragPosition(e.clientX, chartWidth, LAYOUT_CONSTANTS.MIN_TASK_WIDTH);
     }
   }, [isDragging, updateHorizontalDragPosition]);
 
@@ -663,7 +663,7 @@ const GanttChart: React.FC<GanttChartProps> = ({
           className={`gantt-chart-container ${isDragging ? 'dragging' : ''}`}
           style={{
             ...COMPONENT_STYLES.ganttChartArea,
-            width: CHART_WIDTH,
+            flex: 1,
             height: timelineHeight + taskContentHeight,
             ...(isDragging ? COMPONENT_STYLES.draggingContainer : {})
           }}

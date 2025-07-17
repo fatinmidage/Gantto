@@ -1,7 +1,7 @@
 /* 响应式设计 */
 @media (max-width: 1024px) {
   .gantt-container-wrapper {
-    max-width: 95%;
+    width: 95%;
     margin: 0 auto;
   }
   
@@ -103,7 +103,7 @@
   }
   
   .gantt-container-wrapper {
-    max-width: 100%;
+    width: 100%;
     margin: 0;
     border-radius: 12px;
   }
