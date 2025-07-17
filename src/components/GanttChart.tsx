@@ -30,7 +30,8 @@ import {
 // 导入层级帮助函数
 import {
   getVisibleProjectRows,
-  getVisibleTasks
+  getVisibleTasks,
+  getAllDescendantRows
 } from './gantt/GanttHelpers';
 
 // 导入样式常量
@@ -543,10 +544,21 @@ const GanttChart: React.FC<GanttChartProps> = ({
           }
         }
         
-        // 更新被拖拽行的order
+        // 获取所有子代任务
+        const descendants = getAllDescendantRows(draggedRow.id, newRows);
+        
+        // 更新被拖拽行和所有子代任务的order
         const updatedRows = newRows.map(row => {
           if (row.id === draggedRow.id) {
             return { ...row, order: targetOrder };
+          }
+          // 同步更新所有子代任务，确保它们紧跟在父任务后面
+          if (descendants.some(desc => desc.id === row.id)) {
+            // 找到这个子任务在descendants中的索引
+            const descendantIndex = descendants.findIndex(desc => desc.id === row.id);
+            // 子任务的order应该是父任务order + 0.1 + 0.01 * index，确保紧跟在父任务后面
+            const newOrder = targetOrder + 0.1 + 0.01 * descendantIndex;
+            return { ...row, order: newOrder };
           }
           return row;
         });
