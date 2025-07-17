@@ -504,34 +504,62 @@ const GanttChart: React.FC<GanttChartProps> = ({
         verticalDragState.draggedTaskIndex !== null &&
         verticalDragState.targetIndex !== verticalDragState.draggedTaskIndex) {
       
-      // 简化的重排序逻辑
+      // 修复后的重排序逻辑
       setProjectRows(prev => {
         const newRows = [...prev];
+        const draggedTaskId = verticalDragState.draggedTaskId;
         const draggedIndex = verticalDragState.draggedTaskIndex!;
         const targetIndex = verticalDragState.targetIndex!;
         
-        // 重新排序
-        const draggedRow = newRows.find(row => row.id === leftPanelTasks[draggedIndex].id);
-        if (draggedRow) {
-          // 简单的order调整
-          const targetOrder = targetIndex < newRows.length ? newRows[targetIndex].order : newRows.length;
-          const orderDelta = targetOrder - draggedRow.order;
-          
-          return newRows.map(row => {
-            if (row.id === draggedRow.id) {
-              return { ...row, order: row.order + orderDelta };
+        // 直接使用draggedTaskId查找被拖拽的项目行
+        const draggedRow = newRows.find(row => row.id === draggedTaskId);
+        if (!draggedRow) return prev;
+        
+        // 基于visibleProjectRows计算正确的目标位置
+        const currentVisibleRows = getVisibleProjectRows(newRows.sort((a, b) => a.order - b.order), new Map(newRows.map(row => [row.id, row])));
+        
+        // 计算目标位置的正确order值
+        let targetOrder: number;
+        if (targetIndex >= currentVisibleRows.length) {
+          // 拖拽到最后位置
+          targetOrder = Math.max(...newRows.map(row => row.order)) + 1;
+        } else if (targetIndex === 0) {
+          // 拖拽到第一位置
+          targetOrder = Math.min(...newRows.map(row => row.order)) - 1;
+        } else {
+          // 拖拽到中间位置
+          const targetRow = currentVisibleRows[targetIndex];
+          const targetRowInAll = newRows.find(row => row.id === targetRow.id);
+          if (targetRowInAll) {
+            if (draggedIndex < targetIndex) {
+              // 向下拖拽：插入到目标位置后面
+              targetOrder = targetRowInAll.order + 0.5;
+            } else {
+              // 向上拖拽：插入到目标位置前面
+              targetOrder = targetRowInAll.order - 0.5;
             }
-            return row;
-          }).sort((a, b) => a.order - b.order).map((row, index) => ({
-            ...row,
-            order: index
-          }));
+          } else {
+            return prev;
+          }
         }
-        return prev;
+        
+        // 更新被拖拽行的order
+        const updatedRows = newRows.map(row => {
+          if (row.id === draggedRow.id) {
+            return { ...row, order: targetOrder };
+          }
+          return row;
+        });
+        
+        // 重新排序并规范化order值
+        return updatedRows.sort((a, b) => a.order - b.order).map((row, index) => ({
+          ...row,
+          order: index
+        }));
       });
     }
     resetVerticalDrag();
-  }, [verticalDragState, leftPanelTasks, setProjectRows, resetVerticalDrag]);
+  }, [verticalDragState, setProjectRows, resetVerticalDrag]);
 
   const handleMouseMoveCore = useCallback((e: MouseEvent) => {
     if (isDragging) {
