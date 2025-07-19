@@ -17,6 +17,23 @@ export { useGlobalTags } from './gantt/useGlobalTags';
 export { useDragReducer } from './gantt/useDragReducer';
 export { useGanttUIState } from './gantt/useGanttUIState';
 
+// 任务管理相关Hooks
+export { useTaskCRUD } from './gantt/useTaskCRUD';
+export { useTaskBatch } from './gantt/useTaskBatch';
+export { useTaskEditor } from './gantt/useTaskEditor';
+export { useTaskHierarchy } from './gantt/useTaskHierarchy';
+export { useTaskAttributes } from './gantt/useTaskAttributes';
+export { useTaskSelection } from './gantt/useTaskSelection';
+
+// 拖拽相关Hooks
+export { useHorizontalDrag } from './gantt/useHorizontalDrag';
+export { useVerticalDrag } from './gantt/useVerticalDrag';
+
+// 上下文菜单相关Hooks
+export { useContextMenus } from './gantt/useContextMenus';
+export { useGanttContextMenu } from './gantt/useGanttContextMenu';
+
 // 通用Hooks
 export { useThrottle } from './common/useThrottle';
 export { useCache } from './common/useCache';
+export { default as useErrorHandler, useGlobalErrorHandler } from './common/useErrorHandler';

@@ -1,8 +1,17 @@
-import GanttChart from './components/GanttChart';
-import Header from './components/Header';
+import { Header, ErrorBoundary } from './components';
+import { LazyGanttChart, preloadGanttChart } from './components/GanttChartLazy';
+import { useGlobalErrorHandler } from './hooks';
+import { useEffect } from 'react';
 import './styles/index.css';
 
 function App() {
+  const { handleError } = useGlobalErrorHandler();
+
+  // 预加载甘特图组件
+  useEffect(() => {
+    preloadGanttChart();
+  }, []);
+
   const handleNewProject = () => {
     console.log('新建项目');
     // TODO: 实现新建项目功能
@@ -18,17 +27,30 @@ function App() {
     // TODO: 实现保存项目功能
   };
 
+  const handleAppError = (error: Error, errorInfo: React.ErrorInfo) => {
+    handleError(error, {
+      component: 'App',
+      errorInfo: errorInfo.componentStack
+    });
+  };
+
   return (
-    <div className="app">
-      <Header
-        onNewProject={handleNewProject}
-        onOpenProject={handleOpenProject}
-        onSaveProject={handleSaveProject}
-      />
-      <main className="app-main">
-        <GanttChart />
-      </main>
-    </div>
+    <ErrorBoundary onError={handleAppError}>
+      <div className="app">
+        <ErrorBoundary onError={handleAppError}>
+          <Header
+            onNewProject={handleNewProject}
+            onOpenProject={handleOpenProject}
+            onSaveProject={handleSaveProject}
+          />
+        </ErrorBoundary>
+        <main className="app-main">
+          <ErrorBoundary onError={handleAppError}>
+            <LazyGanttChart />
+          </ErrorBoundary>
+        </main>
+      </div>
+    </ErrorBoundary>
   );
 }
 

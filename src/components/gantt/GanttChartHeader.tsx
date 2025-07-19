@@ -1,5 +1,5 @@
 import React from 'react';
-import Toolbar from '../Toolbar';
+import { Toolbar } from '..';
 
 interface GanttChartHeaderProps {
   // 工具栏相关属性

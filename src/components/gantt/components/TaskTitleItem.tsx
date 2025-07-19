@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import TaskIcon, { DragHandle } from '../../TaskIcon';
+import { TaskIcon, DragHandle } from '../..';
 import { Task } from '../../../types';
 import { TaskHierarchyControls } from './TaskHierarchyControls';
 

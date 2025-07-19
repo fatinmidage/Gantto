@@ -1,7 +1,5 @@
 import React from 'react';
-import GanttStateManager from './gantt/GanttStateManager';
-import GanttEventCoordinator from './gantt/GanttEventCoordinator';
-import GanttContainer from './gantt/GanttContainer';
+import { GanttStateManager, GanttEventCoordinator, GanttContainer } from './gantt';
 
 
 // 导入初始数据

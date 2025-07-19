@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import TaskIcon from '../TaskIcon';
+import { TaskIcon } from '..';
 
 interface TaskIconSelectorProps {
   currentType: 'milestone' | 'development' | 'testing' | 'delivery' | 'default';

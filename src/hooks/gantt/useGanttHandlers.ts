@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import { Task } from '../../types';
 
 // 导入样式常量
-import { LAYOUT_CONSTANTS } from '../../components/gantt/ganttStyles';
+import { LAYOUT_CONSTANTS } from '../../components/gantt';
 
 // 事件处理器返回类型
 export interface GanttHandlersResult {
