@@ -29,6 +29,10 @@ GanttContainer (UI层)
 - `src/components/Header.tsx` - 应用顶部导航栏
 - `src/components/ErrorBoundary.tsx` - 全局错误边界组件
 
+### **日期时间控制组件**
+- `src/components/DateRangePicker.tsx` - 日期范围选择器，支持甘特图时间范围调整
+- `src/components/TimeGranularitySelector.tsx` - 时间粒度选择器（日/周/月/季度/年）
+
 ### **甘特图核心架构**
 甘特图采用三层架构模式：
 
@@ -73,6 +77,8 @@ GanttChart (主入口)
 - `src/components/Toolbar.tsx` - 工具栏组件
 - `src/components/gantt/ColorPicker.tsx` - 颜色选择器
 - `src/components/gantt/TagManager.tsx` - 标签管理器
+- `src/components/DateRangePicker.tsx` - 日期范围选择器
+- `src/components/TimeGranularitySelector.tsx` - 时间粒度选择器
 
 ### **性能优化组件**
 - `src/components/GanttChartLazy.tsx` - 懒加载甘特图组件
@@ -133,9 +139,21 @@ App
 4. **可扩展性强** - 组件间低耦合，便于扩展
 
 ### **潜在改进点**
-1. **文件数量较多** - 26+ 个 TSX 组件文件，可能需要进一步整合
+1. **文件数量较多** - 28+ 个 TSX 组件文件，可能需要进一步整合
 2. **Props 传递链较长** - 某些 props 需要经过多层传递
 3. **组件文件长度** - 部分组件可能需要进一步拆分
+
+### **最新功能亮点**
+1. **日期范围控制** - DateRangePicker 组件提供直观的日期范围选择界面
+   - 支持开始/结束日期设置
+   - 自动验证日期范围（最小1个月，最大10年）
+   - 实时显示选择的天数
+   - 使用 Radix UI Popover 组件提供优秀的用户体验
+
+2. **时间粒度切换** - TimeGranularitySelector 组件支持多种时间视图
+   - 支持日/周/月/季度/年五种时间粒度
+   - 使用 Radix UI Select 组件提供下拉选择
+   - 与甘特图时间轴联动，实现动态缩放
 
 ## 📊 组件分类汇总
 
@@ -152,13 +170,15 @@ App
 - TaskHierarchyControls.tsx - 层级控制
 - TaskIcon.tsx - 任务图标
 
-### 🛠️ 交互组件 (6个)
+### 🛠️ 交互组件 (8个)
 - TaskContextMenu.tsx - 任务右键菜单
 - GanttContextMenu.tsx - 甘特图右键菜单
 - ColorPicker.tsx - 颜色选择器
 - TagManager.tsx - 标签管理
 - TaskIconSelector.tsx - 任务图标选择器
 - Toolbar.tsx - 工具栏
+- DateRangePicker.tsx - 日期范围选择器
+- TimeGranularitySelector.tsx - 时间粒度选择器
 
 ### ⚡ 性能优化组件 (3个)
 - GanttChartLazy.tsx - 懒加载组件
@@ -175,7 +195,8 @@ App
 Gantto 项目采用了现代化的 React 架构模式，具有良好的组件分层和模块化设计。整体架构从应用入口到具体功能组件，形成了清晰的层次结构。甘特图核心功能采用状态管理、事件协调、UI 渲染三层架构，有效分离了关注点，提供了良好的可维护性和扩展性。
 
 **核心特色：**
-- 📦 **21个核心组件** 实现完整甘特图功能
+- 📦 **23个核心组件** 实现完整甘特图功能
 - 🏗️ **三层架构** 清晰分离状态、事件、UI
 - ⚡ **性能优化** 懒加载+错误边界+事件节流
 - 🔧 **高度模块化** 组件职责单一，易于维护和扩展
+- 📅 **时间控制** 支持日期范围选择和多种时间粒度（日/周/月/季度/年）
