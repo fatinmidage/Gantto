@@ -3,7 +3,7 @@
  * 提供任务创建、位置计算等公共逻辑
  */
 
-import { ProjectRow } from '../types';
+import { ProjectRow, Task } from '../types';
 
 /**
  * 根据Y坐标计算对应的项目行ID
@@ -69,7 +69,7 @@ export const formatDateForDisplay = (date: Date): string => {
 export const checkTaskOverlap = (
   startDate: Date,
   endDate: Date,
-  existingTasks: any[],
+  existingTasks: Task[],
   rowId: string
 ): boolean => {
   const rowTasks = existingTasks.filter(task => task.rowId === rowId);

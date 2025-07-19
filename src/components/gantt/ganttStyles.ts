@@ -261,7 +261,7 @@ export const styleUtils = {
   },
   
   // 合并样式
-  mergeStyles: (...styles: any[]) => {
+  mergeStyles: (...styles: Record<string, unknown>[]) => {
     return Object.assign({}, ...styles);
   },
   

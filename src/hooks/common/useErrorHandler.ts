@@ -12,7 +12,7 @@ export interface ErrorInfo {
   userAgent?: string;
   url?: string;
   userId?: string;
-  context?: Record<string, any>;
+  context?: Record<string, unknown>;
 }
 
 export interface ErrorHandlerConfig {
@@ -28,13 +28,13 @@ export interface ErrorHandlerResult {
   errors: ErrorInfo[];
   lastError: ErrorInfo | null;
   hasErrors: boolean;
-  handleError: (error: Error | string, context?: Record<string, any>) => void;
+  handleError: (error: Error | string, context?: Record<string, unknown>) => void;
   clearErrors: () => void;
   clearLastError: () => void;
   retryLastAction: () => void;
   executeWithErrorHandling: <T>(
     action: () => Promise<T> | T, 
-    context?: Record<string, any>
+    context?: Record<string, unknown>
   ) => Promise<T | null>;
 }
 
@@ -50,11 +50,11 @@ export const useErrorHandler = (config: ErrorHandlerConfig = {}): ErrorHandlerRe
   const mergedConfig = { ...defaultConfig, ...config };
   const [errors, setErrors] = useState<ErrorInfo[]>([]);
   const [lastError, setLastError] = useState<ErrorInfo | null>(null);
-  const [lastAction, setLastAction] = useState<(() => Promise<any> | any) | null>(null);
+  const [lastAction, setLastAction] = useState<(() => Promise<unknown> | unknown) | null>(null);
 
   const createErrorInfo = useCallback((
     error: Error | string, 
-    context?: Record<string, any>
+    context?: Record<string, unknown>
   ): ErrorInfo => {
     const errorMessage = typeof error === 'string' ? error : error.message;
     const errorStack = typeof error === 'string' ? undefined : error.stack;
@@ -89,7 +89,7 @@ export const useErrorHandler = (config: ErrorHandlerConfig = {}): ErrorHandlerRe
 
   const handleError = useCallback((
     error: Error | string, 
-    context?: Record<string, any>
+    context?: Record<string, unknown>
   ) => {
     const errorInfo = createErrorInfo(error, context);
     
@@ -130,7 +130,7 @@ export const useErrorHandler = (config: ErrorHandlerConfig = {}): ErrorHandlerRe
 
   const executeWithErrorHandling = useCallback(async <T>(
     action: () => Promise<T> | T,
-    context?: Record<string, any>
+    context?: Record<string, unknown>
   ): Promise<T | null> => {
     let retries = 0;
     

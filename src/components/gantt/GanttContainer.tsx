@@ -3,6 +3,7 @@ import GanttChartHeader from './GanttChartHeader';
 import GanttChartBody from './GanttChartBody';
 import GanttMenuManager from './GanttMenuManager';
 import { LAYOUT_CONSTANTS } from './ganttStyles';
+import { ProjectRow, Task } from '../../types';
 
 interface GanttContainerProps {
   // Header props
@@ -19,7 +20,7 @@ interface GanttContainerProps {
   canAddSubtask: boolean;
   
   // Body props
-  leftPanelTasks: any[];
+  leftPanelTasks: ProjectRow[];
   chartTaskRows: any[];
   selectedTitleTaskId: string | null;
   selectedChartTaskId: string | null;
@@ -39,7 +40,7 @@ interface GanttContainerProps {
   onTitleMouseDown: (e: React.MouseEvent, taskId: string) => void;
   onMouseDown: (e: React.MouseEvent, taskId: string) => void;
   onTaskContextMenu: (e: React.MouseEvent, taskId: string) => void;
-  onEdgeHover: (e: React.MouseEvent, task: any) => void;
+  onEdgeHover: (e: React.MouseEvent, task: Task) => void;
   onMouseLeave: () => void;
   onContextMenu: (e: React.MouseEvent) => void;
   dateToPixel: (date: Date) => number;
@@ -49,7 +50,7 @@ interface GanttContainerProps {
   onTitleMouseUp: () => void;
   
   // Menu props
-  tasks: any[];
+  tasks: Task[];
   contextMenuState: any;
   taskContextMenuState: any;
   defaultRowId: string;
