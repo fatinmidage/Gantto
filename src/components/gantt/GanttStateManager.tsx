@@ -1,11 +1,13 @@
 import React, { useMemo } from 'react';
 import { Task } from '../../types';
+import { TimeGranularity } from '../../hooks/gantt/useTimeline';
 
 // 导入自定义 Hooks
 import {
   useDragAndDrop,
   useTaskManager,
   useTimeline,
+  useTaskFilter,
   useGanttUI,
   useGanttEvents,
   useGanttInteractions,
@@ -28,6 +30,7 @@ interface GanttStateManagerProps {
   endDate: Date;
   timelineHeight: number;
   taskHeight: number;
+  timeGranularity?: TimeGranularity;
   initialProjectRows: any[];
   initialChartTasks: any[];
   children: (state: GanttStateData) => React.ReactElement;
@@ -41,6 +44,15 @@ interface GanttStateData {
   setProjectRows: React.Dispatch<React.SetStateAction<any[]>>;
   setChartTasks: React.Dispatch<React.SetStateAction<any[]>>;
   setTasks: React.Dispatch<React.SetStateAction<any[]>>;
+  
+  // 过滤状态
+  filteredTasks: Task[];
+  filterStats: {
+    totalTasks: number;
+    filteredCount: number;
+    hiddenCount: number;
+    hasHiddenTasks: boolean;
+  };
   
   // 拖拽状态
   draggedTask: string | null;
@@ -95,6 +107,7 @@ const GanttStateManager: React.FC<GanttStateManagerProps> = ({
   endDate,
   timelineHeight,
   taskHeight,
+  timeGranularity = 'month',
   initialProjectRows,
   initialChartTasks,
   children
@@ -111,7 +124,7 @@ const GanttStateManager: React.FC<GanttStateManagerProps> = ({
   const dragAndDrop = useDragAndDrop();
   
   // 时间轴管理
-  const timeline = useTimeline(startDate, endDate);
+  const timeline = useTimeline(startDate, endDate, timeGranularity);
   
   // UI 状态管理
   const ganttUI = useGanttUI();
@@ -126,10 +139,24 @@ const GanttStateManager: React.FC<GanttStateManagerProps> = ({
     setTasks
   } = taskManager;
 
+  // === 任务过滤 ===
+  const { filteredTasks, filterStats } = useTaskFilter(tasks, startDate, endDate);
+  
+  // 过滤后的图表任务
+  const filteredChartTasks = useMemo(() => {
+    if (!chartTasks || chartTasks.length === 0) {
+      return [];
+    }
+    
+    // 只保留过滤后任务中存在的图表任务
+    const filteredTaskIds = new Set(filteredTasks.map(task => task.id));
+    return chartTasks.filter(chartTask => filteredTaskIds.has(chartTask.id));
+  }, [chartTasks, filteredTasks]);
+
   // === 使用统一的全局标签管理 ===
   const { availableTags } = useGlobalTags();
 
-  // 事件处理 Hooks
+  // 事件处理 Hooks（使用原始任务数据，而非过滤后的）
   const ganttEvents = useGanttEvents({
     tasks,
     chartTasks,
@@ -218,11 +245,12 @@ const GanttStateManager: React.FC<GanttStateManagerProps> = ({
     [sortedProjectRows, projectRowMapMemo]
   );
   
-  const sortedChartTasks = useMemo(() => chartTasks.map(task => {
+  // 使用过滤后的图表任务，并添加位置计算
+  const sortedChartTasks = useMemo(() => filteredChartTasks.map(task => {
     const x = dateToPixel(task.startDate);
     const width = dateToPixel(task.endDate) - x;
     return { ...task, x, width: Math.max(width, 20) };
-  }), [chartTasks, dateToPixel]);
+  }), [filteredChartTasks, dateToPixel]);
 
   const leftPanelTasks = useMemo(() => visibleProjectRows.map(row => ({
     ...row,
@@ -264,6 +292,10 @@ const GanttStateManager: React.FC<GanttStateManagerProps> = ({
     setProjectRows,
     setChartTasks,
     setTasks,
+    
+    // 过滤状态
+    filteredTasks,
+    filterStats,
     
     // 拖拽状态
     draggedTask,

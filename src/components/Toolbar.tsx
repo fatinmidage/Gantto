@@ -1,42 +1,44 @@
 import React from 'react';
 import { 
-  ZoomIn, 
-  ZoomOut, 
   Plus, 
   Trash2,
   Edit3,
-  Target,
   ChevronRight
 } from './icons';
+import DateRangePicker from './DateRangePicker';
+import TimeGranularitySelector from './TimeGranularitySelector';
+import { TimeGranularity } from '../hooks/gantt/useTimeline';
 
 interface ToolbarProps {
-  onZoomIn?: () => void;
-  onZoomOut?: () => void;
   onAddTask?: () => void;
   onDeleteTask?: () => void;
   onEditTask?: () => void;
-  onViewToday?: () => void;
-  zoomLevel?: number;
-  canZoomIn?: boolean;
-  canZoomOut?: boolean;
   // 子任务相关
   onAddSubtask?: () => void;
   canAddSubtask?: boolean;
+  // 日期范围和时间颗粒度相关
+  dateRangeStart?: Date;
+  dateRangeEnd?: Date;
+  timeGranularity?: TimeGranularity;
+  onDateRangeChange?: (startDate: Date, endDate: Date) => void;
+  onTimeGranularityChange?: (granularity: TimeGranularity) => void;
 }
 
 const Toolbar: React.FC<ToolbarProps> = ({
-  onZoomIn,
-  onZoomOut,
   onAddTask,
   onDeleteTask,
   onEditTask,
-  onViewToday,
-  zoomLevel = 1,
-  canZoomIn = true,
-  canZoomOut = true,
   onAddSubtask,
-  canAddSubtask = false
+  canAddSubtask = false,
+  dateRangeStart,
+  dateRangeEnd,
+  timeGranularity = 'month',
+  onDateRangeChange,
+  onTimeGranularityChange
 }) => {
+  // 默认日期范围：今日前1个月到今日后5个月
+  const defaultStart = dateRangeStart || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  const defaultEnd = dateRangeEnd || new Date(Date.now() + 150 * 24 * 60 * 60 * 1000);
   return (
     <div className="gantt-toolbar">
       <div className="toolbar-section">
@@ -79,33 +81,19 @@ const Toolbar: React.FC<ToolbarProps> = ({
         <div className="toolbar-separator" />
         
         <div className="toolbar-group">
-          <button 
-            className="toolbar-btn"
-            onClick={onViewToday}
-            title="定位到今天"
-          >
-            <Target size={16} />
-            <span>今天</span>
-          </button>
-          <button 
-            className="toolbar-btn"
-            onClick={onZoomOut}
-            disabled={!canZoomOut}
-            title="缩小"
-          >
-            <ZoomOut size={16} />
-          </button>
-          <span className="zoom-level">
-            {Math.round(zoomLevel * 100)}%
-          </span>
-          <button 
-            className="toolbar-btn"
-            onClick={onZoomIn}
-            disabled={!canZoomIn}
-            title="放大"
-          >
-            <ZoomIn size={16} />
-          </button>
+          {onDateRangeChange && (
+            <DateRangePicker
+              startDate={defaultStart}
+              endDate={defaultEnd}
+              onDateRangeChange={onDateRangeChange}
+            />
+          )}
+          {onTimeGranularityChange && (
+            <TimeGranularitySelector
+              value={timeGranularity}
+              onValueChange={onTimeGranularityChange}
+            />
+          )}
         </div>
       </div>
     </div>

@@ -4,6 +4,7 @@
 export { useDragAndDrop } from './gantt/useDragAndDrop';
 export { useTaskManager } from './gantt/useTaskManager';
 export { useTimeline } from './gantt/useTimeline';
+export { useTaskFilter } from './gantt/useTaskFilter';
 export { useGanttUI } from './gantt/useGanttUI';
 export { useThrottledMouseMove } from './gantt/useThrottledMouseMove';
 export { useGanttEvents } from './gantt/useGanttEvents';

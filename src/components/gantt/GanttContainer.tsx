@@ -4,20 +4,21 @@ import GanttChartBody from './GanttChartBody';
 import GanttMenuManager from './GanttMenuManager';
 import { LAYOUT_CONSTANTS } from './ganttStyles';
 import { ProjectRow, Task } from '../../types';
+import { TimeGranularity } from '../../hooks/gantt/useTimeline';
 
 interface GanttContainerProps {
   // Header props
-  onZoomIn: () => void;
-  onZoomOut: () => void;
   onAddTask: () => void;
   onDeleteTask: () => void;
   onEditTask: () => void;
-  onViewToday: () => void;
   onAddSubtask: () => void;
-  zoomLevel: number;
-  canZoomIn: boolean;
-  canZoomOut: boolean;
   canAddSubtask: boolean;
+  // 日期范围和时间颗粒度相关
+  dateRangeStart?: Date;
+  dateRangeEnd?: Date;
+  timeGranularity?: TimeGranularity;
+  onDateRangeChange?: (startDate: Date, endDate: Date) => void;
+  onTimeGranularityChange?: (granularity: TimeGranularity) => void;
   
   // Body props
   leftPanelTasks: ProjectRow[];
@@ -68,17 +69,17 @@ interface GanttContainerProps {
 
 const GanttContainer: React.FC<GanttContainerProps> = ({
   // Header props
-  onZoomIn,
-  onZoomOut,
   onAddTask,
   onDeleteTask,
   onEditTask,
-  onViewToday,
   onAddSubtask,
-  zoomLevel,
-  canZoomIn,
-  canZoomOut,
   canAddSubtask,
+  // 日期范围和时间颗粒度相关
+  dateRangeStart,
+  dateRangeEnd,
+  timeGranularity,
+  onDateRangeChange,
+  onTimeGranularityChange,
   
   // Body props
   leftPanelTasks,
@@ -137,17 +138,16 @@ const GanttContainer: React.FC<GanttContainerProps> = ({
   return (
     <div className="gantt-container-wrapper">
       <GanttChartHeader
-        onZoomIn={onZoomIn}
-        onZoomOut={onZoomOut}
         onAddTask={onAddTask}
         onDeleteTask={onDeleteTask}
         onEditTask={onEditTask}
-        onViewToday={onViewToday}
-        zoomLevel={zoomLevel}
-        canZoomIn={canZoomIn}
-        canZoomOut={canZoomOut}
         onAddSubtask={onAddSubtask}
         canAddSubtask={canAddSubtask}
+        dateRangeStart={dateRangeStart}
+        dateRangeEnd={dateRangeEnd}
+        timeGranularity={timeGranularity}
+        onDateRangeChange={onDateRangeChange}
+        onTimeGranularityChange={onTimeGranularityChange}
       />
       
       <GanttChartBody

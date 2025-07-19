@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import { GanttStateManager, GanttEventCoordinator, GanttContainer } from './gantt';
-
+import { TimeGranularity } from '../hooks/gantt/useTimeline';
 
 // 导入初始数据
 import { initialProjectRows, initialChartTasks } from '../data/initialData';
@@ -14,18 +14,40 @@ interface GanttChartProps {
 }
 
 const GanttChart: React.FC<GanttChartProps> = ({
-  startDate = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000),
-  endDate = new Date(Date.now() + 180 * 24 * 60 * 60 * 1000),
+  startDate: initialStartDate,
+  endDate: initialEndDate,
   timelineHeight = 40,
   taskHeight = 30
 }) => {
+  // 设置默认日期范围：今日前1个月到今日后5个月（总计6个月）
+  const defaultStart = initialStartDate || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  const defaultEnd = initialEndDate || new Date(Date.now() + 150 * 24 * 60 * 60 * 1000);
+  
+  // 日期范围状态管理
+  const [dateRangeStart, setDateRangeStart] = useState<Date>(defaultStart);
+  const [dateRangeEnd, setDateRangeEnd] = useState<Date>(defaultEnd);
+  
+  // 时间颗粒度状态管理
+  const [timeGranularity, setTimeGranularity] = useState<TimeGranularity>('month');
+  
+  // 处理日期范围变化
+  const handleDateRangeChange = useCallback((startDate: Date, endDate: Date) => {
+    setDateRangeStart(startDate);
+    setDateRangeEnd(endDate);
+  }, []);
+  
+  // 处理时间颗粒度变化
+  const handleTimeGranularityChange = useCallback((granularity: TimeGranularity) => {
+    setTimeGranularity(granularity);
+  }, []);
 
   return (
     <GanttStateManager
-      startDate={startDate}
-      endDate={endDate}
+      startDate={dateRangeStart}
+      endDate={dateRangeEnd}
       timelineHeight={timelineHeight}
       taskHeight={taskHeight}
+      timeGranularity={timeGranularity}
       initialProjectRows={initialProjectRows}
       initialChartTasks={initialChartTasks}
     >
@@ -56,17 +78,17 @@ const GanttChart: React.FC<GanttChartProps> = ({
           {(handlers) => (
             <GanttContainer
               // Header props
-              onZoomIn={stateData.handleZoomIn}
-              onZoomOut={stateData.handleZoomOut}
               onAddTask={stateData.ganttEvents.addNewTask}
               onDeleteTask={() => stateData.ganttInteractions.selectedTitleTaskId && stateData.ganttEvents.deleteTaskCore(stateData.ganttInteractions.selectedTitleTaskId)}
               onEditTask={() => {/* TODO: 实现编辑功能 */}}
-              onViewToday={stateData.handleViewToday}
               onAddSubtask={() => stateData.ganttInteractions.selectedTitleTaskId && stateData.ganttInteractions.handleCreateSubtask(stateData.ganttInteractions.selectedTitleTaskId)}
-              zoomLevel={stateData.zoomLevel}
-              canZoomIn={stateData.zoomLevel < 1}
-              canZoomOut={stateData.zoomLevel > 0.01}
               canAddSubtask={!!stateData.ganttInteractions.selectedTitleTaskId}
+              // 日期范围和时间颗粒度相关
+              dateRangeStart={dateRangeStart}
+              dateRangeEnd={dateRangeEnd}
+              timeGranularity={timeGranularity}
+              onDateRangeChange={handleDateRangeChange}
+              onTimeGranularityChange={handleTimeGranularityChange}
               
               // Body props
               leftPanelTasks={stateData.leftPanelTasks}

@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 
 // 时间轴状态接口（内部使用）
 // interface TimelineState {
@@ -18,17 +18,28 @@ interface DateRange {
 
 // 时间刻度接口
 interface TimeScale {
-  type: 'day' | 'week' | 'month';
+  type: 'day' | 'week' | 'month' | 'quarter' | 'year';
   label: string;
   x: number;
   width: number;
 }
 
+// 时间颗粒度类型
+export type TimeGranularity = 'day' | 'week' | 'month' | 'quarter' | 'year';
+
 // 时间轴管理Hook
-export const useTimeline = (initialStartDate?: Date, initialEndDate?: Date) => {
+export const useTimeline = (initialStartDate?: Date, initialEndDate?: Date, initialTimeGranularity?: TimeGranularity) => {
   // === 基础状态 ===
   const [zoomLevel, setZoomLevel] = useState(1);
   const [currentView, setCurrentView] = useState<'timeline' | 'list' | 'grid'>('timeline');
+  const [timeGranularity, setTimeGranularity] = useState<TimeGranularity>(initialTimeGranularity || 'month');
+  
+  // 同步外部传入的时间颗粒度
+  useEffect(() => {
+    if (initialTimeGranularity && initialTimeGranularity !== timeGranularity) {
+      setTimeGranularity(initialTimeGranularity);
+    }
+  }, [initialTimeGranularity, timeGranularity]);
   
   // === 计算日期范围 ===
   const dateRange = useMemo((): DateRange => {
@@ -63,8 +74,8 @@ export const useTimeline = (initialStartDate?: Date, initialEndDate?: Date) => {
     const endDate = dateRange.endDate;
     const pixelPerDay = dateRange.pixelPerDay;
 
-    // 根据缩放级别决定时间刻度类型
-    const scaleType = pixelPerDay > 35 ? 'day' : pixelPerDay > 3 ? 'week' : 'month';
+    // 使用手动选择的时间颗粒度
+    const scaleType = timeGranularity;
 
     if (scaleType === 'day') {
       // 按天显示
@@ -94,7 +105,7 @@ export const useTimeline = (initialStartDate?: Date, initialEndDate?: Date) => {
           width: pixelPerDay * 7
         });
       }
-    } else {
+    } else if (scaleType === 'month') {
       // 按月显示
       const monthStart = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
       
@@ -110,10 +121,43 @@ export const useTimeline = (initialStartDate?: Date, initialEndDate?: Date) => {
           width: pixelPerDay * daysInMonth
         });
       }
+    } else if (scaleType === 'quarter') {
+      // 按季度显示
+      const quarterStart = new Date(startDate.getFullYear(), Math.floor(startDate.getMonth() / 3) * 3, 1);
+      
+      for (let d = new Date(quarterStart); d <= endDate; d.setMonth(d.getMonth() + 3)) {
+        const x = dateToPixel(new Date(d));
+        const nextQuarter = new Date(d.getFullYear(), d.getMonth() + 3, 1);
+        const daysInQuarter = (nextQuarter.getTime() - d.getTime()) / (24 * 60 * 60 * 1000);
+        const quarter = Math.floor(d.getMonth() / 3) + 1;
+        
+        scales.push({
+          type: 'quarter',
+          label: `${d.getFullYear()}Q${quarter}`,
+          x,
+          width: pixelPerDay * daysInQuarter
+        });
+      }
+    } else if (scaleType === 'year') {
+      // 按年显示
+      const yearStart = new Date(startDate.getFullYear(), 0, 1);
+      
+      for (let d = new Date(yearStart); d <= endDate; d.setFullYear(d.getFullYear() + 1)) {
+        const x = dateToPixel(new Date(d));
+        const nextYear = new Date(d.getFullYear() + 1, 0, 1);
+        const daysInYear = (nextYear.getTime() - d.getTime()) / (24 * 60 * 60 * 1000);
+        
+        scales.push({
+          type: 'year',
+          label: `${d.getFullYear()}`,
+          x,
+          width: pixelPerDay * daysInYear
+        });
+      }
     }
 
     return scales;
-  }, [dateRange, dateToPixel]);
+  }, [dateRange, dateToPixel, timeGranularity]);
 
   // === 缩放控制 ===
   const handleZoomIn = useCallback(() => {
@@ -131,6 +175,11 @@ export const useTimeline = (initialStartDate?: Date, initialEndDate?: Date) => {
   // === 视图控制 ===
   const handleViewChange = useCallback((view: 'timeline' | 'list' | 'grid') => {
     setCurrentView(view);
+  }, []);
+
+  // === 时间颗粒度控制 ===
+  const handleTimeGranularityChange = useCallback((granularity: TimeGranularity) => {
+    setTimeGranularity(granularity);
   }, []);
 
   // === 快速导航 ===
@@ -164,6 +213,7 @@ export const useTimeline = (initialStartDate?: Date, initialEndDate?: Date) => {
     // === 状态 ===
     zoomLevel,
     currentView,
+    timeGranularity,
     dateRange,
     timeScales,
     
@@ -177,6 +227,7 @@ export const useTimeline = (initialStartDate?: Date, initialEndDate?: Date) => {
     setZoom,
     handleViewChange,
     handleViewToday,
+    handleTimeGranularityChange,
     
     // === 工具方法 ===
     getCurrentDateLinePosition,
@@ -184,6 +235,7 @@ export const useTimeline = (initialStartDate?: Date, initialEndDate?: Date) => {
     
     // === 状态设置器 ===
     setZoomLevel,
-    setCurrentView
+    setCurrentView,
+    setTimeGranularity
   };
 };

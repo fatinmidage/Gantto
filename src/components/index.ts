@@ -11,6 +11,8 @@ export { default as Toolbar } from './Toolbar';
 export { default as TaskIcon, DragHandle } from './TaskIcon';
 export { default as ErrorBoundary } from './ErrorBoundary';
 export { default as LazyWrapper, createLazyComponent, preloadLazyComponent } from './LazyWrapper';
+export { default as DateRangePicker } from './DateRangePicker';
+export { default as TimeGranularitySelector } from './TimeGranularitySelector';
 
 // === 甘特图相关组件导出 ===
 export * from './gantt';

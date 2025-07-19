@@ -85,3 +85,253 @@
   text-align: center;
 }
 
+/* 时间颗粒度选择器样式 */
+.time-granularity-trigger {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  border: 1px solid var(--border-tertiary);
+  border-radius: 8px;
+  background: var(--bg-hover);
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  min-width: 80px;
+  justify-content: space-between;
+}
+
+.time-granularity-trigger:hover {
+  transform: translateY(-1px);
+  border-color: var(--border-primary);
+}
+
+.time-granularity-trigger:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+.time-granularity-content {
+  background: var(--bg-glass);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--border-tertiary);
+  border-radius: 8px;
+  box-shadow: var(--shadow-lg);
+  z-index: 1000;
+  overflow: hidden;
+  animation: fadeIn 0.15s ease-out;
+}
+
+.time-granularity-viewport {
+  padding: 0.25rem;
+}
+
+.time-granularity-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.15s ease-out;
+  outline: none;
+}
+
+.time-granularity-item:hover {
+  background: var(--bg-hover);
+}
+
+.time-granularity-item[data-state="checked"] {
+  background: var(--accent-primary);
+  color: var(--text-inverse);
+}
+
+.time-granularity-indicator {
+  opacity: 0;
+  transition: opacity 0.15s ease-out;
+}
+
+.time-granularity-item[data-state="checked"] .time-granularity-indicator {
+  opacity: 1;
+}
+
+.time-granularity-scroll-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 25px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  background: var(--bg-glass);
+  border: none;
+  outline: none;
+}
+
+.time-granularity-scroll-button:hover {
+  background: var(--bg-hover);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* 日期范围选择器样式 */
+.date-range-trigger {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  border: 1px solid var(--border-tertiary);
+  border-radius: 8px;
+  background: var(--bg-hover);
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  min-width: 200px;
+}
+
+.date-range-trigger:hover {
+  transform: translateY(-1px);
+  border-color: var(--border-primary);
+}
+
+.date-range-trigger:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+.date-range-display {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.date-range-content {
+  background: var(--bg-glass);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--border-tertiary);
+  border-radius: 12px;
+  box-shadow: var(--shadow-lg);
+  z-index: 1000;
+  overflow: hidden;
+  animation: fadeIn 0.15s ease-out;
+  min-width: 300px;
+  max-width: 400px;
+}
+
+.date-range-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem 0.75rem;
+  border-bottom: 1px solid var(--border-tertiary);
+}
+
+.date-range-header h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.date-range-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease-out;
+}
+
+.date-range-close:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.date-range-form {
+  padding: 1.25rem;
+}
+
+.date-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.date-input-group:last-of-type {
+  margin-bottom: 0.75rem;
+}
+
+.date-input-group label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.date-input {
+  padding: 0.625rem 0.875rem;
+  border: 1px solid var(--border-tertiary);
+  border-radius: 8px;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  transition: all 0.15s ease-out;
+}
+
+.date-input:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+.date-input:hover {
+  border-color: var(--border-primary);
+}
+
+.date-range-info {
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border-tertiary);
+}
+
+.date-range-duration {
+  margin: 0 0 0.25rem 0;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.date-range-limits {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.date-range-arrow {
+  fill: var(--bg-glass);
+  stroke: var(--border-tertiary);
+  stroke-width: 1;
+}
+
