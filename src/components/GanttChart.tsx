@@ -135,6 +135,8 @@ const GanttChart: React.FC<GanttChartProps> = ({
               onTagRemove={stateData.ganttEvents.handleTagRemove}
               onTaskDelete={stateData.ganttEvents.deleteTaskCore}
               pixelToDate={stateData.pixelToDate}
+              containerRef={stateData.containerRef}
+              isCurrentDateInRange={stateData.isCurrentDateInRange}
             />
           )}
         </GanttEventCoordinator>

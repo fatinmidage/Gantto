@@ -28,7 +28,7 @@ interface TimeScale {
 export type TimeGranularity = 'day' | 'week' | 'month' | 'quarter' | 'year';
 
 // 时间轴管理Hook
-export const useTimeline = (initialStartDate?: Date, initialEndDate?: Date, initialTimeGranularity?: TimeGranularity) => {
+export const useTimeline = (initialStartDate?: Date, initialEndDate?: Date, initialTimeGranularity?: TimeGranularity, containerWidth?: number) => {
   // === 基础状态 ===
   const [zoomLevel, setZoomLevel] = useState(1);
   const [currentView, setCurrentView] = useState<'timeline' | 'list' | 'grid'>('timeline');
@@ -43,10 +43,15 @@ export const useTimeline = (initialStartDate?: Date, initialEndDate?: Date, init
   
   // === 计算日期范围 ===
   const dateRange = useMemo((): DateRange => {
-    const start = initialStartDate || new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
-    const end = initialEndDate || new Date(Date.now() + 180 * 24 * 60 * 60 * 1000);
+    // 直接使用传入的日期参数，如果没有传入则使用默认值
+    const start = initialStartDate || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const end = initialEndDate || new Date(Date.now() + 150 * 24 * 60 * 60 * 1000);
     const totalDays = Math.ceil((end.getTime() - start.getTime()) / (24 * 60 * 60 * 1000));
-    const pixelPerDay = Math.max(1, 80 * zoomLevel);
+    
+    // 基于容器宽度的自适应像素密度计算，如果没有容器宽度则使用默认值
+    const pixelPerDay = containerWidth && totalDays > 0 
+      ? containerWidth / totalDays 
+      : Math.max(1, 80 * zoomLevel);
     
     return {
       startDate: start,
@@ -54,7 +59,7 @@ export const useTimeline = (initialStartDate?: Date, initialEndDate?: Date, init
       totalDays,
       pixelPerDay
     };
-  }, [initialStartDate, initialEndDate, zoomLevel]);
+  }, [initialStartDate, initialEndDate, containerWidth, zoomLevel]);
 
   // === 日期像素转换 ===
   const dateToPixel = useCallback((date: Date): number => {
@@ -160,17 +165,24 @@ export const useTimeline = (initialStartDate?: Date, initialEndDate?: Date, init
   }, [dateRange, dateToPixel, timeGranularity]);
 
   // === 缩放控制 ===
+  // 注意：当使用容器宽度自适应时，缩放功能将被禁用
   const handleZoomIn = useCallback(() => {
-    setZoomLevel(prev => Math.min(prev * 1.2, 1));
-  }, []);
+    if (!containerWidth) {
+      setZoomLevel(prev => Math.min(prev * 1.2, 1));
+    }
+  }, [containerWidth]);
 
   const handleZoomOut = useCallback(() => {
-    setZoomLevel(prev => Math.max(prev / 1.2, 0.01));
-  }, []);
+    if (!containerWidth) {
+      setZoomLevel(prev => Math.max(prev / 1.2, 0.01));
+    }
+  }, [containerWidth]);
 
   const setZoom = useCallback((zoom: number) => {
-    setZoomLevel(Math.max(0.01, Math.min(zoom, 1)));
-  }, []);
+    if (!containerWidth) {
+      setZoomLevel(Math.max(0.01, Math.min(zoom, 1)));
+    }
+  }, [containerWidth]);
 
   // === 视图控制 ===
   const handleViewChange = useCallback((view: 'timeline' | 'list' | 'grid') => {
@@ -195,6 +207,12 @@ export const useTimeline = (initialStartDate?: Date, initialEndDate?: Date, init
     const today = new Date();
     return dateToPixel(today);
   }, [dateToPixel]);
+
+  // === 检查当前日期是否在范围内 ===
+  const isCurrentDateInRange = useCallback((): boolean => {
+    const today = new Date();
+    return today >= dateRange.startDate && today <= dateRange.endDate;
+  }, [dateRange]);
 
   // === 计算可视区域 ===
   const getVisibleDateRange = useCallback((scrollLeft: number, containerWidth: number) => {
@@ -232,6 +250,7 @@ export const useTimeline = (initialStartDate?: Date, initialEndDate?: Date, init
     // === 工具方法 ===
     getCurrentDateLinePosition,
     getVisibleDateRange,
+    isCurrentDateInRange,
     
     // === 状态设置器 ===
     setZoomLevel,

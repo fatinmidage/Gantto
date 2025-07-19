@@ -49,6 +49,12 @@ interface GanttChartBodyProps {
   taskHeight: number;
   taskContentHeight: number;
   
+  // 容器引用
+  containerRef?: React.RefObject<HTMLDivElement>;
+  
+  // 当前日期范围检查
+  isCurrentDateInRange?: boolean;
+  
   // 时间轴数据
   timeScales: TimeScale[];
   
@@ -105,9 +111,12 @@ const GanttChartBody: React.FC<GanttChartBodyProps> = ({
   onMouseMove,
   onMouseUp,
   onTitleMouseMove,
-  onTitleMouseUp
+  onTitleMouseUp,
+  containerRef: externalContainerRef,
+  isCurrentDateInRange = true
 }) => {
-  const containerRef = useRef<HTMLDivElement>(null);
+  const localContainerRef = useRef<HTMLDivElement>(null);
+  const containerRef = externalContainerRef || localContainerRef;
 
   // 添加水平拖拽事件监听器
   useEffect(() => {
@@ -175,6 +184,7 @@ const GanttChartBody: React.FC<GanttChartBodyProps> = ({
           timeScales={timeScales}
           dateToPixel={dateToPixel}
           containerHeight={timelineHeight + taskContentHeight}
+          isCurrentDateInRange={isCurrentDateInRange}
         />
 
         {/* 任务条 */}

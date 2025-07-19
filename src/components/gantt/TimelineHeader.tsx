@@ -18,13 +18,15 @@ interface TimelineHeaderProps {
   timeScales: TimeScale[];
   dateToPixel: (date: Date) => number;
   containerHeight: number;
+  isCurrentDateInRange?: boolean;
 }
 
 const TimelineHeader: React.FC<TimelineHeaderProps> = ({
   timelineHeight,
   timeScales,
   dateToPixel,
-  containerHeight
+  containerHeight,
+  isCurrentDateInRange = true
 }) => {
   return (
     <>
@@ -94,18 +96,20 @@ const TimelineHeader: React.FC<TimelineHeaderProps> = ({
         ))}
       </div>
 
-      {/* 当前日期指示线 */}
-      <div className="gantt-current-date-line" style={{
-        position: 'absolute',
-        left: dateToPixel(new Date()) - 1, // 居中对齐
-        top: 0,
-        width: '2px',
-        height: containerHeight,
-        backgroundColor: '#ff4444',
-        zIndex: 25,
-        pointerEvents: 'none',
-        boxShadow: '0 0 6px rgba(255, 68, 68, 0.4)'
-      }} />
+      {/* 当前日期指示线 - 只在日期范围内时显示 */}
+      {isCurrentDateInRange && (
+        <div className="gantt-current-date-line" style={{
+          position: 'absolute',
+          left: dateToPixel(new Date()) - 1, // 居中对齐
+          top: 0,
+          width: '2px',
+          height: containerHeight,
+          backgroundColor: '#ff4444',
+          zIndex: 25,
+          pointerEvents: 'none',
+          boxShadow: '0 0 6px rgba(255, 68, 68, 0.4)'
+        }} />
+      )}
     </>
   );
 };

@@ -3,7 +3,7 @@ import GanttChartHeader from './GanttChartHeader';
 import GanttChartBody from './GanttChartBody';
 import GanttMenuManager from './GanttMenuManager';
 import { LAYOUT_CONSTANTS } from './ganttStyles';
-import { ProjectRow, Task } from '../../types';
+import { Task } from '../../types';
 import { TimeGranularity } from '../../hooks/gantt/useTimeline';
 
 interface GanttContainerProps {
@@ -21,7 +21,7 @@ interface GanttContainerProps {
   onTimeGranularityChange?: (granularity: TimeGranularity) => void;
   
   // Body props
-  leftPanelTasks: ProjectRow[];
+  leftPanelTasks: Task[];
   chartTaskRows: any[];
   selectedTitleTaskId: string | null;
   selectedChartTaskId: string | null;
@@ -65,6 +65,12 @@ interface GanttContainerProps {
   onTagRemove: (taskId: string, tag: string) => void;
   onTaskDelete: (taskId: string) => void;
   pixelToDate: (pixel: number) => Date;
+  
+  // 容器引用
+  containerRef?: React.RefObject<HTMLDivElement>;
+  
+  // 当前日期范围检查
+  isCurrentDateInRange?: boolean;
 }
 
 const GanttContainer: React.FC<GanttContainerProps> = ({
@@ -125,7 +131,9 @@ const GanttContainer: React.FC<GanttContainerProps> = ({
   onTagAdd,
   onTagRemove,
   onTaskDelete,
-  pixelToDate
+  pixelToDate,
+  containerRef,
+  isCurrentDateInRange = true
 }) => {
   // 标题列宽度状态
   const [titleColumnWidth, setTitleColumnWidth] = useState<number>(LAYOUT_CONSTANTS.TITLE_COLUMN_WIDTH);
@@ -181,6 +189,8 @@ const GanttContainer: React.FC<GanttContainerProps> = ({
         onMouseUp={onMouseUp}
         onTitleMouseMove={onTitleMouseMove}
         onTitleMouseUp={onTitleMouseUp}
+        containerRef={containerRef}
+        isCurrentDateInRange={isCurrentDateInRange}
       />
 
       <GanttMenuManager

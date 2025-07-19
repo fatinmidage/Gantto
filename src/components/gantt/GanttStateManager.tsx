@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef, useState, useEffect } from 'react';
 import { Task } from '../../types';
 import { TimeGranularity } from '../../hooks/gantt/useTimeline';
 
@@ -100,6 +100,12 @@ interface GanttStateData {
   
   // 标签状态
   availableTags: string[];
+  
+  // 容器引用
+  containerRef: React.RefObject<HTMLDivElement>;
+  
+  // 当前日期范围检查
+  isCurrentDateInRange: boolean;
 }
 
 const GanttStateManager: React.FC<GanttStateManagerProps> = ({
@@ -112,6 +118,43 @@ const GanttStateManager: React.FC<GanttStateManagerProps> = ({
   initialChartTasks,
   children
 }) => {
+  // === 容器宽度管理 ===
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [containerWidth, setContainerWidth] = useState<number>(0);
+  
+  // 容器宽度监听
+  useEffect(() => {
+    const updateContainerWidth = () => {
+      if (containerRef.current) {
+        const width = containerRef.current.clientWidth;
+        setContainerWidth(width);
+      }
+    };
+    
+    // 初始化宽度
+    updateContainerWidth();
+    
+    // 监听窗口大小变化
+    const handleResize = () => {
+      updateContainerWidth();
+    };
+    
+    window.addEventListener('resize', handleResize);
+    
+    // 使用 ResizeObserver 监听容器大小变化（如果支持）
+    let resizeObserver: ResizeObserver | null = null;
+    if (window.ResizeObserver && containerRef.current) {
+      resizeObserver = new ResizeObserver(updateContainerWidth);
+      resizeObserver.observe(containerRef.current);
+    }
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      if (resizeObserver) {
+        resizeObserver.disconnect();
+      }
+    };
+  }, []);
   // === 使用自定义 Hooks ===
   
   // 任务管理
@@ -123,8 +166,8 @@ const GanttStateManager: React.FC<GanttStateManagerProps> = ({
   // 拖拽功能
   const dragAndDrop = useDragAndDrop();
   
-  // 时间轴管理
-  const timeline = useTimeline(startDate, endDate, timeGranularity);
+  // 时间轴管理 - 传入容器宽度参数
+  const timeline = useTimeline(startDate, endDate, timeGranularity, containerWidth);
   
   // UI 状态管理
   const ganttUI = useGanttUI();
@@ -194,7 +237,8 @@ const GanttStateManager: React.FC<GanttStateManagerProps> = ({
     handleZoomIn,
     handleZoomOut,
     handleViewToday,
-    timeScales
+    timeScales,
+    isCurrentDateInRange
   } = timeline;
   
   // UI状态和方法
@@ -210,7 +254,7 @@ const GanttStateManager: React.FC<GanttStateManagerProps> = ({
     setProjectRows,
     deleteTaskCore: ganttEvents.deleteTaskCore,
     projectRows,
-    containerRef: { current: null },
+    containerRef,
     pixelToDate,
     taskHeight,
     timelineHeight
@@ -342,7 +386,13 @@ const GanttStateManager: React.FC<GanttStateManagerProps> = ({
     ganttInteractions,
     
     // 标签状态
-    availableTags
+    availableTags,
+    
+    // 容器引用
+    containerRef,
+    
+    // 当前日期范围检查
+    isCurrentDateInRange: isCurrentDateInRange()
   };
 
   return children(stateData);
