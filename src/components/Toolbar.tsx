@@ -2,13 +2,12 @@ import React from 'react';
 import { 
   ZoomIn, 
   ZoomOut, 
- 
   Plus, 
   Trash2,
   Edit3,
   Target,
   ChevronRight
-} from 'lucide-react';
+} from './icons';
 
 interface ToolbarProps {
   onZoomIn?: () => void;

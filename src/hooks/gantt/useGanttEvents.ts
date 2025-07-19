@@ -1,6 +1,7 @@
 import { useTaskCRUD } from './useTaskCRUD';
 import { useTaskAttributes } from './useTaskAttributes';
 import { useTaskBatch } from './useTaskBatch';
+import { useGlobalTags } from './useGlobalTags';
 import { Task, ProjectRow } from '../../types';
 
 interface UseGanttEventsProps {
@@ -10,8 +11,6 @@ interface UseGanttEventsProps {
   setTasks: React.Dispatch<React.SetStateAction<Task[]>>;
   setChartTasks: React.Dispatch<React.SetStateAction<Task[]>>;
   setProjectRows: React.Dispatch<React.SetStateAction<ProjectRow[]>>;
-  availableTags?: string[];
-  setAvailableTags?: React.Dispatch<React.SetStateAction<string[]>>;
 }
 
 export const useGanttEvents = ({
@@ -20,10 +19,11 @@ export const useGanttEvents = ({
   projectRows,
   setTasks,
   setChartTasks,
-  setProjectRows,
-  availableTags = [],
-  setAvailableTags
+  setProjectRows
 }: UseGanttEventsProps) => {
+  
+  // 使用统一的全局标签管理（供后续扩展使用）
+  useGlobalTags();
   
   // 使用子hooks组合功能
   const taskCRUD = useTaskCRUD({
@@ -38,9 +38,7 @@ export const useGanttEvents = ({
   const taskAttributes = useTaskAttributes({
     chartTasks,
     setTasks,
-    setChartTasks,
-    availableTags,
-    setAvailableTags
+    setChartTasks
   });
   
   const taskBatch = useTaskBatch({

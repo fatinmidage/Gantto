@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Task } from '../../types';
+import { useGlobalTags } from './useGlobalTags';
 
 // 状态接口定义
 export interface GanttStateType {
@@ -67,10 +68,8 @@ export const useGanttState = (): GanttStateType => {
     newTag?: string;
   }>({ visible: false, x: 0, y: 0 });
 
-  // 可用标签选项
-  const [availableTags, setAvailableTags] = useState<string[]>([
-    '重要', '紧急', '测试', '开发', '设计', '评审', '部署'
-  ]);
+  // 使用统一的全局标签管理
+  const { availableTags, setAvailableTags } = useGlobalTags();
 
   // 预定义颜色选项
   const availableColors = useMemo(() => [

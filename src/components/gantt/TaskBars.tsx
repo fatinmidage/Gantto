@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { Target } from 'lucide-react';
+import { Target } from '../icons';
 import { Task } from '../../types';
 import { COLOR_CONSTANTS } from './ganttStyles';
 

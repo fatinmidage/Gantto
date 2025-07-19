@@ -13,6 +13,9 @@ export { useGanttMouseEvents } from './gantt/useGanttMouseEvents';
 export { useGanttState } from './gantt/useGanttState';
 export { useGanttCalculations } from './gantt/useGanttCalculations';
 export { useGanttHandlers } from './gantt/useGanttHandlers';
+export { useGlobalTags } from './gantt/useGlobalTags';
+export { useDragReducer } from './gantt/useDragReducer';
+export { useGanttUIState } from './gantt/useGanttUIState';
 
 // 通用Hooks
 export { useThrottle } from './common/useThrottle';

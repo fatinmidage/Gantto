@@ -5,7 +5,7 @@ import {
   Save, 
   Settings, 
   BarChart3
-} from 'lucide-react';
+} from './icons';
 
 interface HeaderProps {
   onNewProject?: () => void;

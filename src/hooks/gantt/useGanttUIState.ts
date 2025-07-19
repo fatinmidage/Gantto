@@ -1,14 +1,87 @@
 import { useState, useCallback } from 'react';
-import { TaskContextMenu, ColorPickerState, TagManagerState } from '../../types';
+import { Task, TaskContextMenu, ColorPickerState, TagManagerState } from '../../types';
 import { useGlobalTags } from './useGlobalTags';
 
-// UI交互状态管理Hook
-export const useGanttUI = () => {
+// 统一的甘特图UI状态接口
+export interface UnifiedGanttUIState {
+  // === 选择状态 ===
+  selectedTitleTaskId: string | null;
+  selectedChartTaskId: string | null;
+  
+  // === 上下文菜单状态 ===
+  contextMenu: {
+    visible: boolean;
+    x: number;
+    y: number;
+    clickPosition: { x: number; y: number };
+  };
+  taskContextMenu: TaskContextMenu;
+  
+  // === 模态框状态（统一位置信息） ===
+  colorPickerState: ColorPickerState & {
+    x?: number;
+    y?: number;
+    currentColor?: string;
+  };
+  tagManagerState: TagManagerState & {
+    x?: number;
+    y?: number;
+    task?: Task;
+  };
+  
+  // === 标签和颜色状态 ===
+  availableTags: string[];
+  availableColors: string[];
+}
+
+// 统一的管理操作接口
+export interface UnifiedGanttUIActions {
+  // === 选择管理 ===
+  selectTitleTask: (taskId: string | null) => void;
+  selectChartTask: (taskId: string | null) => void;
+  clearAllSelections: () => void;
+  
+  // === 菜单管理 ===
+  showContextMenu: (e: React.MouseEvent) => void;
+  hideContextMenu: () => void;
+  showTaskContextMenu: (e: React.MouseEvent, taskId: string) => void;
+  hideTaskContextMenu: () => void;
+  
+  // === 模态框管理 ===
+  showColorPicker: (taskId: string, position?: {x: number, y: number}, currentColor?: string) => void;
+  hideColorPicker: () => void;
+  showTagManager: (taskId: string, currentTags?: string[], position?: {x: number, y: number}, task?: Task) => void;
+  hideTagManager: () => void;
+  
+  // === 标签操作 ===
+  addTag: (tag: string) => void;
+  removeTag: (tag: string) => void;
+  updateSelectedTags: (tags: string[]) => void;
+  
+  // === 工具方法 ===
+  isTaskSelected: (taskId: string) => boolean;
+  hasActivePopup: () => boolean;
+  handleKeyDown: (e: KeyboardEvent) => string | null;
+  
+  // === 直接状态设置（向后兼容） ===
+  setSelectedTitleTaskId: (id: string | null) => void;
+  setSelectedChartTaskId: (id: string | null) => void;
+  setContextMenu: (menu: UnifiedGanttUIState['contextMenu']) => void;
+  setTaskContextMenu: (menu: TaskContextMenu) => void;
+  setColorPickerState: (state: UnifiedGanttUIState['colorPickerState']) => void;
+  setTagManagerState: (state: UnifiedGanttUIState['tagManagerState']) => void;
+}
+
+/**
+ * 统一的甘特图UI状态管理Hook
+ * 合并了 useGanttState 和 useGanttUI 的功能，消除重复和接口不一致
+ */
+export const useGanttUIState = (): UnifiedGanttUIState & UnifiedGanttUIActions => {
   // === 选择状态 ===
   const [selectedTitleTaskId, setSelectedTitleTaskId] = useState<string | null>(null);
   const [selectedChartTaskId, setSelectedChartTaskId] = useState<string | null>(null);
   
-  // === 右键菜单状态 ===
+  // === 上下文菜单状态 ===
   const [contextMenu, setContextMenu] = useState<{
     visible: boolean;
     x: number;
@@ -28,22 +101,35 @@ export const useGanttUI = () => {
     taskId: null
   });
 
-  // === 颜色选择器状态 ===
-  const [colorPickerState, setColorPickerState] = useState<ColorPickerState>({
+  // === 模态框状态（统一接口） ===
+  const [colorPickerState, setColorPickerState] = useState<UnifiedGanttUIState['colorPickerState']>({
     visible: false,
-    taskId: null
+    taskId: null,
+    x: 0,
+    y: 0,
+    currentColor: undefined
   });
 
-  // === 标签管理状态 ===
-  const [tagManagerState, setTagManagerState] = useState<TagManagerState>({
+  const [tagManagerState, setTagManagerState] = useState<UnifiedGanttUIState['tagManagerState']>({
     visible: false,
     taskId: null,
     newTag: '',
-    selectedTags: []
+    selectedTags: [],
+    x: 0,
+    y: 0,
+    task: undefined
   });
 
-  // === 使用统一的全局标签管理 ===
+  // === 全局标签和颜色管理 ===
   const { availableTags, addTag: globalAddTag, removeTag: globalRemoveTag } = useGlobalTags();
+  
+  // 预定义颜色选项
+  const availableColors = [
+    '#ff6b6b', '#4ecdc4', '#45b7d1', '#f9ca24', '#f0932b',
+    '#eb4d4b', '#6c5ce7', '#a55eea', '#26de81', '#fd79a8',
+    '#fdcb6e', '#fd79a8', '#e17055', '#00b894', '#0984e3',
+    '#6c5ce7', '#a55eea', '#fd79a8', '#fdcb6e', '#6c5ce7'
+  ];
 
   // === 选择管理 ===
   const selectTitleTask = useCallback((taskId: string | null) => {
@@ -59,7 +145,7 @@ export const useGanttUI = () => {
     setSelectedChartTaskId(null);
   }, []);
 
-  // === 右键菜单管理 ===
+  // === 菜单管理 ===
   const showContextMenu = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     setContextMenu({
@@ -71,12 +157,7 @@ export const useGanttUI = () => {
   }, []);
 
   const hideContextMenu = useCallback(() => {
-    setContextMenu({
-      visible: false,
-      x: 0,
-      y: 0,
-      clickPosition: { x: 0, y: 0 }
-    });
+    setContextMenu(prev => ({ ...prev, visible: false }));
   }, []);
 
   const showTaskContextMenu = useCallback((e: React.MouseEvent, taskId: string) => {
@@ -99,28 +180,45 @@ export const useGanttUI = () => {
     });
   }, []);
 
-  // === 颜色选择器管理 ===
-  const showColorPicker = useCallback((taskId: string) => {
+  // === 模态框管理 ===
+  const showColorPicker = useCallback((
+    taskId: string, 
+    position?: {x: number, y: number}, 
+    currentColor?: string
+  ) => {
     setColorPickerState({
       visible: true,
-      taskId
+      taskId,
+      x: position?.x || 0,
+      y: position?.y || 0,
+      currentColor
     });
   }, []);
 
   const hideColorPicker = useCallback(() => {
     setColorPickerState({
       visible: false,
-      taskId: null
+      taskId: null,
+      x: 0,
+      y: 0,
+      currentColor: undefined
     });
   }, []);
 
-  // === 标签管理器管理 ===
-  const showTagManager = useCallback((taskId: string, currentTags: string[] = []) => {
+  const showTagManager = useCallback((
+    taskId: string, 
+    currentTags: string[] = [], 
+    position?: {x: number, y: number}, 
+    task?: Task
+  ) => {
     setTagManagerState({
       visible: true,
       taskId,
       newTag: '',
-      selectedTags: currentTags
+      selectedTags: currentTags,
+      x: position?.x || 0,
+      y: position?.y || 0,
+      task
     });
   }, []);
 
@@ -129,7 +227,10 @@ export const useGanttUI = () => {
       visible: false,
       taskId: null,
       newTag: '',
-      selectedTags: []
+      selectedTags: [],
+      x: 0,
+      y: 0,
+      task: undefined
     });
   }, []);
 
@@ -149,8 +250,8 @@ export const useGanttUI = () => {
     }));
   }, []);
 
-  // === 键盘快捷键处理 ===
-  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+  // === 键盘处理 ===
+  const handleKeyDown = useCallback((e: KeyboardEvent): string | null => {
     // Escape键关闭所有弹窗
     if (e.key === 'Escape') {
       hideContextMenu();
@@ -197,51 +298,44 @@ export const useGanttUI = () => {
   }, [contextMenu.visible, taskContextMenu.visible, colorPickerState.visible, tagManagerState.visible]);
 
   return {
-    // === 选择状态 ===
+    // === 状态 ===
     selectedTitleTaskId,
     selectedChartTaskId,
-    
-    // === 弹窗状态 ===
     contextMenu,
     taskContextMenu,
     colorPickerState,
     tagManagerState,
-    
-    // === 标签状态 ===
     availableTags,
+    availableColors,
     
     // === 选择管理 ===
     selectTitleTask,
     selectChartTask,
     clearAllSelections,
     
-    // === 右键菜单管理 ===
+    // === 菜单管理 ===
     showContextMenu,
     hideContextMenu,
     showTaskContextMenu,
     hideTaskContextMenu,
     
-    // === 颜色选择器管理 ===
+    // === 模态框管理 ===
     showColorPicker,
     hideColorPicker,
-    
-    // === 标签管理器管理 ===
     showTagManager,
     hideTagManager,
-    updateSelectedTags,
     
     // === 标签操作 ===
     addTag,
     removeTag,
-    
-    // === 键盘处理 ===
-    handleKeyDown,
+    updateSelectedTags,
     
     // === 工具方法 ===
     isTaskSelected,
     hasActivePopup,
+    handleKeyDown,
     
-    // === 状态设置器（用于外部直接控制） ===
+    // === 直接状态设置（向后兼容） ===
     setSelectedTitleTaskId,
     setSelectedChartTaskId,
     setContextMenu,

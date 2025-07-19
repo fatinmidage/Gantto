@@ -1,12 +1,11 @@
 import { useCallback } from 'react';
 import { Task } from '../../types';
+import { useGlobalTags } from './useGlobalTags';
 
 interface UseTaskAttributesProps {
   chartTasks: Task[];
   setTasks: React.Dispatch<React.SetStateAction<Task[]>>;
   setChartTasks: React.Dispatch<React.SetStateAction<Task[]>>;
-  availableTags?: string[];
-  setAvailableTags?: React.Dispatch<React.SetStateAction<string[]>>;
 }
 
 export interface UseTaskAttributesResult {
@@ -20,10 +19,11 @@ export interface UseTaskAttributesResult {
 export const useTaskAttributes = ({
   chartTasks,
   setTasks,
-  setChartTasks,
-  availableTags = [],
-  setAvailableTags
+  setChartTasks
 }: UseTaskAttributesProps): UseTaskAttributesResult => {
+  
+  // 使用统一的全局标签管理
+  const { addTag } = useGlobalTags();
 
   // 更改任务颜色
   const handleColorChange = useCallback((taskId: string, color: string) => {
@@ -71,10 +71,8 @@ export const useTaskAttributes = ({
     }
     
     // 将新标签添加到可用标签列表
-    if (setAvailableTags && !availableTags.includes(tag)) {
-      setAvailableTags(prev => [...prev, tag]);
-    }
-  }, [chartTasks, setChartTasks, setTasks, availableTags, setAvailableTags]);
+    addTag(tag);
+  }, [chartTasks, setChartTasks, setTasks, addTag]);
 
   // 移除标签
   const handleTagRemove = useCallback((taskId: string, tag: string) => {

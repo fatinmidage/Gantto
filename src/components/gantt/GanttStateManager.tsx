@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { Task } from '../../types';
 
 // 导入自定义 Hooks
@@ -9,7 +9,8 @@ import {
   useGanttUI,
   useGanttEvents,
   useGanttInteractions,
-  useGanttKeyboard
+  useGanttKeyboard,
+  useGlobalTags
 } from '../../hooks';
 
 // 导入层级帮助函数
@@ -87,7 +88,6 @@ interface GanttStateData {
   
   // 标签状态
   availableTags: string[];
-  setAvailableTags: (tags: string[]) => void;
 }
 
 const GanttStateManager: React.FC<GanttStateManagerProps> = ({
@@ -126,10 +126,8 @@ const GanttStateManager: React.FC<GanttStateManagerProps> = ({
     setTasks
   } = taskManager;
 
-  // === 可用标签状态管理 ===
-  const [availableTags, setAvailableTags] = useState<string[]>([
-    '重要', '紧急', '测试', '开发', '设计', '评审', '部署'
-  ]);
+  // === 使用统一的全局标签管理 ===
+  const { availableTags } = useGlobalTags();
 
   // 事件处理 Hooks
   const ganttEvents = useGanttEvents({
@@ -138,9 +136,7 @@ const GanttStateManager: React.FC<GanttStateManagerProps> = ({
     projectRows,
     setTasks,
     setChartTasks,
-    setProjectRows,
-    availableTags,
-    setAvailableTags
+    setProjectRows
   });
   
   // 拖拽状态和方法
@@ -314,8 +310,7 @@ const GanttStateManager: React.FC<GanttStateManagerProps> = ({
     ganttInteractions,
     
     // 标签状态
-    availableTags,
-    setAvailableTags
+    availableTags
   };
 
   return children(stateData);

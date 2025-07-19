@@ -6,7 +6,7 @@ import {
   CheckCircle, 
   Circle,
   GripVertical
-} from 'lucide-react';
+} from './icons';
 
 interface TaskIconProps {
   type?: 'milestone' | 'development' | 'testing' | 'delivery' | 'default';
