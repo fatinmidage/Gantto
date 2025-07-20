@@ -31,6 +31,10 @@ interface GanttMenuManagerProps {
   // 可用标签
   availableTags: string[];
   
+  // 可见行数据
+  visibleRows?: Array<{ id: string; [key: string]: any }>;
+  taskHeight?: number;
+  
   // 事件处理
   onContextMenuClose: () => void;
   onTaskContextMenuClose: () => void;
@@ -51,6 +55,8 @@ const GanttMenuManager: React.FC<GanttMenuManagerProps> = ({
   taskContextMenuState,
   defaultRowId,
   availableTags,
+  visibleRows,
+  taskHeight,
   onContextMenuClose,
   onTaskContextMenuClose,
   onCreateTask,
@@ -135,6 +141,8 @@ const GanttMenuManager: React.FC<GanttMenuManagerProps> = ({
         defaultRowId={defaultRowId}
         clickPosition={contextMenuState.clickPosition}
         pixelToDate={pixelToDate}
+        visibleRows={visibleRows}
+        taskHeight={taskHeight}
       />
 
       {/* 任务条右键菜单 */}

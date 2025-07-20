@@ -16,6 +16,8 @@ interface GanttContextMenuProps {
     y: number;
   };
   pixelToDate?: (pixel: number) => Date;
+  visibleRows?: Array<{ id: string; [key: string]: any }>;
+  taskHeight?: number;
 }
 
 const GanttContextMenu: React.FC<GanttContextMenuProps> = ({
@@ -27,7 +29,9 @@ const GanttContextMenu: React.FC<GanttContextMenuProps> = ({
   onCreateMilestone,
   defaultRowId,
   clickPosition,
-  pixelToDate
+  pixelToDate,
+  visibleRows = [],
+  taskHeight = 30
 }) => {
   const menuRef = React.useRef<HTMLDivElement>(null);
 
@@ -64,9 +68,30 @@ const GanttContextMenu: React.FC<GanttContextMenuProps> = ({
   // 计算点击位置的时间信息用于显示
   const clickDate = clickPosition && pixelToDate ? pixelToDate(clickPosition.x) : new Date();
 
+  // 根据点击位置的Y坐标计算目标行ID
+  const calculateTargetRowId = () => {
+    if (!clickPosition || !visibleRows.length) {
+      return defaultRowId;
+    }
+    
+    // 每行的高度包括任务高度 + 10px间距
+    const rowHeight = taskHeight + 10;
+    const clickedRowIndex = Math.floor(clickPosition.y / rowHeight);
+    
+    // 确保索引在有效范围内
+    if (clickedRowIndex >= 0 && clickedRowIndex < visibleRows.length) {
+      return visibleRows[clickedRowIndex].id;
+    } else {
+      return defaultRowId;
+    }
+  };
+
   const handleCreateTask = () => {
     // 计算点击位置的日期
     const clickDate = clickPosition && pixelToDate ? pixelToDate(clickPosition.x) : new Date();
+    
+    // 计算目标行ID
+    const targetRowId = calculateTargetRowId();
     
     const newTask: Task = {
       id: `chart-${Date.now()}`,
@@ -76,7 +101,7 @@ const GanttContextMenu: React.FC<GanttContextMenuProps> = ({
       color: '#9C27B0',
       x: clickPosition?.x || 0,
       width: 0,
-      rowId: defaultRowId,
+      rowId: targetRowId,
       type: 'default',
       status: 'pending',
       progress: 0
@@ -90,6 +115,9 @@ const GanttContextMenu: React.FC<GanttContextMenuProps> = ({
     // 计算点击位置的日期
     const clickDate = clickPosition && pixelToDate ? pixelToDate(clickPosition.x) : new Date();
     
+    // 计算目标行ID（与新任务条逻辑相同）
+    const targetRowId = calculateTargetRowId();
+    
     const newMilestone: Task = {
       id: `milestone-${Date.now()}`,
       title: '新里程碑',
@@ -98,7 +126,7 @@ const GanttContextMenu: React.FC<GanttContextMenuProps> = ({
       color: '#FFD700',
       x: clickPosition?.x || 0,
       width: 20, // 里程碑默认宽度
-      rowId: defaultRowId,
+      rowId: targetRowId,
       type: 'milestone',
       status: 'pending',
       progress: 0
