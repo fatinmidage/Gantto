@@ -35,7 +35,7 @@ const TaskIcon: React.FC<TaskIconProps> = ({
       case 'testing':
         return '#4caf50'; // 绿色
       case 'delivery':
-        return '#1976d2'; // 深蓝色
+        return '#9c27b0'; // 紫色
       default:
         return '#666666'; // 灰色
     }

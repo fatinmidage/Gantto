@@ -1,4 +1,5 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { Task } from '../../types';
 import { formatDateForDisplay } from '../../utils/ganttUtils';
 
@@ -28,6 +29,9 @@ const GanttContextMenu: React.FC<GanttContextMenuProps> = ({
   clickPosition,
   pixelToDate
 }) => {
+  const menuRef = React.useRef<HTMLDivElement>(null);
+
+
   if (!visible) return null;
 
   // 计算点击位置的时间信息用于显示
@@ -83,8 +87,9 @@ const GanttContextMenu: React.FC<GanttContextMenuProps> = ({
     e.currentTarget.style.backgroundColor = 'transparent';
   };
 
-  return (
+  const menuContent = (
     <div
+      ref={menuRef}
       style={{
         position: 'fixed',
         top: y,
@@ -126,6 +131,8 @@ const GanttContextMenu: React.FC<GanttContextMenuProps> = ({
       </div>
     </div>
   );
+
+  return createPortal(menuContent, document.body);
 };
 
 export default GanttContextMenu;
