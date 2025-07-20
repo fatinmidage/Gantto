@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Task } from '../../types';
 import { TaskIcon } from '..';
 
@@ -71,16 +72,22 @@ const TaskTitleContextMenu: React.FC<TaskTitleContextMenuProps> = ({
 
   if (!visible || !taskId || !task) return null;
 
-  // 菜单样式
+  // 菜单样式 - 添加边界检测以确保菜单不会超出视口
+  const menuWidth = 160;
+  const menuHeight = 80; // 估算菜单高度
+  const adjustedX = x + menuWidth > window.innerWidth ? window.innerWidth - menuWidth - 10 : x;
+  const adjustedY = y + menuHeight > window.innerHeight ? window.innerHeight - menuHeight - 10 : y;
+  
+  
   const menuStyle: React.CSSProperties = {
     position: 'fixed',
-    top: y,
-    left: x,
+    top: adjustedY,
+    left: adjustedX,
     backgroundColor: '#fff',
     border: '1px solid #ddd',
     borderRadius: '8px',
     boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-    zIndex: 1000,
+    zIndex: 9999, // 提高z-index确保在最顶层
     minWidth: '160px',
     overflow: 'hidden'
   };
@@ -107,21 +114,35 @@ const TaskTitleContextMenu: React.FC<TaskTitleContextMenuProps> = ({
     onClose();
   };
 
-  // 计算子菜单位置
+  // 计算子菜单位置 - 同样添加边界检测
+  const submenuWidth = 140;
+  const submenuHeight = 200; // 估算子菜单高度
+  const submenuX = adjustedX + menuWidth + 5; // 在主菜单右侧显示
+  const submenuY = adjustedY;
+  
+  // 如果右侧空间不够，则显示在左侧
+  const finalSubmenuX = submenuX + submenuWidth > window.innerWidth 
+    ? adjustedX - submenuWidth - 5 
+    : submenuX;
+  const finalSubmenuY = submenuY + submenuHeight > window.innerHeight 
+    ? window.innerHeight - submenuHeight - 10 
+    : submenuY;
+    
   const submenuStyle: React.CSSProperties = {
     position: 'fixed',
-    top: y,
-    left: x + 160, // 主菜单宽度 + 一些间距
+    top: finalSubmenuY,
+    left: finalSubmenuX,
     backgroundColor: '#fff',
     border: '1px solid #ddd',
     borderRadius: '8px',
     boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-    zIndex: 1001,
+    zIndex: 10000, // 子菜单层级更高
     minWidth: '140px',
     overflow: 'hidden'
   };
 
-  return (
+  // 使用Portal将菜单渲染到document.body，绕过CSS层叠上下文限制
+  const menuContent = (
     <>
       {/* 主菜单 */}
       <div
@@ -222,6 +243,9 @@ const TaskTitleContextMenu: React.FC<TaskTitleContextMenuProps> = ({
       )}
     </>
   );
+
+  // 使用Portal将菜单渲染到document.body
+  return createPortal(menuContent, document.body);
 };
 
 export default TaskTitleContextMenu;

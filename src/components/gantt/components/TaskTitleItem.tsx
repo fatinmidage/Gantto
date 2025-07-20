@@ -78,10 +78,15 @@ export const TaskTitleItem: React.FC<TaskTitleItemProps> = ({
     e.preventDefault();
     e.stopPropagation();
     
+    // 使用鼠标相对于视口的坐标
+    const x = e.clientX;
+    const y = e.clientY;
+    
+    
     setContextMenu({
       visible: true,
-      x: e.clientX,
-      y: e.clientY
+      x,
+      y
     });
   };
 
