@@ -25,18 +25,37 @@ const TaskIcon: React.FC<TaskIconProps> = ({
   const adjustedSize = level > 0 ? size * 0.85 : size;
   const opacity = level > 0 ? 0.8 : 1;
 
+  // 根据任务类型获取颜色
+  const getTypeColor = () => {
+    switch (type) {
+      case 'milestone':
+        return '#ff9800'; // 橙色
+      case 'development':
+        return '#2196f3'; // 蓝色
+      case 'testing':
+        return '#4caf50'; // 绿色
+      case 'delivery':
+        return '#1976d2'; // 深蓝色
+      default:
+        return '#666666'; // 灰色
+    }
+  };
+
+  const iconColor = getTypeColor();
+  const iconStyle = { color: iconColor };
+
   const getTypeIcon = () => {
     switch (type) {
       case 'milestone':
-        return <Target size={adjustedSize} className={className} />;
+        return <Target size={adjustedSize} className={className} style={iconStyle} />;
       case 'development':
-        return <Code size={adjustedSize} className={className} />;
+        return <Code size={adjustedSize} className={className} style={iconStyle} />;
       case 'testing':
-        return <CheckCircle size={adjustedSize} className={className} />;
+        return <CheckCircle size={adjustedSize} className={className} style={iconStyle} />;
       case 'delivery':
-        return <Package size={adjustedSize} className={className} />;
+        return <Package size={adjustedSize} className={className} style={iconStyle} />;
       default:
-        return <Circle size={adjustedSize} className={className} />;
+        return <Circle size={adjustedSize} className={className} style={iconStyle} />;
     }
   };
 
