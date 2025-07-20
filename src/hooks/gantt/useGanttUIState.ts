@@ -1,6 +1,9 @@
-import { useState, useCallback } from 'react';
+import { useCallback } from 'react';
 import { Task, TaskContextMenu, ColorPickerState, TagManagerState } from '../../types';
-import { useGlobalTags } from './useGlobalTags';
+import { useSelectionState } from './ui/useSelectionState';
+import { useMenuState } from './ui/useMenuState';
+import { useModalState } from './ui/useModalState';
+import { useUIKeyboard } from './ui/useUIKeyboard';
 
 // 统一的甘特图UI状态接口
 export interface UnifiedGanttUIState {
@@ -73,274 +76,48 @@ export interface UnifiedGanttUIActions {
 }
 
 /**
- * 统一的甘特图UI状态管理Hook
- * 合并了 useGanttState 和 useGanttUI 的功能，消除重复和接口不一致
+ * 重构后的统一甘特图UI状态管理Hook
+ * 组合各个子状态Hook，提供统一接口
  */
 export const useGanttUIState = (): UnifiedGanttUIState & UnifiedGanttUIActions => {
-  // === 选择状态 ===
-  const [selectedTitleTaskId, setSelectedTitleTaskId] = useState<string | null>(null);
-  const [selectedChartTaskId, setSelectedChartTaskId] = useState<string | null>(null);
-  
-  // === 上下文菜单状态 ===
-  const [contextMenu, setContextMenu] = useState<{
-    visible: boolean;
-    x: number;
-    y: number;
-    clickPosition: { x: number; y: number };
-  }>({
-    visible: false,
-    x: 0,
-    y: 0,
-    clickPosition: { x: 0, y: 0 }
+  // 组合各个子状态
+  const selectionState = useSelectionState();
+  const menuState = useMenuState();
+  const modalState = useModalState();
+
+  // UI键盘处理
+  const uiKeyboard = useUIKeyboard({
+    selectedTitleTaskId: selectionState.selectedTitleTaskId,
+    selectedChartTaskId: selectionState.selectedChartTaskId,
+    hideContextMenu: menuState.hideContextMenu,
+    hideTaskContextMenu: menuState.hideTaskContextMenu,
+    hideColorPicker: modalState.hideColorPicker,
+    hideTagManager: modalState.hideTagManager,
+    clearAllSelections: selectionState.clearAllSelections
   });
 
-  const [taskContextMenu, setTaskContextMenu] = useState<TaskContextMenu>({
-    visible: false,
-    x: 0,
-    y: 0,
-    taskId: null
-  });
-
-  // === 模态框状态（统一接口） ===
-  const [colorPickerState, setColorPickerState] = useState<UnifiedGanttUIState['colorPickerState']>({
-    visible: false,
-    taskId: null,
-    x: 0,
-    y: 0,
-    currentColor: undefined
-  });
-
-  const [tagManagerState, setTagManagerState] = useState<UnifiedGanttUIState['tagManagerState']>({
-    visible: false,
-    taskId: null,
-    newTag: '',
-    selectedTags: [],
-    x: 0,
-    y: 0,
-    task: undefined
-  });
-
-  // === 全局标签和颜色管理 ===
-  const { availableTags, addTag: globalAddTag, removeTag: globalRemoveTag } = useGlobalTags();
-  
-  // 预定义颜色选项
-  const availableColors = [
-    '#ff6b6b', '#4ecdc4', '#45b7d1', '#f9ca24', '#f0932b',
-    '#eb4d4b', '#6c5ce7', '#a55eea', '#26de81', '#fd79a8',
-    '#fdcb6e', '#fd79a8', '#e17055', '#00b894', '#0984e3',
-    '#6c5ce7', '#a55eea', '#fd79a8', '#fdcb6e', '#6c5ce7'
-  ];
-
-  // === 选择管理 ===
-  const selectTitleTask = useCallback((taskId: string | null) => {
-    setSelectedTitleTaskId(taskId);
-  }, []);
-
-  const selectChartTask = useCallback((taskId: string | null) => {
-    setSelectedChartTaskId(taskId);
-  }, []);
-
-  const clearAllSelections = useCallback(() => {
-    setSelectedTitleTaskId(null);
-    setSelectedChartTaskId(null);
-  }, []);
-
-  // === 菜单管理 ===
-  const showContextMenu = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    setContextMenu({
-      visible: true,
-      x: e.clientX,
-      y: e.clientY,
-      clickPosition: { x: e.clientX, y: e.clientY }
-    });
-  }, []);
-
-  const hideContextMenu = useCallback(() => {
-    setContextMenu(prev => ({ ...prev, visible: false }));
-  }, []);
-
-  const showTaskContextMenu = useCallback((e: React.MouseEvent, taskId: string) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setTaskContextMenu({
-      visible: true,
-      x: e.clientX,
-      y: e.clientY,
-      taskId
-    });
-  }, []);
-
-  const hideTaskContextMenu = useCallback(() => {
-    setTaskContextMenu({
-      visible: false,
-      x: 0,
-      y: 0,
-      taskId: null
-    });
-  }, []);
-
-  // === 模态框管理 ===
-  const showColorPicker = useCallback((
-    taskId: string, 
-    position?: {x: number, y: number}, 
-    currentColor?: string
-  ) => {
-    setColorPickerState({
-      visible: true,
-      taskId,
-      x: position?.x || 0,
-      y: position?.y || 0,
-      currentColor
-    });
-  }, []);
-
-  const hideColorPicker = useCallback(() => {
-    setColorPickerState({
-      visible: false,
-      taskId: null,
-      x: 0,
-      y: 0,
-      currentColor: undefined
-    });
-  }, []);
-
-  const showTagManager = useCallback((
-    taskId: string, 
-    currentTags: string[] = [], 
-    position?: {x: number, y: number}, 
-    task?: Task
-  ) => {
-    setTagManagerState({
-      visible: true,
-      taskId,
-      newTag: '',
-      selectedTags: currentTags,
-      x: position?.x || 0,
-      y: position?.y || 0,
-      task
-    });
-  }, []);
-
-  const hideTagManager = useCallback(() => {
-    setTagManagerState({
-      visible: false,
-      taskId: null,
-      newTag: '',
-      selectedTags: [],
-      x: 0,
-      y: 0,
-      task: undefined
-    });
-  }, []);
-
-  // === 标签操作 ===
-  const addTag = useCallback((tag: string) => {
-    globalAddTag(tag);
-  }, [globalAddTag]);
-
-  const removeTag = useCallback((tag: string) => {
-    globalRemoveTag(tag);
-  }, [globalRemoveTag]);
-
-  const updateSelectedTags = useCallback((tags: string[]) => {
-    setTagManagerState(prev => ({
-      ...prev,
-      selectedTags: tags
-    }));
-  }, []);
-
-  // === 键盘处理 ===
-  const handleKeyDown = useCallback((e: KeyboardEvent): string | null => {
-    // Escape键关闭所有弹窗
-    if (e.key === 'Escape') {
-      hideContextMenu();
-      hideTaskContextMenu();
-      hideColorPicker();
-      hideTagManager();
-      clearAllSelections();
-    }
-    
-    // Delete键删除选中的任务
-    if (e.key === 'Delete' || e.key === 'Backspace') {
-      if (selectedTitleTaskId || selectedChartTaskId) {
-        return selectedTitleTaskId || selectedChartTaskId;
-      }
-    }
-    
-    // Ctrl+A全选
-    if (e.ctrlKey && e.key === 'a') {
-      e.preventDefault();
-      // 这里可以实现全选逻辑
-    }
-    
-    return null;
+  // 增强的hasActivePopup方法
+  const hasActivePopup = useCallback((): boolean => {
+    return menuState.contextMenu.visible || 
+           menuState.taskContextMenu.visible || 
+           modalState.colorPickerState.visible || 
+           modalState.tagManagerState.visible;
   }, [
-    selectedTitleTaskId,
-    selectedChartTaskId,
-    hideContextMenu,
-    hideTaskContextMenu,
-    hideColorPicker,
-    hideTagManager,
-    clearAllSelections
+    menuState.contextMenu.visible, 
+    menuState.taskContextMenu.visible, 
+    modalState.colorPickerState.visible, 
+    modalState.tagManagerState.visible
   ]);
 
-  // === 工具方法 ===
-  const isTaskSelected = useCallback((taskId: string): boolean => {
-    return selectedTitleTaskId === taskId || selectedChartTaskId === taskId;
-  }, [selectedTitleTaskId, selectedChartTaskId]);
-
-  const hasActivePopup = useCallback((): boolean => {
-    return contextMenu.visible || 
-           taskContextMenu.visible || 
-           colorPickerState.visible || 
-           tagManagerState.visible;
-  }, [contextMenu.visible, taskContextMenu.visible, colorPickerState.visible, tagManagerState.visible]);
-
+  // 组合所有状态和方法
   return {
     // === 状态 ===
-    selectedTitleTaskId,
-    selectedChartTaskId,
-    contextMenu,
-    taskContextMenu,
-    colorPickerState,
-    tagManagerState,
-    availableTags,
-    availableColors,
-    
-    // === 选择管理 ===
-    selectTitleTask,
-    selectChartTask,
-    clearAllSelections,
-    
-    // === 菜单管理 ===
-    showContextMenu,
-    hideContextMenu,
-    showTaskContextMenu,
-    hideTaskContextMenu,
-    
-    // === 模态框管理 ===
-    showColorPicker,
-    hideColorPicker,
-    showTagManager,
-    hideTagManager,
-    
-    // === 标签操作 ===
-    addTag,
-    removeTag,
-    updateSelectedTags,
+    ...selectionState,
+    ...menuState,
+    ...modalState,
     
     // === 工具方法 ===
-    isTaskSelected,
-    hasActivePopup,
-    handleKeyDown,
-    
-    // === 直接状态设置（向后兼容） ===
-    setSelectedTitleTaskId,
-    setSelectedChartTaskId,
-    setContextMenu,
-    setTaskContextMenu,
-    setColorPickerState,
-    setTagManagerState
+    ...uiKeyboard,
+    hasActivePopup, // 覆盖默认实现
   };
 };
