@@ -31,6 +31,33 @@ const GanttContextMenu: React.FC<GanttContextMenuProps> = ({
 }) => {
   const menuRef = React.useRef<HTMLDivElement>(null);
 
+  // 监听点击外部区域关闭菜单
+  React.useEffect(() => {
+    if (!visible) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        onClose();
+      }
+    };
+
+    const handleEscapeKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    // 添加事件监听器
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleEscapeKey);
+
+    // 清理函数
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscapeKey);
+    };
+  }, [visible, onClose]);
+
 
   if (!visible) return null;
 
