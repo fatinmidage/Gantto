@@ -65,6 +65,7 @@ interface GanttChartBodyProps {
   onTaskCreateSubtask: (taskId: string) => void;
   onTitleMouseDown: (e: React.MouseEvent, taskId: string) => void;
   onWidthChange: (width: number) => void;
+  onTaskUpdate?: (taskId: string, updates: Partial<Task>) => void;
   onMouseDown: (e: React.MouseEvent, taskId: string) => void;
   onTaskContextMenu: (e: React.MouseEvent, taskId: string) => void;
   onEdgeHover: (e: React.MouseEvent, task: any) => void;
@@ -102,6 +103,7 @@ const GanttChartBody: React.FC<GanttChartBodyProps> = ({
   onTaskCreateSubtask,
   onTitleMouseDown,
   onWidthChange,
+  onTaskUpdate,
   onMouseDown,
   onTaskContextMenu,
   onEdgeHover,
@@ -164,6 +166,7 @@ const GanttChartBody: React.FC<GanttChartBodyProps> = ({
         onTaskCreateSubtask={onTaskCreateSubtask}
         onTitleMouseDown={onTitleMouseDown}
         onWidthChange={onWidthChange}
+        onTaskUpdate={onTaskUpdate}
       />
 
       {/* 甘特图表区域 */}

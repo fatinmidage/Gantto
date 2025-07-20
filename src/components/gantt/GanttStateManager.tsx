@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState, useEffect } from 'react';
+import React, { useMemo, useRef, useState, useEffect, useCallback } from 'react';
 import { Task } from '../../types';
 import { TimeGranularity } from '../../hooks/gantt/useTimeline';
 
@@ -97,6 +97,7 @@ interface GanttStateData {
   // 事件处理
   ganttEvents: any;
   ganttInteractions: any;
+  handleTaskUpdate: (taskId: string, updates: Partial<Task>) => void;
   
   // 标签状态
   availableTags: string[];
@@ -327,6 +328,17 @@ const GanttStateManager: React.FC<GanttStateManagerProps> = ({
 
   const taskContentHeight = useMemo(() => containerHeight, [containerHeight]);
 
+  // 任务更新函数
+  const handleTaskUpdate = useCallback((taskId: string, updates: Partial<Task>) => {
+    setTasks(prevTasks => 
+      prevTasks.map(task => 
+        task.id === taskId 
+          ? { ...task, ...updates }
+          : task
+      )
+    );
+  }, [setTasks]);
+
   // 构建状态数据对象
   const stateData: GanttStateData = {
     // 数据状态
@@ -384,6 +396,7 @@ const GanttStateManager: React.FC<GanttStateManagerProps> = ({
     // 事件处理
     ganttEvents,
     ganttInteractions,
+    handleTaskUpdate,
     
     // 标签状态
     availableTags,

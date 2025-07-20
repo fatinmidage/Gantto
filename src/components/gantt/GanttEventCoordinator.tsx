@@ -33,6 +33,7 @@ interface GanttEventCoordinatorProps {
   dateRange: any;
   setProjectRows: React.Dispatch<React.SetStateAction<any[]>>;
   ganttEvents: any;
+  handleTaskUpdate: (taskId: string, updates: Partial<Task>) => void;
   
   // 子组件
   children: (handlers: EventHandlers) => React.ReactElement;
@@ -48,6 +49,7 @@ interface EventHandlers {
   handleMouseUp: () => void;
   handleTitleMouseMove: (e: MouseEvent) => void;
   handleTitleMouseUp: () => void;
+  handleTaskUpdate: (taskId: string, updates: Partial<Task>) => void;
   containerRef: React.RefObject<HTMLDivElement>;
 }
 
@@ -73,6 +75,7 @@ const GanttEventCoordinator: React.FC<GanttEventCoordinatorProps> = ({
   dateRange,
   setProjectRows,
   ganttEvents,
+  handleTaskUpdate,
   children
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -274,6 +277,7 @@ const GanttEventCoordinator: React.FC<GanttEventCoordinatorProps> = ({
     handleMouseUp,
     handleTitleMouseMove,
     handleTitleMouseUp,
+    handleTaskUpdate,
     containerRef
   };
 

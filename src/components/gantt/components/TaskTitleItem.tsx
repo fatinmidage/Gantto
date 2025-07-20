@@ -3,10 +3,11 @@
  * 负责渲染单个任务标题项，包括层级缩进、图标、展开/折叠控制等
  */
 
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { TaskIcon, DragHandle } from '../..';
 import { Task } from '../../../types';
 import { TaskHierarchyControls } from './TaskHierarchyControls';
+import TaskTitleContextMenu from '../TaskTitleContextMenu';
 
 interface TaskTitleItemProps {
   task: Task;
@@ -24,6 +25,7 @@ interface TaskTitleItemProps {
   onTaskToggle: (taskId: string) => void;
   onTaskCreateSubtask: (taskId: string) => void;
   onTitleMouseDown: (e: React.MouseEvent, taskId: string) => void;
+  onTaskUpdate?: (taskId: string, updates: Partial<Task>) => void;
 }
 
 export const TaskTitleItem: React.FC<TaskTitleItemProps> = ({
@@ -35,8 +37,20 @@ export const TaskTitleItem: React.FC<TaskTitleItemProps> = ({
   onTaskSelect,
   onTaskToggle,
   onTaskCreateSubtask,
-  onTitleMouseDown
+  onTitleMouseDown,
+  onTaskUpdate
 }) => {
+  // 编辑状态
+  const [isEditing, setIsEditing] = useState(false);
+  const [editValue, setEditValue] = useState(task.title);
+  const [contextMenu, setContextMenu] = useState({
+    visible: false,
+    x: 0,
+    y: 0
+  });
+  
+  const editInputRef = useRef<HTMLInputElement>(null);
+  
   const isDraggedTask = verticalDragState.draggedTaskId === task.id;
   const isTargetPosition = verticalDragState.isDragging && 
                           verticalDragState.targetIndex === index && 
@@ -48,6 +62,76 @@ export const TaskTitleItem: React.FC<TaskTitleItemProps> = ({
   
   const level = task.level || 0;
   const indentWidth = level * 20;
+
+  // 编辑模式聚焦
+  useEffect(() => {
+    if (isEditing && editInputRef.current) {
+      editInputRef.current.focus();
+      editInputRef.current.select();
+    }
+  }, [isEditing]);
+
+  // 处理右键菜单
+  const handleContextMenu = (e: React.MouseEvent) => {
+    if (task.isPlaceholder) return;
+    
+    e.preventDefault();
+    e.stopPropagation();
+    
+    setContextMenu({
+      visible: true,
+      x: e.clientX,
+      y: e.clientY
+    });
+  };
+
+  // 关闭右键菜单
+  const handleCloseContextMenu = () => {
+    setContextMenu({ visible: false, x: 0, y: 0 });
+  };
+
+  // 开始编辑任务名称
+  const handleStartNameEdit = () => {
+    setIsEditing(true);
+    setEditValue(task.title);
+  };
+
+  // 确认编辑
+  const handleConfirmEdit = () => {
+    if (editValue.trim() && editValue !== task.title && onTaskUpdate) {
+      onTaskUpdate(task.id, { title: editValue.trim() });
+    }
+    setIsEditing(false);
+  };
+
+  // 取消编辑
+  const handleCancelEdit = () => {
+    setEditValue(task.title);
+    setIsEditing(false);
+  };
+
+  // 处理键盘事件
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleConfirmEdit();
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      handleCancelEdit();
+    }
+  };
+
+  // 处理输入框失焦
+  const handleBlur = () => {
+    handleConfirmEdit();
+  };
+
+  // 处理图标更改
+  const handleIconChange = (taskId: string, iconType: 'milestone' | 'development' | 'testing' | 'delivery' | 'default') => {
+    if (onTaskUpdate) {
+      onTaskUpdate(taskId, { type: iconType });
+    }
+  };
 
   const taskTitleStyle: React.CSSProperties = {
     height: taskHeight,
@@ -100,8 +184,9 @@ export const TaskTitleItem: React.FC<TaskTitleItemProps> = ({
             e.currentTarget.style.backgroundColor = 'transparent';
           }
         }}
-        onMouseDown={(e) => !task.isPlaceholder && onTitleMouseDown(e, task.id)}
-        onClick={() => !task.isPlaceholder && onTaskSelect(task.id)}
+        onMouseDown={(e) => !task.isPlaceholder && !isEditing && onTitleMouseDown(e, task.id)}
+        onClick={() => !task.isPlaceholder && !isEditing && onTaskSelect(task.id)}
+        onContextMenu={handleContextMenu}
       >
         <DragHandle size={14} />
         
@@ -119,15 +204,42 @@ export const TaskTitleItem: React.FC<TaskTitleItemProps> = ({
           level={task.level}
         />
         
-        <span 
-          className="task-title-text"
-          style={{ 
-            color: task.isPlaceholder ? '#999' : 'inherit',
-            fontStyle: task.isPlaceholder ? 'italic' : 'normal'
-          }}
-        >
-          {task.title}
-        </span>
+        {/* 任务标题：编辑模式或显示模式 */}
+        {isEditing ? (
+          <input
+            ref={editInputRef}
+            type="text"
+            value={editValue}
+            onChange={(e) => setEditValue(e.target.value)}
+            onKeyDown={handleKeyDown}
+            onBlur={handleBlur}
+            style={{
+              border: '1px solid #2196F3',
+              borderRadius: '4px',
+              padding: '2px 6px',
+              fontSize: '14px',
+              flex: 1,
+              minWidth: 0,
+              background: '#fff'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          />
+        ) : (
+          <span 
+            className="task-title-text"
+            style={{ 
+              color: task.isPlaceholder ? '#999' : 'inherit',
+              fontStyle: task.isPlaceholder ? 'italic' : 'normal',
+              flex: 1,
+              minWidth: 0,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap'
+            }}
+          >
+            {task.title}
+          </span>
+        )}
         
         {/* 选中指示器 */}
         {selectedTitleTaskId === task.id && (
@@ -141,6 +253,18 @@ export const TaskTitleItem: React.FC<TaskTitleItemProps> = ({
        verticalDragState.draggedTaskIndex !== index && (
         <div style={dragIndicatorStyle} />
       )}
+
+      {/* 任务标题右键菜单 */}
+      <TaskTitleContextMenu
+        visible={contextMenu.visible}
+        x={contextMenu.x}
+        y={contextMenu.y}
+        taskId={task.id}
+        task={task}
+        onClose={handleCloseContextMenu}
+        onNameEdit={handleStartNameEdit}
+        onIconChange={handleIconChange}
+      />
     </div>
   );
 };

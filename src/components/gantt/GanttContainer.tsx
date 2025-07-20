@@ -39,6 +39,7 @@ interface GanttContainerProps {
   onTaskToggle: (taskId: string) => void;
   onTaskCreateSubtask: (taskId: string) => void;
   onTitleMouseDown: (e: React.MouseEvent, taskId: string) => void;
+  onTaskUpdate?: (taskId: string, updates: Partial<Task>) => void;
   onMouseDown: (e: React.MouseEvent, taskId: string) => void;
   onTaskContextMenu: (e: React.MouseEvent, taskId: string) => void;
   onEdgeHover: (e: React.MouseEvent, task: Task) => void;
@@ -106,6 +107,7 @@ const GanttContainer: React.FC<GanttContainerProps> = ({
   onTaskToggle,
   onTaskCreateSubtask,
   onTitleMouseDown,
+  onTaskUpdate,
   onMouseDown,
   onTaskContextMenu,
   onEdgeHover,
@@ -179,6 +181,7 @@ const GanttContainer: React.FC<GanttContainerProps> = ({
         onTaskCreateSubtask={onTaskCreateSubtask}
         onTitleMouseDown={onTitleMouseDown}
         onWidthChange={handleTitleColumnWidthChange}
+        onTaskUpdate={onTaskUpdate}
         onMouseDown={onMouseDown}
         onTaskContextMenu={onTaskContextMenu}
         onEdgeHover={onEdgeHover}

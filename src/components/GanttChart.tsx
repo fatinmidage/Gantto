@@ -74,6 +74,7 @@ const GanttChart: React.FC<GanttChartProps> = ({
           dateRange={stateData.dateRange}
           setProjectRows={stateData.setProjectRows}
           ganttEvents={stateData.ganttEvents}
+          handleTaskUpdate={stateData.handleTaskUpdate}
         >
           {(handlers) => (
             <GanttContainer
@@ -109,6 +110,7 @@ const GanttChart: React.FC<GanttChartProps> = ({
               onTaskToggle={stateData.ganttInteractions.handleToggleExpand}
               onTaskCreateSubtask={stateData.ganttInteractions.handleCreateSubtask}
               onTitleMouseDown={handlers.handleTitleMouseDown}
+              onTaskUpdate={handlers.handleTaskUpdate}
               onMouseDown={handlers.handleMouseDown}
               onTaskContextMenu={stateData.ganttInteractions.handleTaskContextMenu}
               onEdgeHover={handlers.handleEdgeHover}

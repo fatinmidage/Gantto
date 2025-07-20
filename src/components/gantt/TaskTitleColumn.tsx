@@ -33,6 +33,7 @@ interface TaskTitleColumnProps {
   onTaskCreateSubtask: (taskId: string) => void;
   onTitleMouseDown: (e: React.MouseEvent, taskId: string) => void;
   onWidthChange?: (width: number) => void;
+  onTaskUpdate?: (taskId: string, updates: Partial<Task>) => void;
 }
 
 const TaskTitleColumn: React.FC<TaskTitleColumnProps> = ({
@@ -47,7 +48,8 @@ const TaskTitleColumn: React.FC<TaskTitleColumnProps> = ({
   onTaskToggle,
   onTaskCreateSubtask,
   onTitleMouseDown,
-  onWidthChange
+  onWidthChange,
+  onTaskUpdate
 }) => {
   // 使用宽度调整 hook
   const { currentWidth, isResizing, handleResizeStart, resizeHandleStyle } = useTitleColumnResize({
@@ -116,6 +118,7 @@ const TaskTitleColumn: React.FC<TaskTitleColumnProps> = ({
             onTaskToggle={onTaskToggle}
             onTaskCreateSubtask={onTaskCreateSubtask}
             onTitleMouseDown={onTitleMouseDown}
+            onTaskUpdate={onTaskUpdate}
           />
         ))}
         
