@@ -76,8 +76,18 @@ const TaskBars: React.FC<TaskBarsProps> = ({
           const isSelected = selectedChartTaskId === chartTask.id;
           
           
-          // 里程碑节点渲染 - 判断条件：开始时间等于结束时间
-          const isMilestone = chartTask.startDate.getTime() === chartTask.endDate.getTime();
+          // 里程碑节点渲染 - 判断条件：开始时间等于结束时间 OR type为milestone
+          const isMilestone = chartTask.startDate.getTime() === chartTask.endDate.getTime() || chartTask.type === 'milestone';
+          
+          // 调试日志：输出任务类型和里程碑判断结果
+          console.log(`[TaskBars Debug] Task ${chartTask.id}:`, {
+            type: chartTask.type,
+            startDate: chartTask.startDate,
+            endDate: chartTask.endDate,
+            timesEqual: chartTask.startDate.getTime() === chartTask.endDate.getTime(),
+            isMilestone: isMilestone,
+            isBeingDragged: isBeingDragged
+          });
           if (isMilestone) {
             // 里程碑节点使用统一的位置计算逻辑，与普通任务保持一致
             const milestoneX = isBeingDragged && tempDragPosition ? tempDragPosition.x : (chartTask.x !== undefined ? chartTask.x : dateToPixel(chartTask.startDate));

@@ -99,8 +99,9 @@ export const useHorizontalDrag = ({
     if (!task || !containerRef.current) return;
     
     // 检测拖拽类型
-    // 里程碑始终是移动操作，不支持resize
-    const currentDragType = task.type === 'milestone' ? 'move' : (() => {
+    // 里程碑始终是移动操作，不支持resize（检查type或时间相等）
+    const isMilestone = task.type === 'milestone' || task.startDate.getTime() === task.endDate.getTime();
+    const currentDragType = isMilestone ? 'move' : (() => {
       const edgeType = detectEdgeHover(e, task);
       return edgeType ? `resize-${edgeType}` as 'resize-left' | 'resize-right' : 'move';
     })();
@@ -151,13 +152,29 @@ export const useHorizontalDrag = ({
       if (dragType === 'move') {
         // 移动任务条：保持时间段长度，改变开始和结束时间
         newStartDate = pixelToDate(tempDragPosition.x);
-        if (draggedTaskData.type === 'milestone') {
+        
+        // 调试日志：拖拽前任务信息
+        console.log(`[HorizontalDrag Debug] 拖拽结束处理 - Task ${draggedTask}:`, {
+          originalType: draggedTaskData.type,
+          originalStartDate: draggedTaskData.startDate,
+          originalEndDate: draggedTaskData.endDate,
+          newStartDate: newStartDate,
+          dragType: dragType
+        });
+        
+        // 检查是否为里程碑：type为milestone 或者 开始时间等于结束时间
+        const isMilestone = draggedTaskData.type === 'milestone' || 
+                           draggedTaskData.startDate.getTime() === draggedTaskData.endDate.getTime();
+                           
+        if (isMilestone) {
           // 里程碑只更新开始时间，结束时间保持与开始时间相同
           newEndDate = newStartDate;
+          console.log(`[HorizontalDrag Debug] 里程碑拖拽处理：newEndDate设置为 ${newEndDate}，判断依据：type=${draggedTaskData.type}, timesEqual=${draggedTaskData.startDate.getTime() === draggedTaskData.endDate.getTime()}`);
         } else {
           // 普通任务保持时间段长度
           const duration = draggedTaskData.endDate.getTime() - draggedTaskData.startDate.getTime();
           newEndDate = new Date(newStartDate.getTime() + duration);
+          console.log(`[HorizontalDrag Debug] 普通任务拖拽处理：duration=${duration}, newEndDate=${newEndDate}`);
         }
       } else if (dragType === 'resize-left') {
         // 左边界拖拽：改变开始时间，保持结束时间

@@ -99,6 +99,23 @@ const GanttStateManager: React.FC<GanttStateManagerProps> = ({
     enabled: true
   });
 
+  // === updateDragMetrics 适配器函数 ===
+  const updateDragMetrics = React.useCallback((task: any, pixelPerDay: number) => {
+    const duration = task.endDate.getTime() - task.startDate.getTime();
+    const isMilestone = task.type === 'milestone';
+    
+    // 修复里程碑的度量计算 - 使用传入的统一像素比率
+    const metrics = {
+      duration: isMilestone ? 0 : duration,
+      pixelPerDay: pixelPerDay, // 使用传入的统一像素比率，不区分任务类型
+      minWidth: isMilestone ? 16 : Math.max(20, Math.ceil(duration / (24 * 60 * 60 * 1000) * pixelPerDay))
+    };
+    
+    // 里程碑度量适配器处理完成
+    
+    dragAndDrop.updateDragMetrics(metrics);
+  }, [dragAndDrop]);
+
   // === 状态数据组装 ===
   const stateData: GanttStateData = {
     // 数据状态
@@ -115,6 +132,7 @@ const GanttStateManager: React.FC<GanttStateManagerProps> = ({
     
     // 拖拽状态
     ...dragAndDrop,
+    updateDragMetrics, // 添加高级适配器函数
     
     // 时间轴状态
     ...timeline,

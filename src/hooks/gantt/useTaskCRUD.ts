@@ -142,13 +142,33 @@ export const useTaskCRUD = ({
     // 优先更新图表任务
     const chartTask = chartTasks.find(t => t.id === taskId);
     if (chartTask) {
+      console.log(`[TaskCRUD Debug] 更新图表任务 ${taskId}:`, {
+        原始type: chartTask.type,
+        原始开始时间: chartTask.startDate,
+        原始结束时间: chartTask.endDate,
+        新开始时间: startDate,
+        新结束时间: endDate
+      });
+      
       setChartTasks(prev => prev.map(task => 
-        task.id === taskId ? { ...task, startDate, endDate } : task
+        task.id === taskId ? { 
+          ...task, 
+          startDate, 
+          endDate,
+          // 保持原有的 type 字段不变，这是关键！
+          type: task.type
+        } : task
       ));
     } else {
       // 兼容性：更新传统任务
       setTasks(prev => prev.map(task => 
-        task.id === taskId ? { ...task, startDate, endDate } : task
+        task.id === taskId ? { 
+          ...task, 
+          startDate, 
+          endDate,
+          // 保持原有的 type 字段不变
+          type: task.type 
+        } : task
       ));
     }
   }, [chartTasks, setChartTasks, setTasks]);

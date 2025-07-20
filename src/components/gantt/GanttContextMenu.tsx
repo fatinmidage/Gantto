@@ -68,10 +68,10 @@ const GanttContextMenu: React.FC<GanttContextMenuProps> = ({
   // 计算点击位置的时间信息用于显示
   const clickDate = clickPosition && pixelToDate ? pixelToDate(clickPosition.x) : new Date();
 
-  // 根据点击位置的Y坐标计算目标行ID
-  const calculateTargetRowId = () => {
+  // 根据点击位置的Y坐标计算目标行ID和类型
+  const calculateTargetRowData = () => {
     if (!clickPosition || !visibleRows.length) {
-      return defaultRowId;
+      return { id: defaultRowId, type: undefined };
     }
     
     // 每行的高度包括任务高度 + 10px间距
@@ -80,9 +80,10 @@ const GanttContextMenu: React.FC<GanttContextMenuProps> = ({
     
     // 确保索引在有效范围内
     if (clickedRowIndex >= 0 && clickedRowIndex < visibleRows.length) {
-      return visibleRows[clickedRowIndex].id;
+      const targetRow = visibleRows[clickedRowIndex];
+      return { id: targetRow.id, type: targetRow.type };
     } else {
-      return defaultRowId;
+      return { id: defaultRowId, type: undefined };
     }
   };
 
@@ -91,7 +92,7 @@ const GanttContextMenu: React.FC<GanttContextMenuProps> = ({
     const clickDate = clickPosition && pixelToDate ? pixelToDate(clickPosition.x) : new Date();
     
     // 计算目标行ID
-    const targetRowId = calculateTargetRowId();
+    const { id: targetRowId } = calculateTargetRowData();
     
     const newTask: Task = {
       id: `chart-${Date.now()}`,
@@ -115,22 +116,42 @@ const GanttContextMenu: React.FC<GanttContextMenuProps> = ({
     // 计算点击位置的日期
     const clickDate = clickPosition && pixelToDate ? pixelToDate(clickPosition.x) : new Date();
     
-    // 计算目标行ID（与新任务条逻辑相同）
-    const targetRowId = calculateTargetRowId();
+    // 计算目标行ID和类型
+    const { id: targetRowId, type: targetRowType } = calculateTargetRowData();
+    
+    // 根据类型获取对应颜色
+    const getTypeColor = (type: string) => {
+      switch (type) {
+        case 'milestone':
+          return '#ff9800'; // 橙色
+        case 'development':
+          return '#2196f3'; // 蓝色
+        case 'testing':
+          return '#4caf50'; // 绿色
+        case 'delivery':
+          return '#9c27b0'; // 紫色
+        default:
+          return '#ff9800'; // 默认橙色
+      }
+    };
+    
+    const finalType = targetRowType || 'milestone';
+    const typeColor = getTypeColor(finalType);
     
     const newMilestone: Task = {
       id: `milestone-${Date.now()}`,
       title: '新里程碑',
       startDate: clickDate,
       endDate: clickDate,
-      color: '#FFD700',
+      color: typeColor, // 使用类型对应的颜色
       x: clickPosition?.x || 0,
       width: 20, // 里程碑默认宽度
       rowId: targetRowId,
-      type: 'milestone',
+      type: finalType, // 继承该行的图标类型，如果没有则默认使用milestone
       status: 'pending',
       progress: 0
     };
+    
     
     onCreateMilestone(newMilestone);
     onClose();
