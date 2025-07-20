@@ -116,8 +116,8 @@ const GanttContextMenu: React.FC<GanttContextMenuProps> = ({
     // 计算点击位置的日期
     const clickDate = clickPosition && pixelToDate ? pixelToDate(clickPosition.x) : new Date();
     
-    // 计算目标行ID
-    const { id: targetRowId } = calculateTargetRowData();
+    // 计算目标行ID和类型
+    const { id: targetRowId, type: targetRowType } = calculateTargetRowData();
     
     // 根据类型获取对应颜色
     const getTypeColor = (type: string) => {
@@ -135,20 +135,22 @@ const GanttContextMenu: React.FC<GanttContextMenuProps> = ({
       }
     };
     
-    // 里程碑始终使用milestone类型，不继承行的类型
+    // 里程碑type固定为milestone，iconType继承行类型用于图标显示
     const milestoneType = 'milestone';
-    const typeColor = getTypeColor(milestoneType);
+    const iconType = targetRowType || 'milestone'; // 继承行的类型，用于图标显示
+    const typeColor = getTypeColor(iconType); // 使用图标类型的颜色
     
     const newMilestone: Task = {
       id: `milestone-${Date.now()}`,
       title: '新里程碑',
       startDate: clickDate,
       endDate: clickDate,
-      color: typeColor, // 里程碑固定使用橙色
+      color: typeColor, // 使用图标类型对应的颜色
       x: clickPosition?.x || 0,
       width: 20, // 里程碑默认宽度
       rowId: targetRowId,
-      type: milestoneType, // 里程碑固定使用milestone类型
+      type: milestoneType, // 里程碑固定使用milestone类型（确保渲染为菱形）
+      iconType: iconType, // 图标类型继承行类型
       status: 'pending',
       progress: 0
     };

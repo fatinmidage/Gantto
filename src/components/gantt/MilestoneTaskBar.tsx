@@ -35,15 +35,17 @@ const MilestoneTaskBar: React.FC<MilestoneTaskBarProps> = ({
   // 里程碑节点使用统一的位置计算逻辑，与普通任务保持一致
   const milestoneX = displayX !== undefined ? displayX : (task.x !== undefined ? task.x : dateToPixel(task.startDate));
 
-  // 根据任务类型选择图标
+  // 根据图标类型选择图标（优先使用iconType，回退到type）
   const renderIcon = () => {
-    switch (task.type) {
+    const iconType = task.iconType || task.type;
+    switch (iconType) {
       case 'development':
         return <Code size={16} />;
       case 'testing':
         return <CheckCircle size={16} />;
       case 'delivery':
         return <Package size={16} />;
+      case 'milestone':
       default:
         return <Target size={16} />;
     }

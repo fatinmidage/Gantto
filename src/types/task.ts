@@ -21,6 +21,9 @@ export interface Task {
   status: TaskStatus;
   progress?: number; // 0-100，改为可选兼容现有代码
   
+  // 图标类型（用于里程碑图标显示，普通任务可忽略）
+  iconType?: TaskType;
+  
   // 层级关系
   parentId?: string;
   children?: string[]; // 改为可选，兼容现有代码
