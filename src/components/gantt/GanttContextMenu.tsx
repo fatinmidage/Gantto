@@ -65,19 +65,23 @@ const GanttContextMenu: React.FC<GanttContextMenuProps> = ({
   const clickDate = clickPosition && pixelToDate ? pixelToDate(clickPosition.x) : new Date();
 
   const handleCreateTask = () => {
+    // 计算点击位置的日期
+    const clickDate = clickPosition && pixelToDate ? pixelToDate(clickPosition.x) : new Date();
+    
     const newTask: Task = {
       id: `chart-${Date.now()}`,
       title: '新任务',
-      startDate: new Date(),
-      endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      startDate: clickDate,
+      endDate: new Date(clickDate.getTime() + 7 * 24 * 60 * 60 * 1000),
       color: '#9C27B0',
-      x: 0,
+      x: clickPosition?.x || 0,
       width: 0,
       rowId: defaultRowId,
       type: 'default',
       status: 'pending',
       progress: 0
     };
+    
     onCreateTask(newTask);
     onClose();
   };

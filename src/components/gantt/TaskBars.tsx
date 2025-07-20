@@ -75,6 +75,7 @@ const TaskBars: React.FC<TaskBarsProps> = ({
           const displayWidth = isBeingDragged && tempDragPosition ? tempDragPosition.width : chartTask.width;
           const isSelected = selectedChartTaskId === chartTask.id;
           
+          
           // 里程碑节点渲染
           if (chartTask.type === 'milestone') {
             // 里程碑节点基于开始时间定位，不使用任务条宽度
