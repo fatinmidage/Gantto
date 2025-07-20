@@ -330,6 +330,7 @@ const GanttStateManager: React.FC<GanttStateManagerProps> = ({
 
   // 任务更新函数
   const handleTaskUpdate = useCallback((taskId: string, updates: Partial<Task>) => {
+    // 更新 tasks 数组（如果任务存在于 tasks 中）
     setTasks(prevTasks => 
       prevTasks.map(task => 
         task.id === taskId 
@@ -337,7 +338,16 @@ const GanttStateManager: React.FC<GanttStateManagerProps> = ({
           : task
       )
     );
-  }, [setTasks]);
+    
+    // 更新 projectRows 数组（任务标题列的数据源）
+    setProjectRows(prevRows => 
+      prevRows.map(row => 
+        row.id === taskId 
+          ? { ...row, ...updates }
+          : row
+      )
+    );
+  }, [setTasks, setProjectRows]);
 
   // 构建状态数据对象
   const stateData: GanttStateData = {

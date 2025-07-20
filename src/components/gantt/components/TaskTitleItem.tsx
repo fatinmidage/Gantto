@@ -103,7 +103,7 @@ export const TaskTitleItem: React.FC<TaskTitleItemProps> = ({
 
   // 确认编辑
   const handleConfirmEdit = () => {
-    if (editValue.trim() && editValue !== task.title && onTaskUpdate) {
+    if (editValue.trim() && onTaskUpdate) {
       onTaskUpdate(task.id, { title: editValue.trim() });
     }
     setIsEditing(false);
