@@ -26,6 +26,11 @@ export { useTaskHierarchy } from './gantt/useTaskHierarchy';
 export { useTaskAttributes } from './gantt/useTaskAttributes';
 export { useTaskSelection } from './gantt/useTaskSelection';
 
+// 里程碑相关Hooks
+export { useMilestoneAttachment } from './gantt/useMilestoneAttachment';
+export { useMilestoneDrag } from './gantt/useMilestoneDrag';
+export { useMilestoneManager } from './gantt/useMilestoneManager';
+
 // 拖拽相关Hooks
 export { useHorizontalDrag } from './gantt/useHorizontalDrag';
 export { useVerticalDrag } from './gantt/useVerticalDrag';

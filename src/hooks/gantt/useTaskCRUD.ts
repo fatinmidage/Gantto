@@ -139,26 +139,59 @@ export const useTaskCRUD = ({
 
   // 更新任务日期
   const updateTaskDates = useCallback((taskId: string, startDate: Date, endDate: Date) => {
+    // 🔍 调试日志：updateTaskDates 函数开始执行
+    console.log(`[TaskCRUD] updateTaskDates 开始执行:`, {
+      taskId,
+      newStartDate: startDate.toISOString(),
+      newEndDate: endDate.toISOString(),
+      newTimesEqual: startDate.getTime() === endDate.getTime()
+    });
+    
     // 优先更新图表任务
     const chartTask = chartTasks.find(t => t.id === taskId);
     if (chartTask) {
-      console.log(`[TaskCRUD Debug] 更新图表任务 ${taskId}:`, {
-        原始type: chartTask.type,
-        原始开始时间: chartTask.startDate,
-        原始结束时间: chartTask.endDate,
-        新开始时间: startDate,
-        新结束时间: endDate
+      console.log(`[TaskCRUD] 找到图表任务，准备更新:`, {
+        taskId,
+        taskTitle: chartTask.title,
+        originalType: chartTask.type,
+        originalStartDate: chartTask.startDate.toISOString(),
+        originalEndDate: chartTask.endDate.toISOString(),
+        originalTimesEqual: chartTask.startDate.getTime() === chartTask.endDate.getTime(),
+        newStartDate: startDate.toISOString(),
+        newEndDate: endDate.toISOString(),
+        newTimesEqual: startDate.getTime() === endDate.getTime(),
+        typeWillBePreserved: chartTask.type
       });
       
-      setChartTasks(prev => prev.map(task => 
-        task.id === taskId ? { 
-          ...task, 
-          startDate, 
-          endDate,
-          // 保持原有的 type 字段不变，这是关键！
-          type: task.type
-        } : task
-      ));
+      setChartTasks(prev => {
+        const updatedTasks = prev.map(task => {
+          if (task.id === taskId) {
+            const updatedTask = { 
+              ...task, 
+              startDate, 
+              endDate,
+              // 保持原有的 type 字段不变，这是关键！
+              type: task.type
+            };
+            
+            console.log(`[TaskCRUD] 任务更新完成:`, {
+              taskId,
+              taskTitle: updatedTask.title,
+              updatedType: updatedTask.type,
+              updatedStartDate: updatedTask.startDate.toISOString(),
+              updatedEndDate: updatedTask.endDate.toISOString(),
+              updatedTimesEqual: updatedTask.startDate.getTime() === updatedTask.endDate.getTime(),
+              shouldBeMilestone: updatedTask.type === 'milestone' || updatedTask.startDate.getTime() === updatedTask.endDate.getTime()
+            });
+            
+            return updatedTask;
+          }
+          return task;
+        });
+        
+        console.log(`[TaskCRUD] setChartTasks 调用完成，更新后的任务数量:`, updatedTasks.length);
+        return updatedTasks;
+      });
     } else {
       // 兼容性：更新传统任务
       setTasks(prev => prev.map(task => 

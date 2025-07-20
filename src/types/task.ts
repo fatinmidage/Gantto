@@ -49,6 +49,42 @@ export interface Task {
   isPlaceholder?: boolean; // 是否为占位符任务
 }
 
+// 里程碑节点接口
+export interface MilestoneNode {
+  id: string;
+  title: string;
+  date: Date;
+  iconType: TaskType;
+  label?: string;
+  color: string;
+  
+  // 附着信息
+  attachedToBar?: string; // 附着的任务条ID
+  relativePosition?: number; // 在任务条上的相对位置 (0-1)
+  
+  // 位置计算属性
+  x?: number;
+  y?: number;
+  
+  // 层级关系
+  parentId?: string;
+  level?: number;
+  order?: number;
+  
+  // 元数据
+  createdAt?: Date;
+  updatedAt?: Date;
+  
+  // 兼容性字段
+  rowId?: string; // 行ID，与关联任务保持一致
+  isCreatedFromContext?: boolean; // 是否通过右键菜单创建
+}
+
+// 扩展任务条接口（基于Task但明确用于任务条）
+export interface TaskBar extends Task {
+  attachedMilestones?: string[]; // 附着的里程碑节点ID列表
+}
+
 // 任务创建输入类型
 export interface TaskCreateInput {
   title: string;
@@ -59,6 +95,17 @@ export interface TaskCreateInput {
   color?: string;
   description?: string;
   tags?: string[];
+}
+
+// 里程碑节点创建输入类型
+export interface MilestoneCreateInput {
+  title: string;
+  date: Date;
+  iconType?: TaskType;
+  label?: string;
+  color?: string;
+  attachedToBar?: string;
+  relativePosition?: number;
 }
 
 // 任务更新输入类型
@@ -73,6 +120,19 @@ export interface TaskUpdateInput {
   color?: string;
   tags?: string[];
   parentId?: string;
+  order?: number;
+}
+
+// 里程碑节点更新输入类型
+export interface MilestoneUpdateInput {
+  id: string;
+  title?: string;
+  date?: Date;
+  iconType?: TaskType;
+  label?: string;
+  color?: string;
+  attachedToBar?: string;
+  relativePosition?: number;
   order?: number;
 }
 
@@ -114,4 +174,21 @@ export interface TaskBatchOperation {
   taskIds: string[];
   operation: 'delete' | 'move' | 'updateStatus' | 'updateTags';
   params?: Record<string, any>;
+}
+
+// 里程碑批量操作类型
+export interface MilestoneBatchOperation {
+  milestoneIds: string[];
+  operation: 'delete' | 'move' | 'updateIcon' | 'detach';
+  params?: Record<string, any>;
+}
+
+// 组合任务和里程碑的数据类型（用于统一处理）
+export type TaskEntity = Task | MilestoneNode;
+
+// 类型守卫函数接口
+export interface TaskTypeGuards {
+  isTask: (entity: TaskEntity) => entity is Task;
+  isMilestone: (entity: TaskEntity) => entity is MilestoneNode;
+  isTaskBar: (task: Task) => task is TaskBar;
 }

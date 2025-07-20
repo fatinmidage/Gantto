@@ -81,7 +81,25 @@ export const useDragAndDrop = () => {
     if (!metrics || !bounds) return;
 
     const mouseX = clientX - bounds.left;
-    const isMilestone = dragState.draggedTaskData.type === 'milestone';
+    const taskData = dragState.draggedTaskData;
+    const isTypeMilestone = taskData.type === 'milestone';
+    const isTimeEqual = taskData.startDate.getTime() === taskData.endDate.getTime();
+    const isMilestone = isTypeMilestone || isTimeEqual;
+    
+    // 🔍 调试日志：拖拽过程中的里程碑判断
+    console.log(`[useDragAndDrop] 拖拽更新位置 - 任务ID: ${taskData.id}`, {
+      taskTitle: taskData.title,
+      taskType: taskData.type,
+      startDate: taskData.startDate.toISOString(),
+      endDate: taskData.endDate.toISOString(),
+      startTime: taskData.startDate.getTime(),
+      endTime: taskData.endDate.getTime(),
+      isTypeMilestone,
+      isTimeEqual,
+      isMilestone,
+      dragType: dragState.dragType,
+      mouseX
+    });
 
     if (dragState.dragType === 'move') {
       const newX = mouseX - dragState.dragOffset.x;

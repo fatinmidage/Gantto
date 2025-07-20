@@ -3,10 +3,10 @@
  * 统一拖拽状态管理
  */
 
-import { Task } from './task';
+import { Task, MilestoneNode } from './task';
 
 // 拖拽类型
-export type DragType = 'move' | 'resize-left' | 'resize-right' | null;
+export type DragType = 'move' | 'resize-left' | 'resize-right' | 'milestone-move' | null;
 export type EdgeHover = 'left' | 'right' | null;
 
 // 拖拽偏移量
@@ -22,6 +22,13 @@ export interface TempDragPosition {
   width: number;
 }
 
+// 里程碑临时拖拽位置
+export interface TempMilestoneDragPosition {
+  id: string;
+  x: number;
+  y: number;
+}
+
 // 垂直拖拽状态
 export interface VerticalDragState {
   isDragging: boolean;
@@ -31,6 +38,16 @@ export interface VerticalDragState {
   startY: number;
   currentY: number;
   shouldShowIndicator: boolean;
+}
+
+// 里程碑拖拽状态
+export interface MilestoneDragState {
+  isDragging: boolean;
+  draggedMilestoneId: string | null;
+  draggedMilestoneData: MilestoneNode | null;
+  tempDragPosition: TempMilestoneDragPosition | null;
+  potentialAttachmentBar: string | null; // 潜在的附着任务条ID
+  startOffset: DragOffset;
 }
 
 // 拖拽缓存

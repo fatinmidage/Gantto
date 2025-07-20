@@ -31,10 +31,10 @@ export interface DateRange {
 }
 
 // 拖拽类型
-export type DragType = 'move' | 'resize-left' | 'resize-right';
+export type DragType = 'move' | 'resize-left' | 'resize-right' | 'milestone-move';
 
 // 视图类型
 export type ViewType = 'timeline' | 'list' | 'grid';
 
 // 右键菜单类型
-export type ContextMenuType = 'task' | 'row' | 'timeline';
+export type ContextMenuType = 'task' | 'row' | 'timeline' | 'milestone';

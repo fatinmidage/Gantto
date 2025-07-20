@@ -153,28 +153,55 @@ export const useHorizontalDrag = ({
         // 移动任务条：保持时间段长度，改变开始和结束时间
         newStartDate = pixelToDate(tempDragPosition.x);
         
-        // 调试日志：拖拽前任务信息
-        console.log(`[HorizontalDrag Debug] 拖拽结束处理 - Task ${draggedTask}:`, {
+        // 🔍 调试日志：拖拽结束处理开始
+        console.log(`[HorizontalDrag] 拖拽结束处理开始 - Task ${draggedTask}:`, {
+          taskTitle: draggedTaskData.title,
           originalType: draggedTaskData.type,
-          originalStartDate: draggedTaskData.startDate,
-          originalEndDate: draggedTaskData.endDate,
-          newStartDate: newStartDate,
-          dragType: dragType
+          originalStartDate: draggedTaskData.startDate.toISOString(),
+          originalEndDate: draggedTaskData.endDate.toISOString(),
+          originalTimesEqual: draggedTaskData.startDate.getTime() === draggedTaskData.endDate.getTime(),
+          newStartDate: newStartDate.toISOString(),
+          dragType: dragType,
+          tempDragPosition
         });
         
         // 检查是否为里程碑：type为milestone 或者 开始时间等于结束时间
-        const isMilestone = draggedTaskData.type === 'milestone' || 
-                           draggedTaskData.startDate.getTime() === draggedTaskData.endDate.getTime();
+        const isTypeMilestone = draggedTaskData.type === 'milestone';
+        const isTimeEqual = draggedTaskData.startDate.getTime() === draggedTaskData.endDate.getTime();
+        const isMilestone = isTypeMilestone || isTimeEqual;
+        
+        console.log(`[HorizontalDrag] 里程碑判断详情:`, {
+          taskId: draggedTask,
+          taskTitle: draggedTaskData.title,
+          taskType: draggedTaskData.type,
+          originalStartTime: draggedTaskData.startDate.getTime(),
+          originalEndTime: draggedTaskData.endDate.getTime(),
+          isTypeMilestone,
+          isTimeEqual,
+          isMilestone
+        });
                            
         if (isMilestone) {
           // 里程碑只更新开始时间，结束时间保持与开始时间相同
           newEndDate = newStartDate;
-          console.log(`[HorizontalDrag Debug] 里程碑拖拽处理：newEndDate设置为 ${newEndDate}，判断依据：type=${draggedTaskData.type}, timesEqual=${draggedTaskData.startDate.getTime() === draggedTaskData.endDate.getTime()}`);
+          console.log(`[HorizontalDrag] 里程碑拖拽处理：设置 newEndDate = newStartDate`, {
+            newStartDate: newStartDate.toISOString(),
+            newEndDate: newEndDate.toISOString(),
+            reason: isTypeMilestone ? 'type=milestone' : 'times equal'
+          });
         } else {
           // 普通任务保持时间段长度
           const duration = draggedTaskData.endDate.getTime() - draggedTaskData.startDate.getTime();
           newEndDate = new Date(newStartDate.getTime() + duration);
-          console.log(`[HorizontalDrag Debug] 普通任务拖拽处理：duration=${duration}, newEndDate=${newEndDate}`);
+          console.log(`[HorizontalDrag] 普通任务拖拽处理：保持时间段长度`, {
+            duration,
+            newStartDate: newStartDate.toISOString(),
+            newEndDate: newEndDate.toISOString(),
+            isMilestone: false,
+            isTypeMilestone,
+            isTimeEqual,
+            originalDuration: duration
+          });
         }
       } else if (dragType === 'resize-left') {
         // 左边界拖拽：改变开始时间，保持结束时间
@@ -188,6 +215,19 @@ export const useHorizontalDrag = ({
         resetHorizontalDrag();
         return;
       }
+      
+      // 🔍 调试日志：调用 updateTaskDates 前的最终数据
+      console.log(`[HorizontalDrag] 即将调用 updateTaskDates:`, {
+        taskId: draggedTask,
+        taskTitle: draggedTaskData.title,
+        originalType: draggedTaskData.type,
+        originalStartDate: draggedTaskData.startDate.toISOString(),
+        originalEndDate: draggedTaskData.endDate.toISOString(),
+        newStartDate: newStartDate.toISOString(),
+        newEndDate: newEndDate.toISOString(),
+        newTimesEqual: newStartDate.getTime() === newEndDate.getTime(),
+        shouldRemainMilestone: draggedTaskData.type === 'milestone' || draggedTaskData.startDate.getTime() === draggedTaskData.endDate.getTime()
+      });
       
       // 更新任务时间
       updateTaskDates(draggedTask, newStartDate, newEndDate);

@@ -20,9 +20,14 @@ export { default as TimelineHeader } from './TimelineHeader';
 
 // === 任务相关组件 ===
 export { default as TaskBars } from './TaskBars';
+export { default as TaskBarsContainer } from './TaskBarsContainer';
+export { default as TaskBar } from './TaskBar';
+export { default as MilestoneTaskBar } from './MilestoneTaskBar';
 export { default as TaskTitleColumn } from './TaskTitleColumn';
 export { default as TaskIconSelector } from './TaskIconSelector';
 export { default as TaskContextMenu } from './TaskContextMenu';
+export { default as MilestoneNode } from './MilestoneNode';
+export { default as MilestoneContextMenu } from './MilestoneContextMenu';
 
 // === 管理和工具组件 ===
 export { default as TagManager } from './TagManager';
