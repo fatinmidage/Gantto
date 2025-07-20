@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { Target } from '..';
+import { Target, Code, CheckCircle, Package } from '..';
 import { Task } from '../../types';
 import { COLOR_CONSTANTS } from './ganttStyles';
 
@@ -76,10 +76,12 @@ const TaskBars: React.FC<TaskBarsProps> = ({
           const isSelected = selectedChartTaskId === chartTask.id;
           
           
-          // 里程碑节点渲染
-          if (chartTask.type === 'milestone') {
-            // 里程碑节点基于开始时间定位，不使用任务条宽度
-            const milestoneX = isBeingDragged && tempDragPosition ? tempDragPosition.x : dateToPixel(chartTask.startDate);
+          // 里程碑节点渲染 - 判断条件：开始时间等于结束时间
+          const isMilestone = chartTask.startDate.getTime() === chartTask.endDate.getTime();
+          if (isMilestone) {
+            // 里程碑节点使用统一的位置计算逻辑，与普通任务保持一致
+            const milestoneX = isBeingDragged && tempDragPosition ? tempDragPosition.x : (chartTask.x !== undefined ? chartTask.x : dateToPixel(chartTask.startDate));
+            
             return (
               <div
                 key={chartTask.id}
@@ -100,8 +102,12 @@ const TaskBars: React.FC<TaskBarsProps> = ({
                 }}
                 onContextMenu={(e) => onTaskContextMenu(e, chartTask.id)}
               >
-                <div className="milestone-icon custom-color" style={{ '--custom-milestone-color': chartTask.color } as React.CSSProperties}>
-                  <Target size={16} />
+                <div className="milestone-icon" style={{ color: chartTask.color }}>
+                  {/* 根据任务类型显示不同图标 */}
+                  {chartTask.type === 'development' && <Code size={16} />}
+                  {chartTask.type === 'testing' && <CheckCircle size={16} />}
+                  {chartTask.type === 'delivery' && <Package size={16} />}
+                  {(!chartTask.type || chartTask.type === 'milestone' || chartTask.type === 'default') && <Target size={16} />}
                 </div>
                 {/* 显示里程碑标签 */}
                 {chartTask.tags && chartTask.tags.length > 0 && (

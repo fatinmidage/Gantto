@@ -75,6 +75,7 @@ const GanttChart: React.FC<GanttChartProps> = ({
           setProjectRows={stateData.setProjectRows}
           ganttEvents={stateData.ganttEvents}
           handleTaskUpdate={stateData.handleTaskUpdate}
+          containerRef={stateData.containerRef}
         >
           {(handlers) => (
             <GanttContainer

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { getAllDescendantRows, getVisibleProjectRows } from './GanttHelpers';
 import { LAYOUT_CONSTANTS } from './ganttStyles';
 import { useThrottledMouseMove } from '../../hooks';
@@ -34,6 +34,9 @@ interface GanttEventCoordinatorProps {
   setProjectRows: React.Dispatch<React.SetStateAction<any[]>>;
   ganttEvents: any;
   handleTaskUpdate: (taskId: string, updates: Partial<Task>) => void;
+  
+  // 容器引用 - 从状态管理器传入
+  containerRef: React.RefObject<HTMLDivElement>;
   
   // 子组件
   children: (handlers: EventHandlers) => React.ReactElement;
@@ -76,9 +79,9 @@ const GanttEventCoordinator: React.FC<GanttEventCoordinatorProps> = ({
   setProjectRows,
   ganttEvents,
   handleTaskUpdate,
+  containerRef,
   children
 }) => {
-  const containerRef = useRef<HTMLDivElement>(null);
 
   // 边界检测处理器
   const detectEdgeHover = useCallback((e: React.MouseEvent, _task: any): 'left' | 'right' | null => {
@@ -104,7 +107,9 @@ const GanttEventCoordinator: React.FC<GanttEventCoordinatorProps> = ({
     e.preventDefault();
     
     const task = sortedChartTasks.find(t => t.id === taskId);
-    if (!task || !containerRef.current) return;
+    if (!task || !containerRef.current) {
+      return;
+    }
     
     const currentDragType = task.type === 'milestone' ? 'move' : (() => {
       const edgeType = detectEdgeHover(e, task);

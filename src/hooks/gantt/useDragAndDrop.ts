@@ -65,15 +65,7 @@ export const useDragAndDrop = () => {
       
       dragState.startHorizontalDrag(taskId, task, newDragType, offset);
       
-      // 更新拖拽度量
-      const duration = task.endDate.getTime() - task.startDate.getTime();
-      const pixelPerDay = (task.width || 100) / (duration / (24 * 60 * 60 * 1000));
-      const metrics = {
-        duration,
-        pixelPerDay,
-        minWidth: Math.max(20, (duration / (24 * 60 * 60 * 1000)) * pixelPerDay)
-      };
-      dragState.updateDragMetrics(metrics);
+      // 拖拽处理已在度量适配器中完成
     }
   }, [dragState, updateContainerBounds]);
 
@@ -89,16 +81,19 @@ export const useDragAndDrop = () => {
     if (!metrics || !bounds) return;
 
     const mouseX = clientX - bounds.left;
+    const isMilestone = dragState.draggedTaskData.type === 'milestone';
 
     if (dragState.dragType === 'move') {
       const newX = mouseX - dragState.dragOffset.x;
-      const maxX = dragState.draggedTaskData.type === 'milestone' ? CHART_WIDTH : CHART_WIDTH - metrics.minWidth;
+      const maxX = isMilestone ? CHART_WIDTH : CHART_WIDTH - metrics.minWidth;
       const constrainedX = Math.max(0, Math.min(newX, maxX));
+      
+      // 里程碑拖拽移动计算
       
       dragState.updateHorizontalDrag({
         id: dragState.draggedTask,
         x: constrainedX,
-        width: dragState.draggedTaskData.type === 'milestone' ? 16 : metrics.minWidth
+        width: isMilestone ? 16 : metrics.minWidth
       });
     } else if (dragState.dragType === 'resize-left') {
       const originalRight = (dragState.draggedTaskData.x || 0) + (dragState.draggedTaskData.width || 0);
