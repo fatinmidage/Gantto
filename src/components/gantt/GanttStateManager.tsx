@@ -52,7 +52,7 @@ const GanttStateManager: React.FC<GanttStateManagerProps> = ({
   const dragAndDrop = useDragAndDrop();
   const timeline = useTimeline(startDate, endDate, timeGranularity, containerWidth);
   const ganttUI = useGanttUI();
-  const { filteredTasks, filterStats } = useTaskFilter(tasks, startDate, endDate);
+  const { filteredTasks, filterStats } = useTaskFilter(chartTasks, startDate, endDate);
   const { availableTags } = useGlobalTags();
 
   // === 计算逻辑 ===

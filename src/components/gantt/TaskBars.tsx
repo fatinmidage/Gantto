@@ -54,6 +54,7 @@ const TaskBars: React.FC<TaskBarsProps> = ({
   onEdgeHover,
   onMouseLeave
 }) => {
+
   return (
     <div className="tasks" style={{
       position: 'absolute',

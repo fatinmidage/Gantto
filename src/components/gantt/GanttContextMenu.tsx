@@ -83,19 +83,23 @@ const GanttContextMenu: React.FC<GanttContextMenuProps> = ({
   };
 
   const handleCreateMilestone = () => {
+    // 计算点击位置的日期
+    const clickDate = clickPosition && pixelToDate ? pixelToDate(clickPosition.x) : new Date();
+    
     const newMilestone: Task = {
       id: `milestone-${Date.now()}`,
       title: '新里程碑',
-      startDate: new Date(),
-      endDate: new Date(),
+      startDate: clickDate,
+      endDate: clickDate,
       color: '#FFD700',
-      x: 0,
-      width: 0,
+      x: clickPosition?.x || 0,
+      width: 20, // 里程碑默认宽度
       rowId: defaultRowId,
       type: 'milestone',
       status: 'pending',
       progress: 0
     };
+    
     onCreateMilestone(newMilestone);
     onClose();
   };
