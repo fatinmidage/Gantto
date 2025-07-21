@@ -1,5 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { calculateMenuPosition } from '../../utils/menuPositioning';
 
 interface ColorPickerProps {
   visible: boolean;
@@ -51,13 +52,22 @@ const ColorPicker: React.FC<ColorPickerProps> = ({
 
   if (!visible) return null;
 
-  // 颜色选择器尺寸配置
-  const pickerWidth = 200;
-  const pickerHeight = 120; // 估算高度（标题+颜色网格）
+  // 计算颜色选择器的尺寸
+  // 颜色网格：5列，3-4行（取决于可用颜色数量），每个颜色块32px，间距8px
+  const colorCount = availableColors.length;
+  const gridRows = Math.ceil(colorCount / 5);
+  const estimatedHeight = 16 + 12 + (32 * gridRows) + (8 * (gridRows - 1)) + 32; // 标题+间距+颜色网格+内边距
   
-  // 边界检测 - 确保颜色选择器不会超出视口
-  const adjustedX = x + pickerWidth > window.innerWidth ? window.innerWidth - pickerWidth - 10 : x;
-  const adjustedY = y + pickerHeight > window.innerHeight ? window.innerHeight - pickerHeight - 10 : y;
+  const menuDimensions = {
+    width: 200,
+    height: estimatedHeight
+  };
+
+  // 应用智能定位算法
+  const adjustedPosition = calculateMenuPosition(
+    { x, y },
+    menuDimensions
+  );
 
   const handleColorSelect = (color: string) => {
     if (taskId) {
@@ -83,8 +93,8 @@ const ColorPicker: React.FC<ColorPickerProps> = ({
       className="color-picker-panel"
       style={{
         position: 'fixed',
-        top: adjustedY,
-        left: adjustedX,
+        top: adjustedPosition.y,
+        left: adjustedPosition.x,
         backgroundColor: '#fff',
         border: '1px solid #ddd',
         borderRadius: '8px',

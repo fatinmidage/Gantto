@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Task } from '../../types';
+import { calculateMenuPosition } from '../../utils/menuPositioning';
 
 interface TagManagerProps {
   visible: boolean;
@@ -28,6 +29,20 @@ const TagManager: React.FC<TagManagerProps> = ({
   if (!visible) return null;
 
   const currentTags = task?.tags || [];
+
+  // 计算标签管理器的智能定位
+  // 基于内容估算高度：标题+当前标签+输入框+快速添加标签
+  const estimatedHeight = Math.min(300, 50 + Math.ceil(currentTags.length / 3) * 32 + 80 + Math.ceil(availableTags.length / 4) * 32);
+  
+  const menuDimensions = {
+    width: 250,
+    height: estimatedHeight
+  };
+
+  const adjustedPosition = calculateMenuPosition(
+    { x: x + 180, y }, // 原来的逻辑是 x + 180，保持这个偏移
+    menuDimensions
+  );
 
   const handleTagAdd = () => {
     if (taskId && newTag.trim()) {
@@ -67,8 +82,8 @@ const TagManager: React.FC<TagManagerProps> = ({
       className="tag-manager-panel"
       style={{
         position: 'fixed',
-        top: y,
-        left: x + 180,
+        top: adjustedPosition.y,
+        left: adjustedPosition.x,
         backgroundColor: '#fff',
         border: '1px solid #ddd',
         borderRadius: '8px',
