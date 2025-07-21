@@ -2,6 +2,7 @@ import React from 'react';
 import { createPortal } from 'react-dom';
 import { Task } from '../../types';
 import { formatDateForDisplay } from '../../utils/ganttUtils';
+import { calculateMenuPosition, getEstimatedMenuDimensions } from '../../utils/menuPositioning';
 
 interface GanttContextMenuProps {
   visible: boolean;
@@ -64,6 +65,15 @@ const GanttContextMenu: React.FC<GanttContextMenuProps> = ({
 
 
   if (!visible) return null;
+
+  // 获取菜单尺寸估算
+  const menuDimensions = getEstimatedMenuDimensions(2); // 2个菜单项：任务条和节点
+  
+  // 计算智能定位
+  const adjustedPosition = calculateMenuPosition(
+    { x, y },
+    menuDimensions
+  );
 
   // 计算点击位置的时间信息用于显示
   const clickDate = clickPosition && pixelToDate ? pixelToDate(clickPosition.x) : new Date();
@@ -179,8 +189,8 @@ const GanttContextMenu: React.FC<GanttContextMenuProps> = ({
       ref={menuRef}
       style={{
         position: 'fixed',
-        top: y,
-        left: x,
+        top: adjustedPosition.y,
+        left: adjustedPosition.x,
         backgroundColor: '#fff',
         border: '1px solid #ddd',
         borderRadius: '4px',

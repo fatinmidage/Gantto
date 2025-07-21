@@ -7,6 +7,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Task } from '../../types';
 import { TaskIcon } from '..';
+import { calculateMenuPosition, calculateSubmenuPosition, getEstimatedMenuDimensions } from '../../utils/menuPositioning';
 
 interface TaskTitleContextMenuProps {
   visible: boolean;
@@ -72,17 +73,27 @@ const TaskTitleContextMenu: React.FC<TaskTitleContextMenuProps> = ({
 
   if (!visible || !taskId || !task) return null;
 
-  // 菜单样式 - 添加边界检测以确保菜单不会超出视口
-  const menuWidth = 160;
-  const menuHeight = 80; // 估算菜单高度
-  const adjustedX = x + menuWidth > window.innerWidth ? window.innerWidth - menuWidth - 10 : x;
-  const adjustedY = y + menuHeight > window.innerHeight ? window.innerHeight - menuHeight - 10 : y;
+  // 主菜单智能定位
+  const mainMenuDimensions = getEstimatedMenuDimensions(2); // 2个菜单项：名称编辑和图标选择
+  const mainMenuPosition = calculateMenuPosition(
+    { x, y },
+    mainMenuDimensions
+  );
+
+  // 子菜单智能定位
+  const submenuDimensions = getEstimatedMenuDimensions(5); // 5个图标选项
+  const submenuPosition = calculateSubmenuPosition(
+    mainMenuPosition,
+    mainMenuDimensions,
+    submenuDimensions,
+    44 // 第二个菜单项的偏移量（44px）
+  );
   
   
   const menuStyle: React.CSSProperties = {
     position: 'fixed',
-    top: adjustedY,
-    left: adjustedX,
+    top: mainMenuPosition.y,
+    left: mainMenuPosition.x,
     backgroundColor: '#fff',
     border: '1px solid #ddd',
     borderRadius: '8px',
@@ -114,24 +125,10 @@ const TaskTitleContextMenu: React.FC<TaskTitleContextMenuProps> = ({
     onClose();
   };
 
-  // 计算子菜单位置 - 同样添加边界检测
-  const submenuWidth = 140;
-  const submenuHeight = 200; // 估算子菜单高度
-  const submenuX = adjustedX + menuWidth + 5; // 在主菜单右侧显示
-  const submenuY = adjustedY;
-  
-  // 如果右侧空间不够，则显示在左侧
-  const finalSubmenuX = submenuX + submenuWidth > window.innerWidth 
-    ? adjustedX - submenuWidth - 5 
-    : submenuX;
-  const finalSubmenuY = submenuY + submenuHeight > window.innerHeight 
-    ? window.innerHeight - submenuHeight - 10 
-    : submenuY;
-    
   const submenuStyle: React.CSSProperties = {
     position: 'fixed',
-    top: finalSubmenuY,
-    left: finalSubmenuX,
+    top: submenuPosition.y,
+    left: submenuPosition.x,
     backgroundColor: '#fff',
     border: '1px solid #ddd',
     borderRadius: '8px',

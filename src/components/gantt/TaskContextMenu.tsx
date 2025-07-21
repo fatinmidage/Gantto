@@ -1,6 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Task } from '../../types';
+import { calculateMenuPosition, getEstimatedMenuDimensions } from '../../utils/menuPositioning';
 
 interface TaskContextMenuProps {
   visible: boolean;
@@ -54,13 +55,14 @@ const TaskContextMenu: React.FC<TaskContextMenuProps> = ({
 
   if (!visible) return null;
 
-  // 菜单尺寸配置
-  const menuWidth = 160;
-  const menuHeight = 120; // 估算菜单高度 (3个菜单项)
+  // 获取菜单尺寸估算
+  const menuDimensions = getEstimatedMenuDimensions(3); // 3个菜单项：更改颜色、管理标签、删除任务
   
-  // 边界检测 - 确保菜单不会超出视口
-  const adjustedX = x + menuWidth > window.innerWidth ? window.innerWidth - menuWidth - 10 : x;
-  const adjustedY = y + menuHeight > window.innerHeight ? window.innerHeight - menuHeight - 10 : y;
+  // 计算智能定位
+  const adjustedPosition = calculateMenuPosition(
+    { x, y },
+    menuDimensions
+  );
 
   const menuItemStyle = {
     padding: '10px 16px',
@@ -116,8 +118,8 @@ const TaskContextMenu: React.FC<TaskContextMenuProps> = ({
       className="task-context-menu"
       style={{
         position: 'fixed',
-        top: adjustedY,
-        left: adjustedX,
+        top: adjustedPosition.y,
+        left: adjustedPosition.x,
         backgroundColor: '#fff',
         border: '1px solid #ddd',
         borderRadius: '8px',

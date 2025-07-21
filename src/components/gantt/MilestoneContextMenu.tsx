@@ -8,6 +8,7 @@ import { createPortal } from 'react-dom';
 import { Target, Code, CheckCircle, Package, Circle, Edit, Trash2 } from 'lucide-react';
 import { MilestoneNode } from '../../types/task';
 import { TaskType } from '../../types/common';
+import { calculateMenuPosition, getEstimatedMenuDimensions } from '../../utils/menuPositioning';
 
 interface MilestoneContextMenuProps {
   visible: boolean;
@@ -61,18 +62,20 @@ const MilestoneContextMenu: React.FC<MilestoneContextMenuProps> = ({
 
   if (!visible || !milestone) return null;
 
-  // 菜单尺寸配置
-  const menuWidth = 200;
-  const menuHeight = isEditingLabel ? 380 : 320; // 根据编辑状态调整高度
+  // 根据编辑状态获取菜单尺寸估算
+  const itemCount = 7; // 5个图标选项 + 1个标签编辑 + 1个删除按钮
+  const menuDimensions = getEstimatedMenuDimensions(itemCount, isEditingLabel);
   
-  // 边界检测 - 确保菜单不会超出视口
-  const adjustedX = x + menuWidth > window.innerWidth ? window.innerWidth - menuWidth - 10 : x;
-  const adjustedY = y + menuHeight > window.innerHeight ? window.innerHeight - menuHeight - 10 : y;
+  // 计算智能定位
+  const adjustedPosition = calculateMenuPosition(
+    { x, y },
+    menuDimensions
+  );
 
   const menuStyle: React.CSSProperties = {
     position: 'fixed',
-    left: adjustedX,
-    top: adjustedY,
+    left: adjustedPosition.x,
+    top: adjustedPosition.y,
     backgroundColor: 'white',
     border: '1px solid #ddd',
     borderRadius: '8px',
