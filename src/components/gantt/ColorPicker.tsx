@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 
 interface ColorPickerProps {
   visible: boolean;
@@ -21,7 +22,42 @@ const ColorPicker: React.FC<ColorPickerProps> = ({
   onColorSelect,
   onClose
 }) => {
+  const pickerRef = useRef<HTMLDivElement>(null);
+
+  // 处理点击外部关闭菜单
+  useEffect(() => {
+    if (!visible) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (pickerRef.current && !pickerRef.current.contains(event.target as Node)) {
+        onClose();
+      }
+    };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleEscape);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [visible, onClose]);
+
   if (!visible) return null;
+
+  // 颜色选择器尺寸配置
+  const pickerWidth = 200;
+  const pickerHeight = 120; // 估算高度（标题+颜色网格）
+  
+  // 边界检测 - 确保颜色选择器不会超出视口
+  const adjustedX = x + pickerWidth > window.innerWidth ? window.innerWidth - pickerWidth - 10 : x;
+  const adjustedY = y + pickerHeight > window.innerHeight ? window.innerHeight - pickerHeight - 10 : y;
 
   const handleColorSelect = (color: string) => {
     if (taskId) {
@@ -40,18 +76,20 @@ const ColorPicker: React.FC<ColorPickerProps> = ({
     e.currentTarget.style.transform = 'scale(1)';
   };
 
-  return (
+  // 颜色选择器内容
+  const pickerContent = (
     <div
+      ref={pickerRef}
       className="color-picker-panel"
       style={{
         position: 'fixed',
-        top: y,
-        left: x + 180,
+        top: adjustedY,
+        left: adjustedX,
         backgroundColor: '#fff',
         border: '1px solid #ddd',
         borderRadius: '8px',
         boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-        zIndex: 1001,
+        zIndex: 9999, // 提高z-index确保在最顶层
         padding: '16px',
         minWidth: '200px'
       }}
@@ -82,6 +120,9 @@ const ColorPicker: React.FC<ColorPickerProps> = ({
       </div>
     </div>
   );
+
+  // 使用Portal将颜色选择器渲染到document.body
+  return createPortal(pickerContent, document.body);
 };
 
 export default ColorPicker;

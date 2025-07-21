@@ -22,6 +22,8 @@ interface TaskContextMenuState extends ContextMenuState {
 interface ColorPickerState {
   visible: boolean;
   taskId: string | null;
+  x?: number;
+  y?: number;
 }
 
 interface TagManagerState {
@@ -57,7 +59,9 @@ export const useContextMenus = ({
 
   const [colorPickerState, setColorPickerState] = useState<ColorPickerState>({
     visible: false,
-    taskId: null
+    taskId: null,
+    x: 0,
+    y: 0
   });
 
   const [tagManagerState, setTagManagerState] = useState<TagManagerState>({
@@ -133,10 +137,12 @@ export const useContextMenus = ({
   const showColorPicker = useCallback((taskId: string) => {
     setColorPickerState({
       visible: true,
-      taskId
+      taskId,
+      x: taskContextMenu.x, // 使用右键菜单的鼠标位置
+      y: taskContextMenu.y
     });
     hideAllMenus();
-  }, [hideAllMenus]);
+  }, [hideAllMenus, taskContextMenu.x, taskContextMenu.y]);
 
   // 显示标签管理器
   const showTagManager = useCallback((taskId: string) => {
