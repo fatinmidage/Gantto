@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Task } from '../../types';
 
 interface TaskContextMenuProps {
@@ -24,7 +25,42 @@ const TaskContextMenu: React.FC<TaskContextMenuProps> = ({
   onTagManage,
   onDelete
 }) => {
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // 处理点击外部关闭菜单
+  useEffect(() => {
+    if (!visible) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        onClose();
+      }
+    };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleEscape);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [visible, onClose]);
+
   if (!visible) return null;
+
+  // 菜单尺寸配置
+  const menuWidth = 160;
+  const menuHeight = 120; // 估算菜单高度 (3个菜单项)
+  
+  // 边界检测 - 确保菜单不会超出视口
+  const adjustedX = x + menuWidth > window.innerWidth ? window.innerWidth - menuWidth - 10 : x;
+  const adjustedY = y + menuHeight > window.innerHeight ? window.innerHeight - menuHeight - 10 : y;
 
   const menuItemStyle = {
     padding: '10px 16px',
@@ -73,18 +109,20 @@ const TaskContextMenu: React.FC<TaskContextMenuProps> = ({
     }
   };
 
-  return (
+  // 菜单内容
+  const menuContent = (
     <div
+      ref={menuRef}
       className="task-context-menu"
       style={{
         position: 'fixed',
-        top: y,
-        left: x,
+        top: adjustedY,
+        left: adjustedX,
         backgroundColor: '#fff',
         border: '1px solid #ddd',
         borderRadius: '8px',
         boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-        zIndex: 1000,
+        zIndex: 9999, // 提高z-index确保在最顶层
         minWidth: '160px',
         overflow: 'hidden'
       }}
@@ -128,6 +166,9 @@ const TaskContextMenu: React.FC<TaskContextMenuProps> = ({
       </div>
     </div>
   );
+
+  // 使用Portal将菜单渲染到document.body，绕过CSS层叠上下文限制
+  return createPortal(menuContent, document.body);
 };
 
 export default TaskContextMenu;

@@ -3,7 +3,8 @@
  * 提供图标选择、标签编辑、删除等功能
  */
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Target, Code, CheckCircle, Package, Circle, Edit, Trash2 } from 'lucide-react';
 import { MilestoneNode } from '../../types/task';
 import { TaskType } from '../../types/common';
@@ -31,18 +32,52 @@ const MilestoneContextMenu: React.FC<MilestoneContextMenuProps> = ({
 }) => {
   const [isEditingLabel, setIsEditingLabel] = useState(false);
   const [labelValue, setLabelValue] = useState(milestone?.label || '');
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // 处理点击外部关闭菜单
+  useEffect(() => {
+    if (!visible) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        onClose();
+      }
+    };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleEscape);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [visible, onClose]);
 
   if (!visible || !milestone) return null;
 
+  // 菜单尺寸配置
+  const menuWidth = 200;
+  const menuHeight = isEditingLabel ? 380 : 320; // 根据编辑状态调整高度
+  
+  // 边界检测 - 确保菜单不会超出视口
+  const adjustedX = x + menuWidth > window.innerWidth ? window.innerWidth - menuWidth - 10 : x;
+  const adjustedY = y + menuHeight > window.innerHeight ? window.innerHeight - menuHeight - 10 : y;
+
   const menuStyle: React.CSSProperties = {
     position: 'fixed',
-    left: x,
-    top: y,
+    left: adjustedX,
+    top: adjustedY,
     backgroundColor: 'white',
     border: '1px solid #ddd',
     borderRadius: '8px',
     boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-    zIndex: 1000,
+    zIndex: 9999, // 提高z-index确保在最顶层
     minWidth: '200px',
     fontSize: '14px',
     userSelect: 'none',
@@ -104,8 +139,13 @@ const MilestoneContextMenu: React.FC<MilestoneContextMenuProps> = ({
     { type: 'default' as TaskType, icon: Circle, color: '#666666', name: '默认' },
   ];
 
-  return (
-    <div style={menuStyle} onClick={(e) => e.stopPropagation()}>
+  // 菜单内容
+  const menuContent = (
+    <div 
+      ref={menuRef} 
+      style={menuStyle} 
+      onClick={(e) => e.stopPropagation()}
+    >
       {/* 图标选择区域 */}
       <div style={{ ...menuItemStyle, borderBottom: 'none', fontWeight: 'bold', color: '#666' }}>
         更改图标
@@ -224,6 +264,9 @@ const MilestoneContextMenu: React.FC<MilestoneContextMenuProps> = ({
       </div>
     </div>
   );
+
+  // 使用Portal将菜单渲染到document.body，绕过CSS层叠上下文限制
+  return createPortal(menuContent, document.body);
 };
 
 export default MilestoneContextMenu;
