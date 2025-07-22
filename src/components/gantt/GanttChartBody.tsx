@@ -4,6 +4,7 @@ import TaskBars from './TaskBars';
 import TimelineHeader from './TimelineHeader';
 import { Task } from '../../types';
 import { COMPONENT_STYLES } from './ganttStyles';
+import { TimelineLayerConfig } from '../../utils/timelineLayerUtils';
 
 interface DragPosition {
   x: number;
@@ -57,6 +58,12 @@ interface GanttChartBodyProps {
   
   // 时间轴数据
   timeScales: TimeScale[];
+  
+  // 分层时间轴相关
+  layerConfig?: TimelineLayerConfig;
+  isLayeredModeEnabled?: boolean;
+  dateRangeStart?: Date;
+  dateRangeEnd?: Date;
   
   // 事件处理
   onTaskSelect: (taskId: string | null) => void;
@@ -115,7 +122,13 @@ const GanttChartBody: React.FC<GanttChartBodyProps> = ({
   onTitleMouseMove,
   onTitleMouseUp,
   containerRef: externalContainerRef,
-  isCurrentDateInRange = true
+  isCurrentDateInRange = true,
+  
+  // 分层时间轴相关
+  layerConfig,
+  isLayeredModeEnabled = true,
+  dateRangeStart,
+  dateRangeEnd
 }) => {
   const localContainerRef = useRef<HTMLDivElement>(null);
   const containerRef = externalContainerRef || localContainerRef;
@@ -188,6 +201,12 @@ const GanttChartBody: React.FC<GanttChartBodyProps> = ({
           dateToPixel={dateToPixel}
           containerHeight={timelineHeight + taskContentHeight}
           isCurrentDateInRange={isCurrentDateInRange}
+          layerConfig={layerConfig}
+          enableLayeredMode={isLayeredModeEnabled}
+          dateRange={dateRangeStart && dateRangeEnd ? {
+            startDate: dateRangeStart,
+            endDate: dateRangeEnd
+          } : undefined}
         />
 
         {/* 任务条 */}

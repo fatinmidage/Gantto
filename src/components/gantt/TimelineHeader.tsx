@@ -1,24 +1,36 @@
 /**
  * 时间轴头部组件
  * 负责渲染顶部时间轴、日期网格线和当前日期指示线
+ * 支持传统单层和新的分层显示模式
  */
 
 import React from 'react';
 import { COLOR_CONSTANTS } from './ganttStyles';
+import LayeredTimelineHeader from './LayeredTimelineHeader';
+import { TimelineLayerConfig } from '../../utils/timelineLayerUtils';
+import { useLayeredTimeline } from '../../hooks/gantt/useLayeredTimeline';
 
-// 时间刻度接口
+// 时间刻度接口 (兼容现有)
 interface TimeScale {
   x: number;
   label: string;
 }
 
-// 组件 Props 接口
+// 组件 Props 接口 (扩展支持分层模式)
 interface TimelineHeaderProps {
   timelineHeight: number;
   timeScales: TimeScale[];
   dateToPixel: (date: Date) => number;
   containerHeight: number;
   isCurrentDateInRange?: boolean;
+  // 新增分层模式支持
+  layerConfig?: TimelineLayerConfig;
+  enableLayeredMode?: boolean;
+  // 分层模式需要的日期范围
+  dateRange?: {
+    startDate: Date;
+    endDate: Date;
+  };
 }
 
 const TimelineHeader: React.FC<TimelineHeaderProps> = ({
@@ -26,8 +38,32 @@ const TimelineHeader: React.FC<TimelineHeaderProps> = ({
   timeScales,
   dateToPixel,
   containerHeight,
-  isCurrentDateInRange = true
+  isCurrentDateInRange = true,
+  layerConfig,
+  enableLayeredMode = false,
+  dateRange
 }) => {
+  // 根据是否启用分层模式选择渲染方式
+  const isLayeredMode = Boolean(layerConfig && enableLayeredMode && dateRange);
+
+  // 分层模式的Hook调用 - 仅在分层模式下调用
+  const layeredTimelineResult = isLayeredMode 
+    ? useLayeredTimeline(layerConfig!, dateRange!, dateToPixel)
+    : null;
+
+  // 分层模式渲染
+  if (isLayeredMode && layeredTimelineResult) {
+    return (
+      <LayeredTimelineHeader
+        layeredTimeScales={layeredTimelineResult.layeredTimeScales}
+        dateToPixel={dateToPixel}
+        containerHeight={containerHeight}
+        isCurrentDateInRange={isCurrentDateInRange}
+      />
+    );
+  }
+
+  // 经典模式渲染（保持原有逻辑）
   return (
     <>
       {/* 时间轴头部 */}

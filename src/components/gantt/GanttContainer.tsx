@@ -5,6 +5,7 @@ import GanttMenuManager from './GanttMenuManager';
 import { LAYOUT_CONSTANTS } from './ganttStyles';
 import { Task } from '../../types';
 import { TimeGranularity } from '../../hooks/gantt/useTimeline';
+import { TimelineLayerConfig } from '../../utils/timelineLayerUtils';
 
 interface GanttContainerProps {
   // Header props
@@ -19,6 +20,12 @@ interface GanttContainerProps {
   timeGranularity?: TimeGranularity;
   onDateRangeChange?: (startDate: Date, endDate: Date) => void;
   onTimeGranularityChange?: (granularity: TimeGranularity) => void;
+  
+  // 分层时间轴相关
+  layerConfig?: TimelineLayerConfig;
+  onLayerConfigChange?: (config: TimelineLayerConfig) => void;
+  onLayerModeToggle?: (enabled: boolean) => void;
+  isLayeredModeEnabled?: boolean;
   
   // Body props
   leftPanelTasks: Task[];
@@ -87,6 +94,12 @@ const GanttContainer: React.FC<GanttContainerProps> = ({
   timeGranularity,
   onDateRangeChange,
   onTimeGranularityChange,
+  
+  // 分层时间轴相关
+  layerConfig,
+  onLayerConfigChange,
+  onLayerModeToggle,
+  isLayeredModeEnabled,
   
   // Body props
   leftPanelTasks,
@@ -158,6 +171,10 @@ const GanttContainer: React.FC<GanttContainerProps> = ({
         timeGranularity={timeGranularity}
         onDateRangeChange={onDateRangeChange}
         onTimeGranularityChange={onTimeGranularityChange}
+        layerConfig={layerConfig}
+        onLayerConfigChange={onLayerConfigChange}
+        onLayerModeToggle={onLayerModeToggle}
+        isLayeredModeEnabled={isLayeredModeEnabled}
       />
       
       <GanttChartBody
@@ -194,6 +211,10 @@ const GanttContainer: React.FC<GanttContainerProps> = ({
         onTitleMouseUp={onTitleMouseUp}
         containerRef={containerRef}
         isCurrentDateInRange={isCurrentDateInRange}
+        layerConfig={layerConfig}
+        isLayeredModeEnabled={isLayeredModeEnabled}
+        dateRangeStart={dateRangeStart}
+        dateRangeEnd={dateRangeEnd}
       />
 
       <GanttMenuManager

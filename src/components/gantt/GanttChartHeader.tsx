@@ -1,6 +1,7 @@
 import React from 'react';
 import { Toolbar } from '..';
 import { TimeGranularity } from '../../hooks/gantt/useTimeline';
+import { TimelineLayerConfig } from '../../utils/timelineLayerUtils';
 
 interface GanttChartHeaderProps {
   // 工具栏相关属性
@@ -15,6 +16,12 @@ interface GanttChartHeaderProps {
   timeGranularity?: TimeGranularity;
   onDateRangeChange?: (startDate: Date, endDate: Date) => void;
   onTimeGranularityChange?: (granularity: TimeGranularity) => void;
+  
+  // 分层时间轴相关
+  layerConfig?: TimelineLayerConfig;
+  onLayerConfigChange?: (config: TimelineLayerConfig) => void;
+  onLayerModeToggle?: (enabled: boolean) => void;
+  isLayeredModeEnabled?: boolean;
 }
 
 const GanttChartHeader: React.FC<GanttChartHeaderProps> = ({
@@ -27,7 +34,11 @@ const GanttChartHeader: React.FC<GanttChartHeaderProps> = ({
   dateRangeEnd,
   timeGranularity,
   onDateRangeChange,
-  onTimeGranularityChange
+  onTimeGranularityChange,
+  layerConfig,
+  onLayerConfigChange,
+  onLayerModeToggle,
+  isLayeredModeEnabled
 }) => {
   return (
     <Toolbar
@@ -41,6 +52,10 @@ const GanttChartHeader: React.FC<GanttChartHeaderProps> = ({
       timeGranularity={timeGranularity}
       onDateRangeChange={onDateRangeChange}
       onTimeGranularityChange={onTimeGranularityChange}
+      layerConfig={layerConfig}
+      onLayerConfigChange={onLayerConfigChange}
+      onLayerModeToggle={onLayerModeToggle}
+      isLayeredModeEnabled={isLayeredModeEnabled}
     />
   );
 };

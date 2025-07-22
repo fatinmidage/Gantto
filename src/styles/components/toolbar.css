@@ -70,6 +70,17 @@
   transform: translateY(-1px);
 }
 
+.toolbar-btn.active {
+  background: var(--accent-primary);
+  color: var(--text-inverse);
+  border: 1px solid var(--border-primary);
+}
+
+.toolbar-btn.active:hover {
+  background: linear-gradient(45deg, var(--accent-primary), #2563eb);
+  transform: translateY(-1px);
+}
+
 .toolbar-separator {
   width: 1px;
   height: 24px;

@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { GanttStateManager, GanttEventCoordinator, GanttContainer } from './gantt';
 import { TimeGranularity } from '../hooks/gantt/useTimeline';
+import { useTimelineSettings } from '../hooks/gantt/useTimelineSettings';
 
 // 导入初始数据
 import { initialProjectRows, initialChartTasks } from '../data/initialData';
@@ -30,6 +31,9 @@ const GanttChart: React.FC<GanttChartProps> = ({
   // 时间颗粒度状态管理
   const [timeGranularity, setTimeGranularity] = useState<TimeGranularity>('month');
   
+  // 分层时间轴状态管理
+  const timelineSettings = useTimelineSettings();
+  
   // 处理日期范围变化
   const handleDateRangeChange = useCallback((startDate: Date, endDate: Date) => {
     setDateRangeStart(startDate);
@@ -39,6 +43,16 @@ const GanttChart: React.FC<GanttChartProps> = ({
   // 处理时间颗粒度变化
   const handleTimeGranularityChange = useCallback((granularity: TimeGranularity) => {
     setTimeGranularity(granularity);
+  }, []);
+
+  // 处理分层配置变化
+  const handleLayerConfigChange = useCallback((config: typeof timelineSettings.config) => {
+    timelineSettings.updateConfig(config);
+  }, [timelineSettings]);
+
+  // 处理分层模式切换
+  const handleLayerModeToggle = useCallback((_enabled: boolean) => {
+    // 这里可以添加额外的逻辑，比如保存用户偏好设置
   }, []);
 
   return (
@@ -91,6 +105,12 @@ const GanttChart: React.FC<GanttChartProps> = ({
               timeGranularity={timeGranularity}
               onDateRangeChange={handleDateRangeChange}
               onTimeGranularityChange={handleTimeGranularityChange}
+              
+              // 分层时间轴相关
+              layerConfig={timelineSettings.config}
+              onLayerConfigChange={handleLayerConfigChange}
+              onLayerModeToggle={handleLayerModeToggle}
+              isLayeredModeEnabled={true}
               
               // Body props
               leftPanelTasks={stateData.leftPanelTasks}

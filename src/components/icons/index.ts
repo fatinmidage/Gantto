@@ -20,6 +20,7 @@ export {
   Edit3,
   Target,
   ChevronRight,
+  Layers,
   
   // TaskIcon 组件图标
   Package,
