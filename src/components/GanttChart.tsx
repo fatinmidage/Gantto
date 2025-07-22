@@ -1,6 +1,5 @@
 import React, { useState, useCallback } from 'react';
 import { GanttStateManager, GanttEventCoordinator, GanttContainer } from './gantt';
-import { TimeGranularity } from '../hooks/gantt/useTimeline';
 import { useTimelineSettings } from '../hooks/gantt/useTimelineSettings';
 
 // 导入初始数据
@@ -28,8 +27,6 @@ const GanttChart: React.FC<GanttChartProps> = ({
   const [dateRangeStart, setDateRangeStart] = useState<Date>(defaultStart);
   const [dateRangeEnd, setDateRangeEnd] = useState<Date>(defaultEnd);
   
-  // 时间颗粒度状态管理
-  const [timeGranularity, setTimeGranularity] = useState<TimeGranularity>('month');
   
   // 分层时间轴状态管理
   const timelineSettings = useTimelineSettings();
@@ -40,10 +37,6 @@ const GanttChart: React.FC<GanttChartProps> = ({
     setDateRangeEnd(endDate);
   }, []);
   
-  // 处理时间颗粒度变化
-  const handleTimeGranularityChange = useCallback((granularity: TimeGranularity) => {
-    setTimeGranularity(granularity);
-  }, []);
 
   // 处理分层配置变化
   const handleLayerConfigChange = useCallback((config: typeof timelineSettings.config) => {
@@ -61,7 +54,6 @@ const GanttChart: React.FC<GanttChartProps> = ({
       endDate={dateRangeEnd}
       timelineHeight={timelineHeight}
       taskHeight={taskHeight}
-      timeGranularity={timeGranularity}
       initialProjectRows={initialProjectRows}
       initialChartTasks={initialChartTasks}
     >
@@ -99,12 +91,10 @@ const GanttChart: React.FC<GanttChartProps> = ({
               onEditTask={() => {/* TODO: 实现编辑功能 */}}
               onAddSubtask={() => stateData.ganttInteractions.selectedTitleTaskId && stateData.ganttInteractions.handleCreateSubtask(stateData.ganttInteractions.selectedTitleTaskId)}
               canAddSubtask={!!stateData.ganttInteractions.selectedTitleTaskId}
-              // 日期范围和时间颗粒度相关
+              // 日期范围相关
               dateRangeStart={dateRangeStart}
               dateRangeEnd={dateRangeEnd}
-              timeGranularity={timeGranularity}
               onDateRangeChange={handleDateRangeChange}
-              onTimeGranularityChange={handleTimeGranularityChange}
               
               // 分层时间轴相关
               onLayerConfigChange={handleLayerConfigChange}

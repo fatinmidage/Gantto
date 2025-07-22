@@ -1,6 +1,5 @@
 import React from 'react';
 import { Toolbar } from '..';
-import { TimeGranularity } from '../../hooks/gantt/useTimeline';
 import { TimelineLayerConfig } from '../../utils/timelineLayerUtils';
 
 interface GanttChartHeaderProps {
@@ -10,12 +9,10 @@ interface GanttChartHeaderProps {
   onEditTask: () => void;
   onAddSubtask: () => void;
   canAddSubtask: boolean;
-  // 日期范围和时间颗粒度相关
+  // 日期范围相关
   dateRangeStart?: Date;
   dateRangeEnd?: Date;
-  timeGranularity?: TimeGranularity;
   onDateRangeChange?: (startDate: Date, endDate: Date) => void;
-  onTimeGranularityChange?: (granularity: TimeGranularity) => void;
   
   // 分层时间轴相关
   layerConfig?: TimelineLayerConfig;
@@ -32,9 +29,7 @@ const GanttChartHeader: React.FC<GanttChartHeaderProps> = ({
   canAddSubtask,
   dateRangeStart,
   dateRangeEnd,
-  timeGranularity,
   onDateRangeChange,
-  onTimeGranularityChange,
   layerConfig,
   onLayerConfigChange,
   onLayerModeToggle,
@@ -49,9 +44,7 @@ const GanttChartHeader: React.FC<GanttChartHeaderProps> = ({
       canAddSubtask={canAddSubtask}
       dateRangeStart={dateRangeStart}
       dateRangeEnd={dateRangeEnd}
-      timeGranularity={timeGranularity}
       onDateRangeChange={onDateRangeChange}
-      onTimeGranularityChange={onTimeGranularityChange}
       layerConfig={layerConfig}
       onLayerConfigChange={onLayerConfigChange}
       onLayerModeToggle={onLayerModeToggle}

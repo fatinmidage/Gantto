@@ -4,7 +4,6 @@ import GanttChartBody from './GanttChartBody';
 import GanttMenuManager from './GanttMenuManager';
 import { LAYOUT_CONSTANTS } from './ganttStyles';
 import { Task } from '../../types';
-import { TimeGranularity } from '../../hooks/gantt/useTimeline';
 import { TimelineLayerConfig, LayeredTimeScale, DateRange } from '../../utils/timelineLayerUtils';
 
 interface GanttContainerProps {
@@ -14,12 +13,10 @@ interface GanttContainerProps {
   onEditTask: () => void;
   onAddSubtask: () => void;
   canAddSubtask: boolean;
-  // 日期范围和时间颗粒度相关
+  // 日期范围相关
   dateRangeStart?: Date;
   dateRangeEnd?: Date;
-  timeGranularity?: TimeGranularity;
   onDateRangeChange?: (startDate: Date, endDate: Date) => void;
-  onTimeGranularityChange?: (granularity: TimeGranularity) => void;
   
   // 分层时间轴回调函数（保留兼容性）
   onLayerConfigChange?: (config: TimelineLayerConfig) => void;
@@ -89,12 +86,10 @@ const GanttContainer: React.FC<GanttContainerProps> = ({
   onEditTask,
   onAddSubtask,
   canAddSubtask,
-  // 日期范围和时间颗粒度相关
+  // 日期范围相关
   dateRangeStart,
   dateRangeEnd,
-  timeGranularity,
   onDateRangeChange,
-  onTimeGranularityChange,
   
   // 分层时间轴相关
   onLayerConfigChange,
@@ -170,9 +165,7 @@ const GanttContainer: React.FC<GanttContainerProps> = ({
         canAddSubtask={canAddSubtask}
         dateRangeStart={dateRangeStart}
         dateRangeEnd={dateRangeEnd}
-        timeGranularity={timeGranularity}
         onDateRangeChange={onDateRangeChange}
-        onTimeGranularityChange={onTimeGranularityChange}
         layerConfig={layerConfig}
         onLayerConfigChange={onLayerConfigChange}
         onLayerModeToggle={onLayerModeToggle}

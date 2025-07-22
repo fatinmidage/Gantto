@@ -6,9 +6,7 @@ import {
   ChevronRight
 } from './icons';
 import DateRangePicker from './DateRangePicker';
-import TimeGranularitySelector from './TimeGranularitySelector';
 import TimelineLayerSettings from './gantt/TimelineLayerSettings';
-import { TimeGranularity } from '../hooks/gantt/useTimeline';
 import { TimelineLayerConfig } from '../utils/timelineLayerUtils';
 
 interface ToolbarProps {
@@ -18,12 +16,10 @@ interface ToolbarProps {
   // 子任务相关
   onAddSubtask?: () => void;
   canAddSubtask?: boolean;
-  // 日期范围和时间颗粒度相关
+  // 日期范围相关
   dateRangeStart?: Date;
   dateRangeEnd?: Date;
-  timeGranularity?: TimeGranularity;
   onDateRangeChange?: (startDate: Date, endDate: Date) => void;
-  onTimeGranularityChange?: (granularity: TimeGranularity) => void;
   // 分层时间轴相关
   layerConfig?: TimelineLayerConfig;
   onLayerConfigChange?: (config: TimelineLayerConfig) => void;
@@ -39,9 +35,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
   canAddSubtask = false,
   dateRangeStart,
   dateRangeEnd,
-  timeGranularity = 'month',
   onDateRangeChange,
-  onTimeGranularityChange,
   layerConfig,
   onLayerConfigChange,
   onLayerModeToggle,
@@ -97,12 +91,6 @@ const Toolbar: React.FC<ToolbarProps> = ({
               startDate={defaultStart}
               endDate={defaultEnd}
               onDateRangeChange={onDateRangeChange}
-            />
-          )}
-          {onTimeGranularityChange && (
-            <TimeGranularitySelector
-              value={timeGranularity}
-              onValueChange={onTimeGranularityChange}
             />
           )}
           <TimelineLayerSettings

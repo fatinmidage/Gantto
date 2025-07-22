@@ -60,7 +60,9 @@ const LayeredTimelineHeader: React.FC<LayeredTimelineHeaderProps> = ({
                 fontWeight: 400,
                 whiteSpace: 'nowrap',
                 overflow: 'hidden',
-                textOverflow: 'clip'
+                textOverflow: 'clip',
+                borderRight: itemIndex < layer.items.length - 1 
+                  ? `1px solid ${COLOR_CONSTANTS.BORDER_COLOR}` : 'none'
               }}>
                 {item.label}
               </div>

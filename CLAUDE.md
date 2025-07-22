@@ -2,204 +2,147 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Project Overview
-
-Gantto is a modern cross-platform Gantt chart application built with Tauri + React + TypeScript. It provides an intuitive interface for project planning, task management, and progress tracking with features like drag-and-drop task management, hierarchical task structures, and visual timeline views.
-
 ## Development Commands
 
-### Setup and Installation
+**Development server:**
 ```bash
-pnpm install               # Install dependencies
+pnpm run tauri dev  # Start Tauri development server with hot reload
 ```
 
-### Development
+**Build commands:**
 ```bash
-pnpm run dev              # Start Vite development server only
-pnpm run tauri dev        # Start full Tauri development mode (recommended)
+pnpm run build         # TypeScript compilation + Vite build
+pnpm run build:analyze # Build with bundle analysis (outputs bundle-analysis.html)
+pnpm run tauri build   # Build complete Tauri application for distribution
 ```
 
-### Building
+**Testing commands:**
 ```bash
-pnpm run build            # Build frontend (TypeScript compilation + Vite build)
-pnpm run tauri build      # Build complete Tauri application for distribution
+pnpm test              # Run tests in watch mode
+pnpm run test:ui       # Run tests with Vitest UI interface
+pnpm run test:coverage # Run tests with coverage report
+pnpm run test:run      # Run tests once (CI mode)
 ```
 
-### Preview
+**Preview:**
 ```bash
-pnpm run preview          # Preview built frontend locally
+pnpm run preview       # Preview built application locally
 ```
 
-## Architecture
+## Architecture Overview
 
-### Tech Stack
-- **Frontend**: React 18 + TypeScript + Vite
-- **Backend**: Tauri v2 (Rust)
-- **UI Components**: Radix UI (@radix-ui/react-dropdown-menu, @radix-ui/react-tooltip)
-- **Icons**: Lucide React
-- **Package Manager**: pnpm
+This is a **Tauri-based cross-platform Gantt chart application** built with React + TypeScript. The architecture follows a modular, layered design with clear separation of concerns.
 
-### Project Structure
-```
-src/                          # Frontend source code
-├── App.tsx                   # Main application component with theme management
-├── main.tsx                  # React application entry point
-├── components/               # React components
-│   ├── GanttChart.tsx        # Main Gantt chart component (complex, 2000+ lines)
-│   ├── Header.tsx            # Application header with project controls
-│   ├── TaskIcon.tsx          # Task type icons and drag handles
-│   └── Toolbar.tsx           # Chart toolbar with zoom/view controls
-└── assets/                   # Static assets
+### Core Technology Stack
+- **Frontend**: React 18 + TypeScript, Vite for bundling
+- **Backend**: Tauri v2 (Rust-based desktop runtime)
+- **UI Components**: Radix UI primitives + custom components
+- **Testing**: Vitest + Testing Library + jsdom
+- **Package Manager**: pnpm with workspace support
 
-src-tauri/                    # Tauri backend
-├── src/                      # Rust source code
-├── tauri.conf.json          # Tauri configuration
-└── Cargo.toml               # Rust dependencies
+### High-Level Architecture Layers
 
-public/                       # Static files
-dist/                        # Build output
-```
+**1. Application Layer (`src/App.tsx`)**
+- Main application container with error boundaries
+- Lazy-loaded Gantt chart component for performance
+- Global error handling integration
 
-### Key Components
+**2. Component Architecture (`src/components/`)**
+- **Core Container**: `GanttContainer` orchestrates all gantt components
+- **State Management**: `GanttStateManager` + `GanttEventCoordinator` 
+- **Data Layer**: `GanttDataProvider` for data flow
+- **Visualization**: `GanttChartHeader` + `GanttChartBody` for UI rendering
+- **Interaction**: `GanttEventHandler` + context menus for user interactions
 
-#### GanttChart.tsx
-The core component handling:
-- **Task Management**: CRUD operations for tasks with hierarchical support (parent/child relationships)
-- **Drag & Drop**: Horizontal task dragging for timeline adjustment and vertical dragging for task reordering
-- **Task Hierarchy**: Support for parent-child task relationships with expand/collapse functionality
-- **Visual Features**: Progress bars, task status indicators, current date line, timeline scaling
-- **State Management**: Complex state including task data, drag states, zoom levels, and selection
+**3. Hook-Based Logic (`src/hooks/`)**
+- **Gantt Hooks**: 20+ specialized hooks for different gantt functionality
+- **State Hooks**: `useGanttState`, `useGanttUIState`, `useDragReducer`
+- **Interaction Hooks**: `useDragAndDrop`, `useTaskManager`, `useTimeline`
+- **Common Hooks**: `useThrottle`, `useCache`, `useErrorHandler`
 
-#### Task Data Structure
-```typescript
-interface Task {
-  id: string;
-  title: string;
-  startDate: Date;
-  endDate: Date;
-  color: string;
-  x: number;               // Calculated position
-  width: number;           // Calculated width  
-  order: number;           // Display order
-  type?: 'milestone' | 'development' | 'testing' | 'delivery' | 'default';
-  status?: 'pending' | 'in-progress' | 'completed' | 'overdue';
-  progress?: number;       // 0-100
-  parentId?: string;       // For hierarchical tasks
-  children?: string[];     // Child task IDs
-  level?: number;          // Nesting level (0 = root)
-  isExpanded?: boolean;    // Expand/collapse state
-}
-```
+**4. Type System (`src/types/`)**
+- **Unified Exports**: All types accessible via `src/types/index.ts`
+- **Core Models**: `Task`, `MilestoneNode`, `TaskBar` interfaces
+- **Operation Types**: Create/Update/Batch operation interfaces
+- **UI State Types**: Drag, selection, context menu state types
 
-## Claude Code 开发指导原则
+### Key Design Patterns
 
-### 代码简洁性要求
-- **文件长度分级控制**: 
-  - 核心组件: 200-300行（允许适度复杂性）
-  - 简单组件: 150行以内
-  - 工具函数: 100行以内
-  - Hook: 200行以内
-- **组件拆分原则**: 复杂组件必须拆分为多个小组件，每个组件职责单一
-- **函数长度限制**: 单个函数不超过 30 行，复杂逻辑需要拆分
-- **避免深度嵌套**: 最多 3 层嵌套，超出需要提取子组件或函数
+**Component Composition Pattern:**
+- `GanttContainer` acts as composition root
+- Each component has single responsibility
+- Props drilling minimized through context and custom hooks
 
-### 模块化开发策略
-- **功能导向拆分**: 按功能将大组件拆分为独立的小组件
-- **Hook 抽离**: 复杂状态逻辑抽离为自定义 hooks
-- **工具函数分离**: 纯函数逻辑放在单独的 utils 文件中
-- **类型定义集中**: 共享类型放在 types/ 目录下
+**Hook-First Architecture:**
+- Business logic encapsulated in custom hooks
+- Components focus on rendering and event handling
+- Shared state managed through specialized hooks
 
-### Claude Code 最佳实践
-- **优先重构而非新建**: 总是优先考虑重构现有代码而非创建新文件
-- **逐步迭代**: 大功能分解为多个小的可验证步骤
-- **保持一致性**: 严格遵循现有的代码风格和组织结构
-- **中文注释**: 使用中文进行代码注释和文档编写
+**Type-Driven Development:**
+- Comprehensive TypeScript interfaces for all data models
+- Input/Output types for all operations
+- Type guards for runtime safety
 
-### 中文本地化
-- 项目使用中文进行 UI 文本和注释
-- 遵循现有的中文命名规范
-- 新功能添加时使用合适的中文本地化模式
+**Layered Timeline System:**
+- Multi-scale timeline visualization
+- `TimelineLayerConfig` for configurable timeline layers
+- Adaptive time granularity (day/week/month views)
 
-### Tauri 开发
-- 使用 `pnpm run tauri dev` 进行开发（而非仅 `pnpm run dev`）
-- 开发时前端运行在 http://localhost:1420
-- Tauri 配置位于 `src-tauri/tauri.conf.json`
+### Data Flow Architecture
 
-### Performance Considerations
-- The GanttChart component uses throttled mouse events for smooth dragging
-- Batched React updates for drag operations
-- Memoized calculations for date/pixel conversions
-- Lazy evaluation of visible tasks based on hierarchy expansion state
+**Task Management Flow:**
+1. `GanttDataProvider` manages global task state
+2. `useTaskManager` hook provides CRUD operations
+3. `GanttStateManager` coordinates state updates
+4. Components receive updates via props/context
 
-### Cursor AI Rules Integration
-The project includes Cursor AI rules (`.cursor/rules/commandplan.mdc`) that enforce:
-- RIPER-5 development protocol with strict mode transitions
-- Chinese language responses with structured planning approach
-- Systematic code analysis and implementation phases
+**Interaction Flow:**
+1. User interactions captured by `GanttEventHandler`
+2. Events processed by specialized hooks (`useDragAndDrop`, `useTaskSelection`)
+3. State updates propagated through `GanttEventCoordinator`
+4. UI updates triggered via React state changes
 
-## Claude Code 重构指导
+**Drag & Drop System:**
+- `useDragReducer` for complex drag state management
+- `useHorizontalDrag` + `useVerticalDrag` for axis-specific dragging
+- Real-time visual feedback during drag operations
 
-### 当前重构优先级
-1. **GanttChart.tsx 拆分** (1171 行 → 核心组件 <300 行)
-   - 提取任务渲染逻辑为独立组件
-   - 拆分拖拽功能为自定义 hooks
-   - 分离时间轴和网格渲染逻辑
+### Testing Strategy
+- **Unit Tests**: Hook testing with `@testing-library/react-hooks`
+- **Integration Tests**: Component testing with `@testing-library/react`
+- **Setup**: Global test configuration in `src/test/setup.ts`
+- **Coverage**: Comprehensive coverage excluding config/build files
 
-2. **状态管理优化**
-   - 复杂状态逻辑抽离为 custom hooks
-   - 拖拽状态单独管理
-   - 任务数据操作函数模块化
+## Development Guidelines
 
-3. **组件职责分离**
-   - 每个组件只负责单一功能
-   - 避免在一个文件中混合多种逻辑
-   - UI 组件与业务逻辑完全分离
+**Component Development:**
+- Follow existing patterns in `src/components/gantt/`
+- Use TypeScript interfaces from `src/types/`
+- Implement error boundaries for robustness
+- Leverage existing hooks rather than creating new state
 
-### 代码质量控制
-- **文件大小监控**: 
-  - 核心组件超过 300 行立即重构
-  - 简单组件超过 150 行需要拆分
-  - Hook 超过 200 行需要拆分
-  - 工具函数超过 100 行需要拆分
-- **函数复杂度**: 单个函数超过 30 行需要拆分
-- **嵌套深度**: 超过 3 层嵌套必须提取子组件
-- **重复代码**: 发现重复立即抽离为共享函数
+**Hook Development:**
+- Place in appropriate `src/hooks/gantt/` or `src/hooks/common/`
+- Export from `src/hooks/index.ts` for unified imports
+- Write comprehensive tests in `__tests__` directories
+- Follow naming convention: `use[Feature][Aspect]`
 
-### 开发任务模式
-- **小步骤迭代**: 每次只修改一个小功能点
-- **验证驱动**: 每个修改后立即验证功能正常
-- **渐进式重构**: 在添加新功能时同步重构相关代码
-- **保持简洁**: 宁可多创建几个小文件也不要单个大文件
+**State Management:**
+- Prefer hook-based state over external state libraries
+- Use `useDragReducer` pattern for complex state machines
+- Keep state as close to usage as possible
+- Implement optimistic updates for better UX
 
-## Testing and Quality
+**Styling:**
+- CSS modules organized in `src/styles/components/`
+- Follow existing naming conventions in stylesheet files
+- Use CSS custom properties for theme consistency
+- Responsive design principles applied throughout
 
-### Testing Commands
-```bash
-# Currently no test setup - tests need to be configured
-# Project uses TypeScript strict mode for type checking
-pnpm run build            # Validates TypeScript compilation
-```
+## Important Notes
 
-### Code Quality
-- TypeScript strict mode enabled for type safety
-- Use Chinese language for UI text and comments
-- Follow existing component patterns and performance optimizations
-
-## Claude Code 工作流程
-
-### 开发前检查
-1. 使用 `Grep` 搜索相关代码模式
-2. 用 `Read` 工具了解现有组件结构
-3. 评估当前文件长度，超过 200 行优先重构
-
-### 编码原则
-- **单一职责**: 每个文件/函数只做一件事
-- **可读性优先**: 代码要易于理解，避免复杂逻辑
-- **渐进式开发**: 小步骤迭代，频繁验证
-- **保持简洁**: 优先选择简单方案而非复杂实现
-
-### 质量验证命令
-每次修改后必须运行:
-```bash
-pnpm run build     # TypeScript 编译检查
-```
+- **Tauri Context**: This is a desktop application - web-specific APIs may not work
+- **Performance**: Lazy loading implemented for heavy components (see `GanttChartLazy.tsx`)
+- **Internationalization**: Currently Chinese-focused but structured for i18n expansion
+- **Bundle Analysis**: Use `ANALYZE=true pnpm run build` to analyze bundle size
+- **Development Port**: Fixed at 1420 for Tauri integration (configured in vite.config.ts)
