@@ -4,7 +4,7 @@
  */
 
 import { useState, useCallback } from 'react';
-import { TimelineLayerConfig } from '../../utils/timelineLayerUtils';
+import { TimelineLayerConfig, validateTimelineConfig } from '../../utils/timelineLayerUtils';
 
 // Hook返回接口
 interface UseTimelineSettingsResult {
@@ -32,32 +32,19 @@ export const useTimelineSettings = (initialConfig?: TimelineLayerConfig): UseTim
   const [isPanelOpen, setIsPanelOpen] = useState(false);
 
   /**
-   * 验证配置合理性
+   * 验证配置合理性 - 使用增强验证函数
    */
   const validateConfig = useCallback((newConfig: TimelineLayerConfig): TimelineLayerConfig => {
-    // 基本验证：确保必要字段存在
-    const validatedConfig = { ...newConfig };
+    const validation = validateTimelineConfig(newConfig);
     
-    // 2层模式：需要bottom和middle
-    if (validatedConfig.layers === 2) {
-      if (!validatedConfig.middle) {
-        validatedConfig.middle = 'month';
-      }
-      // 清除top字段
-      delete validatedConfig.top;
+    if (!validation.isValid) {
+      console.warn('时间轴配置验证失败:', validation.errors);
+      
+      // 返回修正后的配置或默认配置
+      return validation.correctedConfig || DEFAULT_CONFIG;
     }
     
-    // 3层模式：需要bottom、middle和top
-    if (validatedConfig.layers === 3) {
-      if (!validatedConfig.middle) {
-        validatedConfig.middle = 'month';
-      }
-      if (!validatedConfig.top) {
-        validatedConfig.top = 'year';
-      }
-    }
-    
-    return validatedConfig;
+    return newConfig;
   }, []);
 
   /**

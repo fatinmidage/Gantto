@@ -4,7 +4,7 @@ import TaskBars from './TaskBars';
 import TimelineHeader from './TimelineHeader';
 import { Task } from '../../types';
 import { COMPONENT_STYLES } from './ganttStyles';
-import { TimelineLayerConfig } from '../../utils/timelineLayerUtils';
+import { TimelineLayerConfig, LayeredTimeScale, DateRange } from '../../utils/timelineLayerUtils';
 
 interface DragPosition {
   x: number;
@@ -21,12 +21,6 @@ interface VerticalDragState {
   shouldShowIndicator: boolean;
 }
 
-interface TimeScale {
-  type: 'day' | 'week' | 'month';
-  label: string;
-  x: number;
-  width: number;
-}
 
 interface GanttChartBodyProps {
   // 任务数据
@@ -56,14 +50,11 @@ interface GanttChartBodyProps {
   // 当前日期范围检查
   isCurrentDateInRange?: boolean;
   
-  // 时间轴数据
-  timeScales: TimeScale[];
-  
-  // 分层时间轴相关
-  layerConfig?: TimelineLayerConfig;
-  isLayeredModeEnabled?: boolean;
-  dateRangeStart?: Date;
-  dateRangeEnd?: Date;
+  // 分层时间轴数据 - 移除传统timeScales参数
+  layeredTimeScales: LayeredTimeScale;
+  layerConfig: TimelineLayerConfig;
+  dateRange: DateRange;
+  dateToPixel: (date: Date) => number;
   
   // 事件处理
   onTaskSelect: (taskId: string | null) => void;
@@ -78,9 +69,6 @@ interface GanttChartBodyProps {
   onEdgeHover: (e: React.MouseEvent, task: any) => void;
   onMouseLeave: () => void;
   onContextMenu: (e: React.MouseEvent) => void;
-  
-  // 工具函数
-  dateToPixel: (date: Date) => number;
   
   // 事件监听器
   onMouseMove: (e: MouseEvent) => void;
@@ -103,7 +91,8 @@ const GanttChartBody: React.FC<GanttChartBodyProps> = ({
   timelineHeight,
   taskHeight,
   taskContentHeight,
-  timeScales,
+  layerConfig,
+  dateRange,
   onTaskSelect,
   onChartTaskSelect,
   onTaskToggle,
@@ -123,12 +112,6 @@ const GanttChartBody: React.FC<GanttChartBodyProps> = ({
   onTitleMouseUp,
   containerRef: externalContainerRef,
   isCurrentDateInRange = true,
-  
-  // 分层时间轴相关
-  layerConfig,
-  isLayeredModeEnabled = true,
-  dateRangeStart,
-  dateRangeEnd
 }) => {
   const localContainerRef = useRef<HTMLDivElement>(null);
   const containerRef = externalContainerRef || localContainerRef;
@@ -196,17 +179,11 @@ const GanttChartBody: React.FC<GanttChartBodyProps> = ({
       >
         {/* 时间轴头部 */}
         <TimelineHeader
-          timelineHeight={timelineHeight}
-          timeScales={timeScales}
+          layerConfig={layerConfig}
+          dateRange={dateRange}
           dateToPixel={dateToPixel}
           containerHeight={timelineHeight + taskContentHeight}
           isCurrentDateInRange={isCurrentDateInRange}
-          layerConfig={layerConfig}
-          enableLayeredMode={isLayeredModeEnabled}
-          dateRange={dateRangeStart && dateRangeEnd ? {
-            startDate: dateRangeStart,
-            endDate: dateRangeEnd
-          } : undefined}
         />
 
         {/* 任务条 */}

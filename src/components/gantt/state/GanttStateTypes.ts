@@ -1,6 +1,6 @@
 import React from 'react';
 import { Task } from '../../../types';
-import { TimeGranularity } from '../../../hooks/gantt/useTimeline';
+import { TimeGranularity, LayeredTimeScale, TimelineLayerConfig } from '../../../utils/timelineLayerUtils';
 
 // 甘特图状态管理器属性接口
 export interface GanttStateManagerProps {
@@ -58,7 +58,9 @@ export interface GanttStateData {
   handleZoomIn: () => void;
   handleZoomOut: () => void;
   handleViewToday: () => void;
-  timeScales: any[];
+  layeredTimeScales: LayeredTimeScale;
+  layerConfig: TimelineLayerConfig;
+  updateLayerConfig: (newConfig: Partial<TimelineLayerConfig>) => void;
   
   // UI状态
   selectedChartTaskId: string | null;

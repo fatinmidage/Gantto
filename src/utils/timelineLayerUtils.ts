@@ -7,7 +7,7 @@
 export type TimeGranularity = 'day' | 'week' | 'month' | 'quarter' | 'year';
 
 // 日期范围接口
-interface DateRange {
+export interface DateRange {
   startDate: Date;
   endDate: Date;
 }
@@ -42,6 +42,41 @@ export interface TimelineLayerConfig {
   bottom: TimeGranularity;
   middle?: TimeGranularity;  // 2层时为上层，3层时为中层
   top?: TimeGranularity;     // 仅3层时需要
+}
+
+// 允许的颗粒度组合（按时间大小顺序）
+const VALID_COMBINATIONS = {
+  2: [
+    ['day', 'week'],     // 日+周
+    ['day', 'month'],    // 日+月 (默认)
+    ['week', 'month'],   // 周+月
+    ['week', 'quarter'], // 周+季度
+    ['month', 'quarter'],// 月+季度
+    ['month', 'year']    // 月+年
+  ] as TimeGranularity[][],
+  3: [
+    ['day', 'week', 'month'],    // 日+周+月
+    ['day', 'month', 'quarter'], // 日+月+季度
+    ['week', 'month', 'quarter'],// 周+月+季度
+    ['week', 'month', 'year'],   // 周+月+年
+    ['month', 'quarter', 'year'] // 月+季度+年
+  ] as TimeGranularity[][]
+};
+
+// 时间颗粒度排序权重
+const GRANULARITY_WEIGHTS: Record<TimeGranularity, number> = {
+  'day': 1,
+  'week': 2, 
+  'month': 3,
+  'quarter': 4,
+  'year': 5
+};
+
+// 配置验证结果接口
+export interface TimelineConfigValidation {
+  isValid: boolean;
+  errors: string[];
+  correctedConfig?: TimelineLayerConfig;
 }
 
 // 标签格式映射
@@ -276,5 +311,90 @@ export const generateLayeredTimeScales = (
   return {
     layers,
     totalHeight: 55
+  };
+};
+
+/**
+ * 增强配置验证函数
+ */
+export const validateTimelineConfig = (config: TimelineLayerConfig): TimelineConfigValidation => {
+  const errors: string[] = [];
+  
+  // 1. 基础字段验证
+  if (!config.layers || ![2, 3].includes(config.layers)) {
+    errors.push('层数必须为2或3');
+  }
+  
+  if (!config.bottom) {
+    errors.push('底层颗粒度不能为空');
+  }
+  
+  // 2. 层级配置验证
+  if (config.layers === 2) {
+    if (!config.middle) {
+      errors.push('2层模式需要middle颗粒度');
+    }
+    if (config.top) {
+      errors.push('2层模式不应该有top颗粒度');
+    }
+  }
+  
+  if (config.layers === 3) {
+    if (!config.middle || !config.top) {
+      errors.push('3层模式需要middle和top颗粒度');
+    }
+  }
+  
+  // 3. 重复颗粒度检查
+  const granularities = [config.bottom, config.middle, config.top].filter(Boolean) as TimeGranularity[];
+  const uniqueGranularities = new Set(granularities);
+  if (granularities.length !== uniqueGranularities.size) {
+    errors.push('不能使用重复的时间颗粒度');
+  }
+  
+  // 4. 顺序合理性检查
+  if (config.layers === 2 && config.middle) {
+    const bottomWeight = GRANULARITY_WEIGHTS[config.bottom];
+    const middleWeight = GRANULARITY_WEIGHTS[config.middle];
+    if (bottomWeight >= middleWeight) {
+      errors.push('颗粒度必须按从小到大排列');
+    }
+  }
+  
+  if (config.layers === 3 && config.middle && config.top) {
+    const bottomWeight = GRANULARITY_WEIGHTS[config.bottom];
+    const middleWeight = GRANULARITY_WEIGHTS[config.middle];
+    const topWeight = GRANULARITY_WEIGHTS[config.top];
+    if (bottomWeight >= middleWeight || middleWeight >= topWeight) {
+      errors.push('颗粒度必须按从小到大排列');
+    }
+  }
+  
+  // 5. 组合合理性检查
+  const validCombinations = VALID_COMBINATIONS[config.layers];
+  const currentCombination = granularities;
+  const isValidCombination = validCombinations.some(validCombo => 
+    validCombo.length === currentCombination.length &&
+    validCombo.every((gran, index) => gran === currentCombination[index])
+  );
+  
+  if (!isValidCombination) {
+    errors.push('不支持的颗粒度组合');
+  }
+  
+  // 生成修正配置
+  let correctedConfig: TimelineLayerConfig | undefined;
+  if (errors.length > 0) {
+    correctedConfig = {
+      layers: 2,
+      bottom: 'day',
+      middle: 'month'
+    }; // 回退到默认配置
+  }
+  
+  return {
+    isValid: errors.length === 0,
+    errors,
+    correctedConfig
   };
 };

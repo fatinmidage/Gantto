@@ -107,7 +107,6 @@ const GanttChart: React.FC<GanttChartProps> = ({
               onTimeGranularityChange={handleTimeGranularityChange}
               
               // 分层时间轴相关
-              layerConfig={timelineSettings.config}
               onLayerConfigChange={handleLayerConfigChange}
               onLayerModeToggle={handleLayerModeToggle}
               isLayeredModeEnabled={true}
@@ -125,7 +124,10 @@ const GanttChart: React.FC<GanttChartProps> = ({
               timelineHeight={timelineHeight}
               taskHeight={taskHeight}
               taskContentHeight={stateData.taskContentHeight}
-              timeScales={stateData.timeScales}
+              layeredTimeScales={stateData.layeredTimeScales}
+              layerConfig={stateData.layerConfig}
+              dateRange={stateData.dateRange}
+              dateToPixel={stateData.dateToPixel}
               onTaskSelect={stateData.ganttInteractions.setSelectedTitleTaskId}
               onChartTaskSelect={stateData.setSelectedChartTaskId}
               onTaskToggle={stateData.ganttInteractions.handleToggleExpand}
@@ -137,7 +139,6 @@ const GanttChart: React.FC<GanttChartProps> = ({
               onEdgeHover={handlers.handleEdgeHover}
               onMouseLeave={() => stateData.setIsHoveringEdge(null)}
               onContextMenu={stateData.ganttInteractions.handleContextMenu}
-              dateToPixel={stateData.dateToPixel}
               onMouseMove={handlers.handleMouseMove}
               onMouseUp={handlers.handleMouseUp}
               onTitleMouseMove={handlers.handleTitleMouseMove}

@@ -5,7 +5,7 @@ import GanttMenuManager from './GanttMenuManager';
 import { LAYOUT_CONSTANTS } from './ganttStyles';
 import { Task } from '../../types';
 import { TimeGranularity } from '../../hooks/gantt/useTimeline';
-import { TimelineLayerConfig } from '../../utils/timelineLayerUtils';
+import { TimelineLayerConfig, LayeredTimeScale, DateRange } from '../../utils/timelineLayerUtils';
 
 interface GanttContainerProps {
   // Header props
@@ -21,8 +21,7 @@ interface GanttContainerProps {
   onDateRangeChange?: (startDate: Date, endDate: Date) => void;
   onTimeGranularityChange?: (granularity: TimeGranularity) => void;
   
-  // 分层时间轴相关
-  layerConfig?: TimelineLayerConfig;
+  // 分层时间轴回调函数（保留兼容性）
   onLayerConfigChange?: (config: TimelineLayerConfig) => void;
   onLayerModeToggle?: (enabled: boolean) => void;
   isLayeredModeEnabled?: boolean;
@@ -40,7 +39,10 @@ interface GanttContainerProps {
   timelineHeight: number;
   taskHeight: number;
   taskContentHeight: number;
-  timeScales: any[];
+  layeredTimeScales: LayeredTimeScale;
+  layerConfig: TimelineLayerConfig;
+  dateRange: DateRange;
+  dateToPixel: (date: Date) => number;
   onTaskSelect: (taskId: string | null) => void;
   onChartTaskSelect: (taskId: string | null) => void;
   onTaskToggle: (taskId: string) => void;
@@ -52,7 +54,6 @@ interface GanttContainerProps {
   onEdgeHover: (e: React.MouseEvent, task: Task) => void;
   onMouseLeave: () => void;
   onContextMenu: (e: React.MouseEvent) => void;
-  dateToPixel: (date: Date) => number;
   onMouseMove: (e: MouseEvent) => void;
   onMouseUp: () => void;
   onTitleMouseMove: (e: MouseEvent) => void;
@@ -96,7 +97,6 @@ const GanttContainer: React.FC<GanttContainerProps> = ({
   onTimeGranularityChange,
   
   // 分层时间轴相关
-  layerConfig,
   onLayerConfigChange,
   onLayerModeToggle,
   isLayeredModeEnabled,
@@ -114,7 +114,10 @@ const GanttContainer: React.FC<GanttContainerProps> = ({
   timelineHeight,
   taskHeight,
   taskContentHeight,
-  timeScales,
+  layeredTimeScales,
+  layerConfig,
+  dateRange,
+  dateToPixel,
   onTaskSelect,
   onChartTaskSelect,
   onTaskToggle,
@@ -126,7 +129,6 @@ const GanttContainer: React.FC<GanttContainerProps> = ({
   onEdgeHover,
   onMouseLeave,
   onContextMenu,
-  dateToPixel,
   onMouseMove,
   onMouseUp,
   onTitleMouseMove,
@@ -191,7 +193,9 @@ const GanttContainer: React.FC<GanttContainerProps> = ({
         timelineHeight={timelineHeight}
         taskHeight={taskHeight}
         taskContentHeight={taskContentHeight}
-        timeScales={timeScales}
+        layeredTimeScales={layeredTimeScales}
+        layerConfig={layerConfig}
+        dateRange={dateRange}
         onTaskSelect={onTaskSelect}
         onChartTaskSelect={onChartTaskSelect}
         onTaskToggle={onTaskToggle}
@@ -211,10 +215,6 @@ const GanttContainer: React.FC<GanttContainerProps> = ({
         onTitleMouseUp={onTitleMouseUp}
         containerRef={containerRef}
         isCurrentDateInRange={isCurrentDateInRange}
-        layerConfig={layerConfig}
-        isLayeredModeEnabled={isLayeredModeEnabled}
-        dateRangeStart={dateRangeStart}
-        dateRangeEnd={dateRangeEnd}
       />
 
       <GanttMenuManager

@@ -7,14 +7,9 @@ import { useMemo } from 'react';
 import { 
   TimelineLayerConfig, 
   LayeredTimeScale, 
+  DateRange,
   generateLayeredTimeScales 
 } from '../../utils/timelineLayerUtils';
-
-// 日期范围接口（与现有保持一致）
-interface DateRange {
-  startDate: Date;
-  endDate: Date;
-}
 
 // Hook返回接口
 interface UseLayeredTimelineResult {

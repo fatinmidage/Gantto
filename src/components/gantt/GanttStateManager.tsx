@@ -50,7 +50,29 @@ const GanttStateManager: React.FC<GanttStateManagerProps> = ({
 
   // === 功能性Hooks ===
   const dragAndDrop = useDragAndDrop();
-  const timeline = useTimeline(startDate, endDate, timeGranularity, containerWidth);
+  // 转换旧的timeGranularity参数为layerConfig
+  const layerConfig = React.useMemo(() => {
+    // 为了兼容性，将旧的timeGranularity转换为新的layerConfig
+    if (timeGranularity) {
+      switch (timeGranularity) {
+        case 'day':
+          return { layers: 2 as const, bottom: 'day' as const, middle: 'week' as const };
+        case 'week':
+          return { layers: 2 as const, bottom: 'day' as const, middle: 'week' as const };
+        case 'month':
+          return { layers: 2 as const, bottom: 'day' as const, middle: 'month' as const };
+        case 'quarter':
+          return { layers: 2 as const, bottom: 'month' as const, middle: 'quarter' as const };
+        case 'year':
+          return { layers: 2 as const, bottom: 'month' as const, middle: 'year' as const };
+        default:
+          return { layers: 2 as const, bottom: 'day' as const, middle: 'month' as const };
+      }
+    }
+    return undefined;
+  }, [timeGranularity]);
+  
+  const timeline = useTimeline(startDate, endDate, layerConfig, containerWidth);
   const ganttUI = useGanttUI();
   const { filteredTasks, filterStats } = useTaskFilter(chartTasks, startDate, endDate);
   const { availableTags } = useGlobalTags();
