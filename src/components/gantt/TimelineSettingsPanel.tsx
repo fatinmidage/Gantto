@@ -80,8 +80,28 @@ const TimelineSettingsPanel: React.FC<TimelineSettingsPanelProps> = ({
 
     const handleClickOutside = (event: MouseEvent) => {
       const panel = panelRef.current;
-      if (panel && !panel.contains(event.target as Node)) {
-        onClose();
+      const target = event.target as Node;
+      
+      // 检查点击是否在面板内部
+      if (panel && !panel.contains(target)) {
+        // 检查点击是否在Radix UI Select的Portal内容中
+        const isInRadixSelect = (
+          // Radix Select相关元素检查
+          target.closest?.('[data-radix-select-content]') ||
+          target.closest?.('[data-radix-select-viewport]') ||
+          target.closest?.('[data-radix-select-item]') ||
+          target.closest?.('[data-radix-popper-content-wrapper]') ||
+          target.closest?.('[data-radix-popper-content]') ||
+          target.closest?.('[data-radix-portal]') ||
+          // Role属性检查
+          target.closest?.('[role="listbox"]') ||
+          target.closest?.('[role="option"]')
+        );
+        
+        // 如果不在Select选项中，才关闭面板
+        if (!isInRadixSelect) {
+          onClose();
+        }
       }
     };
 

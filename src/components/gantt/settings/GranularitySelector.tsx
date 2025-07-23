@@ -60,13 +60,16 @@ const GranularitySelector: React.FC<GranularitySelectorProps> = ({
           </Select.Icon>
         </Select.Trigger>
         <Select.Portal>
-          <Select.Content style={{
-            backgroundColor: 'white',
-            border: '1px solid #d0d0d0',
-            borderRadius: '4px',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-            zIndex: 1000
-          }}>
+          <Select.Content 
+            style={{
+              backgroundColor: 'white',
+              border: '1px solid #d0d0d0',
+              borderRadius: '4px',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+              zIndex: 1001 // 确保比面板更高的z-index
+            }}
+            onCloseAutoFocus={(e) => e.preventDefault()} // 防止自动聚焦导致的意外关闭
+          >
             <Select.Viewport>
               {granularityOptions.map((option) => (
                 <Select.Item 
@@ -78,6 +81,10 @@ const GranularitySelector: React.FC<GranularitySelectorProps> = ({
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between'
+                  }}
+                  onSelect={(e) => {
+                    // 防止事件冒泡，确保选择后不会关闭设置面板
+                    e.stopPropagation?.();
                   }}
                 >
                   <Select.ItemText>{option.label}</Select.ItemText>
