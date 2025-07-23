@@ -160,7 +160,27 @@ const generateWeekItems = (
 };
 
 /**
- * 生成月项
+ * 优化的日期到像素转换，确保网格对齐
+ */
+const dateToPixelAligned = (
+  date: Date, 
+  dateToPixel: (date: Date) => number
+): number => {
+  // 使用UTC时间避免时区影响，确保精确的日期边界计算
+  const utcDate = new Date(Date.UTC(
+    date.getFullYear(), 
+    date.getMonth(), 
+    date.getDate()
+  ));
+  
+  const pixelPosition = dateToPixel(utcDate);
+  
+  // 对于月份边界，进行精度修正，四舍五入到最近的像素
+  return Math.round(pixelPosition);
+};
+
+/**
+ * 生成月项 - 优化版本，确保月份分隔线精确对齐到日期网格线
  */
 const generateMonthItems = (
   items: TimeScaleItem[], 
@@ -168,22 +188,60 @@ const generateMonthItems = (
   dateToPixel: (date: Date) => number, 
   formatter: (date: Date) => string
 ) => {
-  const monthStart = new Date(dateRange.startDate.getFullYear(), dateRange.startDate.getMonth(), 1);
+  // 修复：使用更安全的月份推进方式，避免日期跳跃
+  let currentYear = dateRange.startDate.getFullYear();
+  let currentMonth = dateRange.startDate.getMonth();
   
-  for (let d = new Date(monthStart); d <= dateRange.endDate; d.setMonth(d.getMonth() + 1)) {
-    const currentMonth = new Date(d);
-    const nextMonth = new Date(d.getFullYear(), d.getMonth() + 1, 1);
-    const x = dateToPixel(currentMonth);
-    const nextX = dateToPixel(nextMonth);
+  while (true) {
+    // 创建当前月的第一天（00:00:00时刻）
+    const monthStartDate = new Date(currentYear, currentMonth, 1, 0, 0, 0, 0);
+    
+    // 如果当前月已经超出结束日期，则退出
+    if (monthStartDate > dateRange.endDate) {
+      break;
+    }
+    
+    // 创建下个月的第一天（00:00:00时刻）
+    const nextYear = currentMonth === 11 ? currentYear + 1 : currentYear;
+    const nextMonth = currentMonth === 11 ? 0 : currentMonth + 1;
+    const nextMonthStartDate = new Date(nextYear, nextMonth, 1, 0, 0, 0, 0);
+    
+    // 使用对齐优化的像素转换，确保精确对齐到日期网格线
+    const x = dateToPixelAligned(monthStartDate, dateToPixel);
+    const nextX = dateToPixelAligned(nextMonthStartDate, dateToPixel);
+    
+    // 调试信息：记录月份分隔线位置计算
+    if (process.env.NODE_ENV === 'development') {
+      const originalX = dateToPixel(monthStartDate);
+      const originalNextX = dateToPixel(nextMonthStartDate);
+      
+      console.log(`月份分隔线调试 - ${monthStartDate.getFullYear()}年${monthStartDate.getMonth() + 1}月:`, {
+        monthStartDate: monthStartDate.toLocaleDateString(),
+        nextMonthStartDate: nextMonthStartDate.toLocaleDateString(),
+        原始位置: { start: originalX, end: originalNextX, width: originalNextX - originalX },
+        对齐位置: { start: x, end: nextX, width: nextX - x },
+        精度修正: { start: x - originalX, end: nextX - originalNextX },
+        monthStartTime: monthStartDate.getTime(),
+        nextMonthStartTime: nextMonthStartDate.getTime()
+      });
+    }
     
     items.push({
       type: 'month',
-      label: formatter(currentMonth),
+      label: formatter(monthStartDate),
       x,
       width: nextX - x,
-      startDate: currentMonth,
-      endDate: nextMonth
+      startDate: monthStartDate,
+      endDate: nextMonthStartDate
     });
+    
+    // 推进到下个月
+    if (currentMonth === 11) {
+      currentYear++;
+      currentMonth = 0;
+    } else {
+      currentMonth++;
+    }
   }
 };
 

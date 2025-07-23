@@ -40,17 +40,52 @@ export const useTimeline = (
     };
   }, [initialStartDate, initialEndDate]);
 
-  // === 日期像素转换保持不变 ===
+  // === 日期像素转换 - 优化精度版本 ===
   const dateToPixel = useCallback((date: Date): number => {
-    const daysDiff = (date.getTime() - dateRange.startDate.getTime()) / (24 * 60 * 60 * 1000);
-    const totalDays = Math.ceil((dateRange.endDate.getTime() - dateRange.startDate.getTime()) / (24 * 60 * 60 * 1000));
+    // 标准化时间到UTC午夜，避免时区和时间影响
+    const normalizedDate = new Date(Date.UTC(
+      date.getFullYear(), 
+      date.getMonth(), 
+      date.getDate()
+    ));
+    const normalizedStartDate = new Date(Date.UTC(
+      dateRange.startDate.getFullYear(), 
+      dateRange.startDate.getMonth(), 
+      dateRange.startDate.getDate()
+    ));
+    const normalizedEndDate = new Date(Date.UTC(
+      dateRange.endDate.getFullYear(), 
+      dateRange.endDate.getMonth(), 
+      dateRange.endDate.getDate()
+    ));
+    
+    // 使用UTC时间计算天数差，避免时区造成的精度问题
+    const daysDiff = (normalizedDate.getTime() - normalizedStartDate.getTime()) / (24 * 60 * 60 * 1000);
+    const totalDays = Math.ceil((normalizedEndDate.getTime() - normalizedStartDate.getTime()) / (24 * 60 * 60 * 1000));
     
     // 基于容器宽度的自适应像素密度计算，如果没有容器宽度则使用默认值
     const pixelPerDay = containerWidth && totalDays > 0 
       ? containerWidth / totalDays 
       : Math.max(1, 80 * zoomLevel);
     
-    return daysDiff * pixelPerDay;
+    const pixelPosition = daysDiff * pixelPerDay;
+    
+    // 调试信息：记录关键日期的像素转换
+    if (process.env.NODE_ENV === 'development' && date.getDate() === 1) {
+      console.log(`dateToPixel调试 - ${date.toLocaleDateString()}:`, {
+        原始日期: date.toLocaleDateString(),
+        标准化日期: normalizedDate.toLocaleDateString(),
+        daysDiff,
+        totalDays,
+        pixelPerDay,
+        pixelPosition,
+        containerWidth,
+        zoomLevel,
+        时区偏移: date.getTimezoneOffset()
+      });
+    }
+    
+    return pixelPosition;
   }, [dateRange, containerWidth, zoomLevel]);
 
   const pixelToDate = useCallback((pixel: number): Date => {
