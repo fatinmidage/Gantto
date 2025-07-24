@@ -26,6 +26,7 @@ const GanttStateManager: React.FC<GanttStateManagerProps> = ({
   timelineHeight,
   taskHeight,
   timeGranularity = 'month',
+  layerConfig,
   initialProjectRows,
   initialChartTasks,
   children
@@ -51,7 +52,12 @@ const GanttStateManager: React.FC<GanttStateManagerProps> = ({
   // === 功能性Hooks ===
   const dragAndDrop = useDragAndDrop();
   // 转换旧的timeGranularity参数为layerConfig
-  const layerConfig = React.useMemo(() => {
+  const computedLayerConfig = React.useMemo(() => {
+    // 优先使用传入的layerConfig
+    if (layerConfig) {
+      return layerConfig;
+    }
+    
     // 为了兼容性，将旧的timeGranularity转换为新的layerConfig
     if (timeGranularity) {
       switch (timeGranularity) {
@@ -70,9 +76,9 @@ const GanttStateManager: React.FC<GanttStateManagerProps> = ({
       }
     }
     return undefined;
-  }, [timeGranularity]);
+  }, [layerConfig, timeGranularity]);
   
-  const timeline = useTimeline(startDate, endDate, layerConfig, containerWidth);
+  const timeline = useTimeline(startDate, endDate, computedLayerConfig, containerWidth);
   const ganttUI = useGanttUI();
   const { filteredTasks, filterStats } = useTaskFilter(chartTasks, startDate, endDate);
   const { availableTags } = useGlobalTags();

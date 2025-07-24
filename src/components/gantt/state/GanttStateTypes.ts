@@ -9,6 +9,7 @@ export interface GanttStateManagerProps {
   timelineHeight: number;
   taskHeight: number;
   timeGranularity?: TimeGranularity;
+  layerConfig?: TimelineLayerConfig;
   initialProjectRows: any[];
   initialChartTasks: any[];
   children: (state: GanttStateData) => React.ReactElement;

@@ -56,6 +56,7 @@ const GanttChart: React.FC<GanttChartProps> = ({
       taskHeight={taskHeight}
       initialProjectRows={initialProjectRows}
       initialChartTasks={initialChartTasks}
+      layerConfig={timelineSettings.config}
     >
       {(stateData) => (
         <GanttEventCoordinator

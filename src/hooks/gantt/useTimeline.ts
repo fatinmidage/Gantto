@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { useLayeredTimeline } from './useLayeredTimeline';
 import { TimelineLayerConfig, DateRange, TimeGranularity } from '../../utils/timelineLayerUtils';
 
@@ -27,6 +27,13 @@ export const useTimeline = (
   const [layerConfig, setLayerConfig] = useState<TimelineLayerConfig>(
     initialLayerConfig || DEFAULT_LAYER_CONFIG
   );
+  
+  // === 响应外部配置更改 ===
+  React.useEffect(() => {
+    if (initialLayerConfig) {
+      setLayerConfig(initialLayerConfig);
+    }
+  }, [initialLayerConfig]);
   
   // === 计算日期范围保持不变 ===
   const dateRange = useMemo((): DateRange => {
@@ -70,20 +77,6 @@ export const useTimeline = (
     
     const pixelPosition = daysDiff * pixelPerDay;
     
-    // 调试信息：记录关键日期的像素转换
-    if (process.env.NODE_ENV === 'development' && date.getDate() === 1) {
-      console.log(`dateToPixel调试 - ${date.toLocaleDateString()}:`, {
-        原始日期: date.toLocaleDateString(),
-        标准化日期: normalizedDate.toLocaleDateString(),
-        daysDiff,
-        totalDays,
-        pixelPerDay,
-        pixelPosition,
-        containerWidth,
-        zoomLevel,
-        时区偏移: date.getTimezoneOffset()
-      });
-    }
     
     return pixelPosition;
   }, [dateRange, containerWidth, zoomLevel]);

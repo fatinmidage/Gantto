@@ -57,6 +57,7 @@ const VALID_COMBINATIONS = {
   3: [
     ['day', 'week', 'month'],    // 日+周+月
     ['day', 'month', 'quarter'], // 日+月+季度
+    ['day', 'month', 'year'],    // 日+月+年
     ['week', 'month', 'quarter'],// 周+月+季度
     ['week', 'month', 'year'],   // 周+月+年
     ['month', 'quarter', 'year'] // 月+季度+年
@@ -210,21 +211,6 @@ const generateMonthItems = (
     const x = dateToPixelAligned(monthStartDate, dateToPixel);
     const nextX = dateToPixelAligned(nextMonthStartDate, dateToPixel);
     
-    // 调试信息：记录月份分隔线位置计算
-    if (process.env.NODE_ENV === 'development') {
-      const originalX = dateToPixel(monthStartDate);
-      const originalNextX = dateToPixel(nextMonthStartDate);
-      
-      console.log(`月份分隔线调试 - ${monthStartDate.getFullYear()}年${monthStartDate.getMonth() + 1}月:`, {
-        monthStartDate: monthStartDate.toLocaleDateString(),
-        nextMonthStartDate: nextMonthStartDate.toLocaleDateString(),
-        原始位置: { start: originalX, end: originalNextX, width: originalNextX - originalX },
-        对齐位置: { start: x, end: nextX, width: nextX - x },
-        精度修正: { start: x - originalX, end: nextX - originalNextX },
-        monthStartTime: monthStartDate.getTime(),
-        nextMonthStartTime: nextMonthStartDate.getTime()
-      });
-    }
     
     items.push({
       type: 'month',
@@ -287,17 +273,42 @@ const generateYearItems = (
   for (let d = new Date(yearStart); d <= dateRange.endDate; d.setFullYear(d.getFullYear() + 1)) {
     const currentYear = new Date(d);
     const nextYear = new Date(d.getFullYear() + 1, 0, 1);
-    const x = dateToPixel(currentYear);
-    const nextX = dateToPixel(nextYear);
     
-    items.push({
-      type: 'year',
-      label: formatter(currentYear),
-      x,
-      width: nextX - x,
-      startDate: currentYear,
-      endDate: nextYear
-    });
+    // 计算年份的实际可视区域位置
+    const yearActualStart = Math.max(currentYear.getTime(), dateRange.startDate.getTime());
+    const yearActualEnd = Math.min(nextYear.getTime(), dateRange.endDate.getTime());
+    
+    // 如果年份在可视范围内
+    if (yearActualStart < yearActualEnd) {
+      const actualStartX = dateToPixel(new Date(yearActualStart));
+      const actualEndX = dateToPixel(new Date(yearActualEnd));
+      const calculatedWidth = actualEndX - actualStartX;
+      
+      // 年份标签显示的最小宽度，确保能居中显示完整的4位数年份
+      const minWidthForYear = 80; // 增加到80像素，确保居中显示时有足够边距
+      
+      // 如果计算宽度小于最小宽度，则扩展容器宽度
+      const finalWidth = Math.max(calculatedWidth, minWidthForYear);
+      
+      // 如果需要扩展宽度，调整起始位置以保持年份在可视区域内居中
+      let finalX = actualStartX;
+      if (finalWidth > calculatedWidth) {
+        const extraWidth = finalWidth - calculatedWidth;
+        // 优先向左扩展，但不超出年份实际开始时间
+        const maxLeftExtension = actualStartX - dateToPixel(currentYear);
+        const leftExtension = Math.min(extraWidth / 2, maxLeftExtension);
+        finalX = actualStartX - leftExtension;
+      }
+      
+      items.push({
+        type: 'year',
+        label: formatter(currentYear),
+        x: finalX,
+        width: finalWidth,
+        startDate: currentYear,
+        endDate: nextYear
+      });
+    }
   }
 };
 
