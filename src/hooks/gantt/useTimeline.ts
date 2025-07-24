@@ -7,9 +7,10 @@ export type { TimeGranularity };
 
 // 默认分层配置
 const DEFAULT_LAYER_CONFIG: TimelineLayerConfig = {
-  layers: 2,
-  bottom: 'day',
-  middle: 'month'
+  layers: 3,
+  bottom: 'week',
+  middle: 'month',
+  top: 'year'
 };
 
 // 时间轴管理Hook

@@ -17,9 +17,10 @@ interface UseTimelineSettingsResult {
 
 // 默认配置
 const DEFAULT_CONFIG: TimelineLayerConfig = {
-  layers: 2,
-  bottom: 'day',
-  middle: 'month'
+  layers: 3,
+  bottom: 'week',
+  middle: 'month',
+  top: 'year'
 };
 
 /**
