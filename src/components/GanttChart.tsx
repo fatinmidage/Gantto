@@ -16,7 +16,7 @@ interface GanttChartProps {
 const GanttChart: React.FC<GanttChartProps> = ({
   startDate: initialStartDate,
   endDate: initialEndDate,
-  timelineHeight = 40,
+  timelineHeight = 55,
   taskHeight = 30
 }) => {
   // 设置默认日期范围：今日前1个月到今日后5个月（总计6个月）
