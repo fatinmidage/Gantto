@@ -27,7 +27,6 @@ interface TaskBarsProps {
   timelineHeight: number;
   draggedTask: string | null;
   tempDragPosition: DragPosition | null;
-  selectedChartTaskId: string | null;
   isHoveringEdge: 'left' | 'right' | null;
   dateToPixel: (date: Date) => number;
   isDragging: boolean;

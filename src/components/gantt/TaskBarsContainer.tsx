@@ -28,7 +28,6 @@ interface TaskBarsContainerProps {
   timelineHeight: number;
   draggedTask: string | null;
   tempDragPosition: DragPosition | null;
-  selectedChartTaskId: string | null;
   isHoveringEdge: 'left' | 'right' | null;
   dateToPixel: (date: Date) => number;
   isDragging: boolean;
@@ -45,7 +44,6 @@ const TaskBarsContainer: React.FC<TaskBarsContainerProps> = ({
   timelineHeight,
   draggedTask,
   tempDragPosition,
-  selectedChartTaskId,
   isHoveringEdge,
   dateToPixel,
   isDragging,
@@ -91,7 +89,6 @@ const TaskBarsContainer: React.FC<TaskBarsContainerProps> = ({
           const isBeingDragged = draggedTask === chartTask.id;
           const displayX = isBeingDragged && tempDragPosition ? tempDragPosition.x : chartTask.x;
           const displayWidth = isBeingDragged && tempDragPosition ? tempDragPosition.width : chartTask.width;
-          const isSelected = selectedChartTaskId === chartTask.id;
           const milestoneCheck = isMilestone(chartTask);
           
           // 🔍 调试日志：任务渲染前的状态检查
@@ -103,7 +100,6 @@ const TaskBarsContainer: React.FC<TaskBarsContainerProps> = ({
             timesEqual: chartTask.startDate.getTime() === chartTask.endDate.getTime(),
             isMilestone: milestoneCheck,
             isBeingDragged,
-            isSelected,
             displayX,
             displayWidth,
             tempDragPosition,
@@ -118,7 +114,6 @@ const TaskBarsContainer: React.FC<TaskBarsContainerProps> = ({
                 task={chartTask}
                 rowIndex={rowIndex}
                 taskHeight={taskHeight}
-                isSelected={isSelected}
                 isBeingDragged={isBeingDragged}
                 displayX={displayX}
                 dateToPixel={dateToPixel}
@@ -136,7 +131,6 @@ const TaskBarsContainer: React.FC<TaskBarsContainerProps> = ({
               task={chartTask}
               rowIndex={rowIndex}
               taskHeight={taskHeight}
-              isSelected={isSelected}
               isBeingDragged={isBeingDragged}
               isHoveringEdge={isHoveringEdge}
               displayX={displayX}

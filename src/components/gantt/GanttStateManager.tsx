@@ -132,12 +132,37 @@ const GanttStateManager: React.FC<GanttStateManagerProps> = ({
     const duration = task.endDate.getTime() - task.startDate.getTime();
     const isMilestone = task.type === 'milestone';
     
+    // 验证输入参数
+    if (isNaN(duration)) {
+      console.error('🐛 updateDragMetrics: Invalid duration:', {
+        task: { id: task.id, title: task.title, startDate: task.startDate, endDate: task.endDate },
+        duration,
+        startTime: task.startDate.getTime(),
+        endTime: task.endDate.getTime()
+      });
+    }
+    
+    if (isNaN(pixelPerDay) || pixelPerDay <= 0) {
+      console.error('🐛 updateDragMetrics: Invalid pixelPerDay:', pixelPerDay);
+    }
+    
+    // 安全的 minWidth 计算
+    let minWidth: number;
+    if (isMilestone) {
+      minWidth = 16;
+    } else {
+      const daysWidth = duration / (24 * 60 * 60 * 1000) * pixelPerDay;
+      minWidth = isNaN(daysWidth) ? 20 : Math.max(20, Math.ceil(daysWidth));
+    }
+    
     // 修复里程碑的度量计算 - 使用传入的统一像素比率
     const metrics = {
-      duration: isMilestone ? 0 : duration,
-      pixelPerDay: pixelPerDay, // 使用传入的统一像素比率，不区分任务类型
-      minWidth: isMilestone ? 16 : Math.max(20, Math.ceil(duration / (24 * 60 * 60 * 1000) * pixelPerDay))
+      duration: isMilestone ? 0 : (isNaN(duration) ? 0 : duration),
+      pixelPerDay: isNaN(pixelPerDay) ? 1 : pixelPerDay, // 使用传入的统一像素比率，不区分任务类型
+      minWidth: isNaN(minWidth) ? 20 : minWidth
     };
+    
+    // 度量计算完成
     
     // 里程碑度量适配器处理完成
     

@@ -53,19 +53,58 @@ export const useDragAndDrop = () => {
     newDragType: DragType,
     containerElement: HTMLElement | null
   ) => {
+    console.log('🐛 useDragAndDrop startHorizontalDrag called:', {
+      taskId,
+      task: task ? { id: task.id, title: task.title, x: task.x, width: task.width } : null,
+      clientX,
+      clientY,
+      newDragType,
+      hasContainer: !!containerElement
+    });
+    
     updateContainerBounds(containerElement);
     
     const bounds = containerBounds.current;
+    console.log('🐛 Container bounds:', bounds);
+    
     if (bounds) {
       const taskX = task.x || 0;
+      
+      console.log('🐛 Offset calculation inputs:', {
+        clientX,
+        clientY,
+        boundsLeft: bounds.left,
+        boundsTop: bounds.top,
+        taskX,
+        clientXValid: !isNaN(clientX),
+        clientYValid: !isNaN(clientY),
+        boundsLeftValid: !isNaN(bounds.left),
+        boundsTopValid: !isNaN(bounds.top),
+        taskXValid: !isNaN(taskX)
+      });
+      
       const offset = {
         x: clientX - bounds.left - taskX,
         y: clientY - bounds.top
       };
       
+      console.log('🐛 Starting drag with offset:', {
+        offset,
+        offsetXValid: !isNaN(offset.x),
+        offsetYValid: !isNaN(offset.y)
+      });
+      
       dragState.startHorizontalDrag(taskId, task, newDragType, offset);
       
+      console.log('🐛 Drag state after start:', {
+        isDragging: dragState.isDragging,
+        draggedTask: dragState.draggedTask,
+        dragType: dragState.dragType
+      });
+      
       // 拖拽处理已在度量适配器中完成
+    } else {
+      console.log('🐛 Failed to get container bounds');
     }
   }, [dragState, updateContainerBounds]);
 
@@ -74,45 +113,112 @@ export const useDragAndDrop = () => {
     CHART_WIDTH: number = 800,
     minWidth: number = 20
   ) => {
-    if (!dragState.isDragging || !dragState.draggedTask || !dragState.draggedTaskData || !dragState.dragType) return;
+    console.log('🐛 updateHorizontalDragPosition called:', {
+      clientX,
+      CHART_WIDTH,
+      minWidth,
+      isDragging: dragState.isDragging,
+      draggedTask: dragState.draggedTask,
+      hasDraggedTaskData: !!dragState.draggedTaskData,
+      dragType: dragState.dragType
+    });
+    
+    if (!dragState.isDragging || !dragState.draggedTask || !dragState.draggedTaskData || !dragState.dragType) {
+      console.log('🐛 updateHorizontalDragPosition: Early return due to missing state');
+      return;
+    }
 
     const metrics = dragState.getDragMetrics();
     const bounds = containerBounds.current;
-    if (!metrics || !bounds) return;
+    
+    console.log('🐛 updateHorizontalDragPosition dependencies:', {
+      hasMetrics: !!metrics,
+      hasBounds: !!bounds,
+      metrics,
+      bounds
+    });
+    
+    if (!metrics || !bounds) {
+      console.error('🐛 updateHorizontalDragPosition: Missing metrics or bounds');
+      return;
+    }
 
     const mouseX = clientX - bounds.left;
+    
+    // 只在 mouseX 是 NaN 时才记录调试信息
+    if (isNaN(mouseX)) {
+      console.error('🐛 mouseX is NaN:', {
+        clientX,
+        clientXValid: !isNaN(clientX),
+        boundsLeft: bounds.left,
+        boundsLeftValid: !isNaN(bounds.left),
+        mouseX,
+        mouseXValid: !isNaN(mouseX)
+      });
+    }
     const taskData = dragState.draggedTaskData;
     const isTypeMilestone = taskData.type === 'milestone';
     const isTimeEqual = taskData.startDate.getTime() === taskData.endDate.getTime();
     const isMilestone = isTypeMilestone || isTimeEqual;
     
-    // 🔍 调试日志：拖拽过程中的里程碑判断
-    console.log(`[useDragAndDrop] 拖拽更新位置 - 任务ID: ${taskData.id}`, {
-      taskTitle: taskData.title,
-      taskType: taskData.type,
-      startDate: taskData.startDate.toISOString(),
-      endDate: taskData.endDate.toISOString(),
-      startTime: taskData.startDate.getTime(),
-      endTime: taskData.endDate.getTime(),
-      isTypeMilestone,
-      isTimeEqual,
-      isMilestone,
-      dragType: dragState.dragType,
-      mouseX
-    });
+    // 简化的调试日志，只在需要时显示
+    // console.log(`[useDragAndDrop] 拖拽更新位置 - 任务ID: ${taskData.id}`);
 
     if (dragState.dragType === 'move') {
       const newX = mouseX - dragState.dragOffset.x;
       const maxX = isMilestone ? CHART_WIDTH : CHART_WIDTH - metrics.minWidth;
       const constrainedX = Math.max(0, Math.min(newX, maxX));
       
+      // 只在计算出 NaN 时显示详细调试信息
+      if (isNaN(constrainedX)) {
+        console.error('🐛 constrainedX is NaN - Full diagnostic:', {
+          // 输入值诊断
+          mouseX,
+          dragOffsetX: dragState.dragOffset.x,
+          mouseXValid: !isNaN(mouseX),
+          dragOffsetXValid: !isNaN(dragState.dragOffset.x),
+          CHART_WIDTH,
+          metricsMinWidth: metrics.minWidth,
+          isMilestone,
+          // 计算过程诊断
+          newX,
+          newXValid: !isNaN(newX),
+          maxX,
+          maxXValid: !isNaN(maxX),
+          constrainedX,
+          constrainedXValid: !isNaN(constrainedX),
+          // 更深层的数据检查
+          clientX: mouseX + bounds.left, // 反推 clientX
+          boundsLeft: bounds.left,
+          taskData: {
+            id: taskData.id,
+            title: taskData.title,
+            x: taskData.x,
+            width: taskData.width
+          }
+        });
+        
+        const fallbackX = 0;
+        const dragUpdate = {
+          id: dragState.draggedTask,
+          x: fallbackX,
+          width: isMilestone ? 16 : metrics.minWidth
+        };
+        console.log('🐛 Using fallback dragUpdate:', dragUpdate);
+        dragState.updateHorizontalDrag(dragUpdate);
+        return;
+      }
+      
       // 里程碑拖拽移动计算
       
-      dragState.updateHorizontalDrag({
+      const dragUpdate = {
         id: dragState.draggedTask,
         x: constrainedX,
         width: isMilestone ? 16 : metrics.minWidth
-      });
+      };
+      
+      console.log('🐛 Calling updateHorizontalDrag with:', dragUpdate);
+      dragState.updateHorizontalDrag(dragUpdate);
     } else if (dragState.dragType === 'resize-left') {
       const originalRight = (dragState.draggedTaskData.x || 0) + (dragState.draggedTaskData.width || 0);
       const newLeft = Math.max(0, Math.min(mouseX, originalRight - minWidth));

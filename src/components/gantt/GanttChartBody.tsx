@@ -29,7 +29,6 @@ interface GanttChartBodyProps {
   
   // 选中状态
   selectedTitleTaskId: string | null;
-  selectedChartTaskId: string | null;
   
   // 拖拽状态
   verticalDragState: VerticalDragState;
@@ -81,7 +80,6 @@ const GanttChartBody: React.FC<GanttChartBodyProps> = ({
   leftPanelTasks,
   chartTaskRows,
   selectedTitleTaskId,
-  selectedChartTaskId,
   verticalDragState,
   draggedTask,
   tempDragPosition,
@@ -116,29 +114,7 @@ const GanttChartBody: React.FC<GanttChartBodyProps> = ({
   const localContainerRef = useRef<HTMLDivElement>(null);
   const containerRef = externalContainerRef || localContainerRef;
 
-  // 添加水平拖拽事件监听器
-  useEffect(() => {
-    if (isDragging) {
-      document.addEventListener('mousemove', onMouseMove);
-      document.addEventListener('mouseup', onMouseUp);
-      return () => {
-        document.removeEventListener('mousemove', onMouseMove);
-        document.removeEventListener('mouseup', onMouseUp);
-      };
-    }
-  }, [isDragging, onMouseMove, onMouseUp]);
-
-  // 添加垂直拖拽事件监听器
-  useEffect(() => {
-    if (verticalDragState.isDragging) {
-      document.addEventListener('mousemove', onTitleMouseMove);
-      document.addEventListener('mouseup', onTitleMouseUp);
-      return () => {
-        document.removeEventListener('mousemove', onTitleMouseMove);
-        document.removeEventListener('mouseup', onTitleMouseUp);
-      };
-    }
-  }, [verticalDragState.isDragging, onTitleMouseMove, onTitleMouseUp]);
+  // 事件监听器已统一移动到 GanttEventCoordinator 中管理
 
   return (
     <div 
@@ -193,7 +169,6 @@ const GanttChartBody: React.FC<GanttChartBodyProps> = ({
           timelineHeight={timelineHeight}
           draggedTask={draggedTask}
           tempDragPosition={tempDragPosition}
-          selectedChartTaskId={selectedChartTaskId}
           isHoveringEdge={isHoveringEdge}
           dateToPixel={dateToPixel}
           isDragging={isDragging}

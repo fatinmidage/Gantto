@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Development server:**
 ```bash
-pnpm run tauri dev  # Start Tauri development server with hot reload
+pnpm tauri dev  # Start Tauri development server with hot reload
 ```
 
 **Build commands:**
@@ -49,15 +49,19 @@ This is a **Tauri-based cross-platform Gantt chart application** built with Reac
 
 **2. Component Architecture (`src/components/`)**
 - **Core Container**: `GanttContainer` orchestrates all gantt components
-- **State Management**: `GanttStateManager` + `GanttEventCoordinator` 
+- **State Management**: Refactored `GanttStateManager` (144 lines, 66% reduction) + `GanttEventCoordinator`
+- **State Architecture**: Modular design with `state/GanttStateTypes.ts`, `state/GanttContainerManager.tsx`, `state/GanttStateCalculations.ts`
 - **Data Layer**: `GanttDataProvider` for data flow
+- **Timeline System**: `LayeredTimelineHeader`, `TimelineSettingsPanel`, `TimelineLayerSettings` for multi-layer timeline
 - **Visualization**: `GanttChartHeader` + `GanttChartBody` for UI rendering
 - **Interaction**: `GanttEventHandler` + context menus for user interactions
 
 **3. Hook-Based Logic (`src/hooks/`)**
 - **Gantt Hooks**: 20+ specialized hooks for different gantt functionality
-- **State Hooks**: `useGanttState`, `useGanttUIState`, `useDragReducer`
-- **Interaction Hooks**: `useDragAndDrop`, `useTaskManager`, `useTimeline`
+- **State Hooks**: `useGanttState`, optimized `useGanttUIState` (122 lines), `useDragReducer`
+- **UI State Modules**: `ui/useSelectionState.ts`, `ui/useMenuState.ts`, `ui/useModalState.ts`, `ui/useUIKeyboard.ts`
+- **Interaction Hooks**: `useDragAndDrop`, `useTaskManager`, `useTimeline`, `useLayeredTimeline`
+- **Timeline Hooks**: `useTimelineSettings` for layered timeline configuration
 - **Common Hooks**: `useThrottle`, `useCache`, `useErrorHandler`
 
 **4. Type System (`src/types/`)**
@@ -84,9 +88,12 @@ This is a **Tauri-based cross-platform Gantt chart application** built with Reac
 - Type guards for runtime safety
 
 **Layered Timeline System:**
-- Multi-scale timeline visualization
-- `TimelineLayerConfig` for configurable timeline layers
-- Adaptive time granularity (day/week/month views)
+- Multi-scale timeline visualization with configurable layers
+- Default three-layer structure: Year/Month/Week
+- `LayeredTimelineHeader` component for multi-layer rendering
+- `TimelineLayerSettings` and `TimelineSettingsPanel` for configuration
+- `timelineLayerUtils` for layer calculation and management
+- Adaptive time granularity with intelligent layer selection
 
 ### Data Flow Architecture
 
@@ -110,6 +117,9 @@ This is a **Tauri-based cross-platform Gantt chart application** built with Reac
 ### Testing Strategy
 - **Unit Tests**: Hook testing with `@testing-library/react-hooks`
 - **Integration Tests**: Component testing with `@testing-library/react`
+- **Component Tests**: Timeline components (`TimelineSettingsPanel.test.tsx`)
+- **Utility Tests**: Timeline layer utilities (`timelineLayerUtils.test.ts`)
+- **Hook Tests**: Comprehensive coverage in `hooks/gantt/__tests__/` directory
 - **Setup**: Global test configuration in `src/test/setup.ts`
 - **Coverage**: Comprehensive coverage excluding config/build files
 
@@ -129,9 +139,18 @@ This is a **Tauri-based cross-platform Gantt chart application** built with Reac
 
 **State Management:**
 - Prefer hook-based state over external state libraries
+- Use modular state architecture: separate types, calculations, and container management
 - Use `useDragReducer` pattern for complex state machines
+- Leverage UI sub-modules (`ui/useSelectionState`, `ui/useMenuState`) for specialized UI state
 - Keep state as close to usage as possible
 - Implement optimistic updates for better UX
+
+**Timeline Development:**
+- Use `LayeredTimelineHeader` for multi-layer timeline rendering
+- Leverage `timelineLayerUtils` for layer calculations and management
+- Implement timeline settings through `TimelineSettingsPanel` and `TimelineLayerSettings`
+- Follow three-layer default structure: Year/Month/Week
+- Use `useLayeredTimeline` and `useTimelineSettings` hooks for timeline state management
 
 **Styling:**
 - CSS modules organized in `src/styles/components/`
@@ -139,10 +158,23 @@ This is a **Tauri-based cross-platform Gantt chart application** built with Reac
 - Use CSS custom properties for theme consistency
 - Responsive design principles applied throughout
 
+## Key Utilities
+
+### Timeline System Utilities
+- **`timelineLayerUtils.ts`**: Core utilities for layered timeline calculation and management
+- **`menuPositioning.ts`**: Smart positioning logic for context menus and dropdowns
+
+### Architecture Enhancements
+- Modular state management with clear separation of concerns
+- Optimized component hierarchy with reduced bundle size
+- Enhanced type safety with comprehensive TypeScript interfaces
+
 ## Important Notes
 
 - **Tauri Context**: This is a desktop application - web-specific APIs may not work
 - **Performance**: Lazy loading implemented for heavy components (see `GanttChartLazy.tsx`)
+- **Timeline Architecture**: New layered timeline system with configurable multi-scale visualization
+- **State Management**: Refactored for modularity and performance (66% reduction in core state manager)
 - **Internationalization**: Currently Chinese-focused but structured for i18n expansion
 - **Bundle Analysis**: Use `ANALYZE=true pnpm run build` to analyze bundle size
 - **Development Port**: Fixed at 1420 for Tauri integration (configured in vite.config.ts)

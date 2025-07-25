@@ -27,7 +27,6 @@ interface GanttContainerProps {
   leftPanelTasks: Task[];
   chartTaskRows: any[];
   selectedTitleTaskId: string | null;
-  selectedChartTaskId: string | null;
   verticalDragState: any;
   draggedTask: string | null;
   tempDragPosition: any;
@@ -100,7 +99,6 @@ const GanttContainer: React.FC<GanttContainerProps> = ({
   leftPanelTasks,
   chartTaskRows,
   selectedTitleTaskId,
-  selectedChartTaskId,
   verticalDragState,
   draggedTask,
   tempDragPosition,
@@ -176,7 +174,6 @@ const GanttContainer: React.FC<GanttContainerProps> = ({
         leftPanelTasks={leftPanelTasks}
         chartTaskRows={chartTaskRows}
         selectedTitleTaskId={selectedTitleTaskId}
-        selectedChartTaskId={selectedChartTaskId}
         verticalDragState={verticalDragState}
         draggedTask={draggedTask}
         tempDragPosition={tempDragPosition}

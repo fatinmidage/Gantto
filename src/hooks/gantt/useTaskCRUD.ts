@@ -139,6 +139,18 @@ export const useTaskCRUD = ({
 
   // 更新任务日期
   const updateTaskDates = useCallback((taskId: string, startDate: Date, endDate: Date) => {
+    // 验证日期有效性
+    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+      console.error('🐛 Invalid dates passed to updateTaskDates:', {
+        taskId,
+        startDate,
+        endDate,
+        startDateValid: !isNaN(startDate.getTime()),
+        endDateValid: !isNaN(endDate.getTime())
+      });
+      return;
+    }
+    
     // 🔍 调试日志：updateTaskDates 函数开始执行
     console.log(`[TaskCRUD] updateTaskDates 开始执行:`, {
       taskId,

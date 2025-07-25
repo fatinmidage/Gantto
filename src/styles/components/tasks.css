@@ -90,11 +90,6 @@
   border-color: rgba(255, 255, 255, 0.4);
 }
 
-.gantt-task-bar.selected {
-  box-shadow: 0 0 0 2px #2196F3;
-  border: 2px solid var(--accent-primary);
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
-}
 
 /* 任务条内容 */
 .gantt-task-content {

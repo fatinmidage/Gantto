@@ -78,7 +78,8 @@ const initialDragState: DragState = {
 const dragReducer = (state: DragState, action: DragAction): DragState => {
   switch (action.type) {
     case 'START_HORIZONTAL_DRAG':
-      return {
+      console.log('🐛 dragReducer START_HORIZONTAL_DRAG:', action.payload);
+      const newState = {
         ...state,
         draggedTask: action.payload.taskId,
         draggedTaskData: action.payload.taskData,
@@ -87,8 +88,22 @@ const dragReducer = (state: DragState, action: DragAction): DragState => {
         isDragging: true,
         isHoveringEdge: null
       };
+      console.log('🐛 New drag state:', {
+        isDragging: newState.isDragging,
+        draggedTask: newState.draggedTask,
+        dragType: newState.dragType
+      });
+      return newState;
 
     case 'UPDATE_HORIZONTAL_DRAG':
+      console.log('🐛 dragReducer UPDATE_HORIZONTAL_DRAG:', {
+        payload: action.payload,
+        tempPosition: action.payload.tempPosition,
+        xValue: action.payload.tempPosition.x,
+        xIsNaN: isNaN(action.payload.tempPosition.x),
+        widthValue: action.payload.tempPosition.width,
+        widthIsNaN: isNaN(action.payload.tempPosition.width)
+      });
       return {
         ...state,
         tempDragPosition: action.payload.tempPosition
@@ -171,10 +186,17 @@ export const useDragReducer = () => {
 
   // === 水平拖拽操作 ===
   const startHorizontalDrag = useCallback((taskId: string, taskData: Task, dragType: DragType, offset: DragOffset) => {
+    console.log('🐛 useDragReducer startHorizontalDrag dispatching:', {
+      taskId,
+      taskData: taskData ? { id: taskData.id, title: taskData.title } : null,
+      dragType,
+      offset
+    });
     dispatch({
       type: 'START_HORIZONTAL_DRAG',
       payload: { taskId, taskData, dragType, offset }
     });
+    console.log('🐛 After dispatch, current state will be updated');
   }, []);
 
   const updateHorizontalDrag = useCallback((tempPosition: TempDragPosition) => {

@@ -30,6 +30,7 @@ interface GanttEventCoordinatorProps {
   
   // 其他方法
   pixelToDate: (pixel: number) => Date;
+  dateToPixel: (date: Date) => number;
   dateRange: any;
   setProjectRows: React.Dispatch<React.SetStateAction<any[]>>;
   ganttEvents: any;
@@ -75,6 +76,7 @@ const GanttEventCoordinator: React.FC<GanttEventCoordinatorProps> = ({
   resetHorizontalDrag,
   resetVerticalDrag,
   pixelToDate,
+  dateToPixel,
   dateRange,
   setProjectRows,
   ganttEvents,
@@ -116,9 +118,20 @@ const GanttEventCoordinator: React.FC<GanttEventCoordinatorProps> = ({
       return edgeType ? `resize-${edgeType}` as 'resize-left' | 'resize-right' : 'move';
     })();
     
-    updateDragMetrics(task, dateRange.pixelPerDay);
+    // 计算正确的 pixelPerDay
+    const totalDays = Math.ceil((dateRange.endDate.getTime() - dateRange.startDate.getTime()) / (24 * 60 * 60 * 1000));
+    const startPixel = 0;
+    const endPixel = dateToPixel(dateRange.endDate);
+    const calculatedPixelPerDay = totalDays > 0 ? endPixel / totalDays : 1;
+    
+    // 验证 pixelPerDay 的有效性
+    const safePixelPerDay = typeof calculatedPixelPerDay === 'number' && !isNaN(calculatedPixelPerDay) && calculatedPixelPerDay > 0 
+      ? calculatedPixelPerDay 
+      : 1; // 默认值
+    
+    updateDragMetrics(task, safePixelPerDay);
     startHorizontalDrag(taskId, task, e.clientX, e.clientY, currentDragType, containerRef.current);
-  }, [sortedChartTasks, detectEdgeHover, updateDragMetrics, dateRange.pixelPerDay, startHorizontalDrag]);
+  }, [sortedChartTasks, detectEdgeHover, updateDragMetrics, dateRange, dateToPixel, startHorizontalDrag, containerRef]);
 
   const handleTitleMouseDown = useCallback((e: React.MouseEvent, taskId: string) => {
     e.preventDefault();
@@ -221,7 +234,36 @@ const GanttEventCoordinator: React.FC<GanttEventCoordinatorProps> = ({
 
   const handleMouseUp = useCallback(() => {
     if (tempDragPosition && draggedTask && draggedTaskData && dragType) {
+      console.log('🐛 handleMouseUp data:', {
+        tempDragPosition: tempDragPosition ? {
+          id: tempDragPosition.id,
+          x: tempDragPosition.x,
+          width: tempDragPosition.width,
+          xValid: !isNaN(tempDragPosition.x),
+          widthValid: !isNaN(tempDragPosition.width)
+        } : null,
+        draggedTask,
+        draggedTaskData: draggedTaskData ? {
+          id: draggedTaskData.id,
+          title: draggedTaskData.title,
+          startDate: draggedTaskData.startDate,
+          endDate: draggedTaskData.endDate,
+          startDateValid: !isNaN(draggedTaskData.startDate.getTime()),
+          endDateValid: !isNaN(draggedTaskData.endDate.getTime())
+        } : null,
+        dragType
+      });
+      
       const newStartDate = pixelToDate(tempDragPosition.x);
+      console.log('🐛 newStartDate from pixelToDate:', newStartDate, 'isValid:', !isNaN(newStartDate.getTime()));
+      
+      // 验证日期有效性
+      if (isNaN(newStartDate.getTime())) {
+        console.error('🐛 Invalid start date calculated:', newStartDate);
+        resetHorizontalDrag();
+        return;
+      }
+      
       const newEndDate = dragType === 'move' 
         ? (draggedTaskData.type === 'milestone' 
           ? newStartDate 
@@ -229,6 +271,15 @@ const GanttEventCoordinator: React.FC<GanttEventCoordinatorProps> = ({
         : dragType === 'resize-left' 
         ? draggedTaskData.endDate 
         : pixelToDate(tempDragPosition.x + tempDragPosition.width);
+      
+      console.log('🐛 newEndDate calculated:', newEndDate, 'isValid:', !isNaN(newEndDate.getTime()));
+      
+      // 验证结束日期有效性
+      if (isNaN(newEndDate.getTime())) {
+        console.error('🐛 Invalid end date calculated:', newEndDate);
+        resetHorizontalDrag();
+        return;
+      }
       
       ganttEvents.updateTaskDates(draggedTask, newStartDate, newEndDate);
     }

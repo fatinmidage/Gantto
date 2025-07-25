@@ -10,7 +10,6 @@ interface TaskBarProps {
   task: Task;
   rowIndex: number;
   taskHeight: number;
-  isSelected: boolean;
   isBeingDragged: boolean;
   isHoveringEdge: 'left' | 'right' | null;
   displayX?: number;
@@ -27,7 +26,6 @@ const TaskBar: React.FC<TaskBarProps> = ({
   task,
   rowIndex,
   taskHeight,
-  isSelected,
   isBeingDragged,
   isHoveringEdge,
   displayX,
@@ -39,17 +37,23 @@ const TaskBar: React.FC<TaskBarProps> = ({
   onEdgeHover,
   onMouseLeave
 }) => {
-  const taskX = displayX !== undefined ? displayX : task.x;
-  const taskWidth = displayWidth !== undefined ? displayWidth : task.width;
+  const taskX = displayX !== undefined ? displayX : (task.x || 0);
+  const taskWidth = displayWidth !== undefined ? displayWidth : (task.width || 100);
+  
+  // 防止 NaN 值导致样式错误
+  const safeTaskX = isNaN(taskX) ? 0 : taskX;
+  const safeTaskWidth = isNaN(taskWidth) ? 100 : taskWidth;
+  
+  // 数据验证完成
 
   return (
     <div
       key={task.id}
-      className={`gantt-task-bar custom-color ${isBeingDragged ? 'dragging' : ''} ${isSelected ? 'selected' : ''} status-${task.status} type-${task.type} ${isHoveringEdge ? `edge-hover-${isHoveringEdge}` : ''}`}
+      className={`gantt-task-bar custom-color ${isBeingDragged ? 'dragging' : ''} status-${task.status} type-${task.type} ${isHoveringEdge ? `edge-hover-${isHoveringEdge}` : ''}`}
       style={{
-        left: taskX,
+        left: safeTaskX,
         top: rowIndex * (taskHeight + 10),
-        width: taskWidth,
+        width: safeTaskWidth,
         height: taskHeight,
         '--custom-task-color': task.color,
         cursor: isHoveringEdge === 'left' ? 'w-resize' : isHoveringEdge === 'right' ? 'e-resize' : 'grab'

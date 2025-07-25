@@ -83,15 +83,79 @@ export const useTimeline = (
   }, [dateRange, containerWidth, zoomLevel]);
 
   const pixelToDate = useCallback((pixel: number): Date => {
+    console.log('🐛 pixelToDate called with:', {
+      pixel,
+      containerWidth,
+      zoomLevel,
+      dateRange: {
+        startDate: dateRange.startDate,
+        endDate: dateRange.endDate,
+        startDateValid: !isNaN(dateRange.startDate.getTime()),
+        endDateValid: !isNaN(dateRange.endDate.getTime())
+      }
+    });
+    
+    // 1. 输入参数验证
+    if (typeof pixel !== 'number' || isNaN(pixel)) {
+      console.error('🐛 pixelToDate: Invalid pixel parameter:', pixel);
+      return new Date(dateRange.startDate); // 返回起始日期作为降级方案
+    }
+    
+    // 2. 日期范围验证
+    if (isNaN(dateRange.startDate.getTime()) || isNaN(dateRange.endDate.getTime())) {
+      console.error('🐛 pixelToDate: Invalid dateRange:', {
+        startDate: dateRange.startDate,
+        endDate: dateRange.endDate,
+        startDateValid: !isNaN(dateRange.startDate.getTime()),
+        endDateValid: !isNaN(dateRange.endDate.getTime())
+      });
+      return new Date(); // 返回当前时间作为降级方案
+    }
+    
     const totalDays = Math.ceil((dateRange.endDate.getTime() - dateRange.startDate.getTime()) / (24 * 60 * 60 * 1000));
+    console.log('🐛 totalDays calculated:', totalDays);
+    
+    // 3. 总天数验证
+    if (totalDays <= 0) {
+      console.error('🐛 pixelToDate: Invalid totalDays:', totalDays);
+      return new Date(dateRange.startDate); // 返回起始日期
+    }
     
     // 基于容器宽度的自适应像素密度计算，如果没有容器宽度则使用默认值
     const pixelPerDay = containerWidth && totalDays > 0 
       ? containerWidth / totalDays 
       : Math.max(1, 80 * zoomLevel);
     
+    console.log('🐛 pixelPerDay calculated:', pixelPerDay);
+    
+    // 4. 像素密度验证
+    if (pixelPerDay <= 0 || isNaN(pixelPerDay)) {
+      console.error('🐛 pixelToDate: Invalid pixelPerDay:', pixelPerDay);
+      return new Date(dateRange.startDate);
+    }
+    
     const days = pixel / pixelPerDay;
-    return new Date(dateRange.startDate.getTime() + days * 24 * 60 * 60 * 1000);
+    const resultTimestamp = dateRange.startDate.getTime() + days * 24 * 60 * 60 * 1000;
+    const resultDate = new Date(resultTimestamp);
+    
+    console.log('🐛 pixelToDate calculation:', {
+      days,
+      resultTimestamp,
+      resultDate,
+      isValidResult: !isNaN(resultDate.getTime())
+    });
+    
+    // 5. 结果验证
+    if (isNaN(resultDate.getTime())) {
+      console.error('🐛 pixelToDate: Calculated invalid date:', {
+        days,
+        resultTimestamp,
+        resultDate
+      });
+      return new Date(dateRange.startDate);
+    }
+    
+    return resultDate;
   }, [dateRange, containerWidth, zoomLevel]);
 
   // === 使用分层时间轴 ===

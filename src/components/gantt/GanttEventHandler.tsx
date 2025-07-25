@@ -180,9 +180,16 @@ export const GanttEventHandler: React.FC<GanttEventHandlerProps> = ({
       return edgeType ? `resize-${edgeType}` as 'resize-left' | 'resize-right' : 'move';
     })();
     
-    updateDragMetrics(task, dateRange.pixelPerDay);
+    // 直接使用固定的 pixelPerDay 计算，避免依赖 dateToPixel
+    const totalDays = Math.ceil((dateRange.endDate.getTime() - dateRange.startDate.getTime()) / (24 * 60 * 60 * 1000));
+    const calculatedPixelPerDay = CHART_WIDTH && totalDays > 0 ? CHART_WIDTH / totalDays : 1;
+    const safePixelPerDay = typeof calculatedPixelPerDay === 'number' && !isNaN(calculatedPixelPerDay) && calculatedPixelPerDay > 0 
+      ? calculatedPixelPerDay 
+      : 1;
+    
+    updateDragMetrics(task, safePixelPerDay);
     startHorizontalDrag(taskId, task, e.clientX, e.clientY, currentDragType, containerRef.current);
-  }, [sortedChartTasks, taskMapMemo, detectEdgeHover, updateDragMetrics, dateRange.pixelPerDay, startHorizontalDrag, containerRef]);
+  }, [sortedChartTasks, taskMapMemo, detectEdgeHover, updateDragMetrics, dateRange, CHART_WIDTH, startHorizontalDrag, containerRef]);
 
   const handleTitleMouseDown = useCallback((e: React.MouseEvent, taskId: string) => {
     e.preventDefault();

@@ -37,10 +37,6 @@
   transform: scale(1.2);
 }
 
-.gantt-milestone-node.selected {
-  box-shadow: 0 0 0 2px #2196F3;
-  border-radius: 50%;
-}
 
 .milestone-icon {
   width: 16px;
@@ -66,11 +62,6 @@
   transform: scale(1.1);
 }
 
-.gantt-milestone-node.selected .milestone-icon {
-  color: var(--accent-warning);
-  transform: scale(1.2);
-  filter: drop-shadow(0 4px 8px rgba(245, 158, 11, 0.3));
-}
 
 .gantt-milestone-node.dragging .milestone-icon {
   filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.2));
@@ -83,11 +74,6 @@
   backdrop-filter: blur(4px);
 }
 
-/* 选中状态样式 */
-.milestone.selected {
-  border: 2px solid #4299e1 !important;
-  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2) !important;
-}
 
 /* 新增优化样式类 */
 .milestone-dragging {

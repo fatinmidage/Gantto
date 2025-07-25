@@ -11,7 +11,6 @@ interface MilestoneTaskBarProps {
   task: Task;
   rowIndex: number;
   taskHeight: number;
-  isSelected: boolean;
   isBeingDragged: boolean;
   displayX?: number;
   dateToPixel: (date: Date) => number;
@@ -24,7 +23,6 @@ const MilestoneTaskBar: React.FC<MilestoneTaskBarProps> = ({
   task,
   rowIndex,
   taskHeight,
-  isSelected,
   isBeingDragged,
   displayX,
   dateToPixel,
@@ -54,7 +52,7 @@ const MilestoneTaskBar: React.FC<MilestoneTaskBarProps> = ({
   return (
     <div
       key={task.id}
-      className={`gantt-milestone-node ${isBeingDragged ? 'dragging' : ''} ${isSelected ? 'selected' : ''} status-${task.status}`}
+      className={`gantt-milestone-node ${isBeingDragged ? 'dragging' : ''} status-${task.status}`}
       style={{
         left: milestoneX - 8, // 减去图标宽度的一半，让它居中对齐
         top: rowIndex * (taskHeight + 10) + (taskHeight - 16) / 2, // 居中对齐
