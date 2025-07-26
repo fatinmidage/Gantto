@@ -117,18 +117,32 @@ const GanttEventCoordinator: React.FC<GanttEventCoordinatorProps> = ({
     if (!task) {
       const milestone = milestones.find(m => m.id === taskId);
       if (milestone) {
+        // 🔧 修复：里程碑坐标不一致问题
+        // 问题：milestone.x 是存储的旧坐标，而渲染时使用 dateToPixel(milestone.date) 计算新坐标
+        // 解决：使用基于日期重新计算的坐标，确保拖拽起始位置与渲染位置一致
+        const currentRenderX = dateToPixel(milestone.date);
+        
+        console.log('=== 里程碑坐标修复调试信息 ===');
+        console.log('里程碑ID:', milestone.id);
+        console.log('存储的旧坐标:', milestone.x);
+        console.log('基于日期计算的当前渲染坐标:', currentRenderX);
+        console.log('使用坐标:', currentRenderX);
+        
         // 将里程碑转换为任务对象以便拖拽处理
         task = {
           id: milestone.id,
           title: milestone.title || milestone.label || '里程碑',
           type: 'milestone',
-          x: milestone.x || 0,
+          x: currentRenderX, // 🔧 使用当前渲染坐标而不是存储坐标
           width: 16, // 里程碑的固定宽度
           startDate: milestone.date,
           endDate: milestone.date, // 里程碑的开始和结束日期相同
           status: 'active',
           color: milestone.color || '#666666'
         };
+        
+        console.log('修复后任务对象X坐标:', task.x);
+        console.log('============================');
       }
     }
     
