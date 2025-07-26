@@ -9,7 +9,7 @@ import { Task } from '../../types';
 import { TaskIcon } from '..';
 import { IconType } from '../../types/common';
 import { calculateMenuPosition, getEstimatedMenuDimensions, calculateSubmenuPosition } from '../../utils/menuPositioning';
-import { AVAILABLE_ICONS } from '../../config/icons';
+import { AVAILABLE_ICONS, getIconConfig } from '../../config/icons';
 
 interface TaskTitleContextMenuProps {
   visible: boolean;
@@ -19,7 +19,7 @@ interface TaskTitleContextMenuProps {
   task?: Task;
   onClose: () => void;
   onNameEdit: (taskId: string) => void;
-  onIconChange: (taskId: string, iconType: IconType) => void;
+  onIconChange: (taskId: string, iconType: IconType, color?: string) => void;
 }
 
 const TaskTitleContextMenu: React.FC<TaskTitleContextMenuProps> = ({
@@ -171,7 +171,11 @@ const TaskTitleContextMenu: React.FC<TaskTitleContextMenuProps> = ({
 
   // 处理图标选择
   const handleIconSelect = (iconType: IconType) => {
-    onIconChange(taskId, iconType);
+    // 获取图标配置中的标准颜色
+    const iconConfig = getIconConfig(iconType);
+    const standardColor = iconConfig.color;
+    
+    onIconChange(taskId, iconType, standardColor);
     setShowIconSubmenu(false);
     onClose();
   };

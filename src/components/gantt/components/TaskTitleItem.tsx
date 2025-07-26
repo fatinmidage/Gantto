@@ -133,13 +133,20 @@ export const TaskTitleItem: React.FC<TaskTitleItemProps> = ({
   };
 
   // 处理图标更改
-  const handleIconChange = (taskId: string, iconType: IconType) => {
+  const handleIconChange = (taskId: string, iconType: IconType, color?: string) => {
     if (onTaskUpdate) {
       // 支持新的 iconType 字段，同时保持向后兼容的 type 字段
-      onTaskUpdate(taskId, { 
+      const updates: Partial<Task> = { 
         iconType,
         type: iconType as any // 保持向后兼容
-      });
+      };
+      
+      // 如果提供了颜色，则同时更新颜色
+      if (color) {
+        updates.color = color;
+      }
+      
+      onTaskUpdate(taskId, updates);
     }
   };
 

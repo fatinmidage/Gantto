@@ -55,7 +55,7 @@ interface GanttMenuManagerProps {
   onTagRemove: (taskId: string, tag: string) => void;
   onTaskDelete: (taskId: string) => void;
   onLabelEdit?: (taskId: string, label: string) => void; // 里程碑标签编辑
-  onMilestoneIconChange?: (milestoneId: string, iconType: any) => void;
+  onMilestoneIconChange?: (milestoneId: string, iconType: any, color?: string) => void;
   onMilestoneLabelEdit?: (milestoneId: string, label: string) => void;
   onMilestoneDelete?: (milestoneId: string) => void;
   

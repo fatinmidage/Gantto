@@ -154,7 +154,13 @@ const GanttChart: React.FC<GanttChartProps> = ({
               onTagRemove={stateData.ganttEvents.handleTagRemove}
               onTaskDelete={stateData.ganttEvents.deleteTaskCore}
               onLabelEdit={stateData.ganttEvents.handleLabelEdit}
-              onMilestoneIconChange={(milestoneId: string, iconType: any) => stateData.milestoneManager.updateMilestone({ id: milestoneId, iconType })}
+              onMilestoneIconChange={(milestoneId: string, iconType: any, color?: string) => {
+                const updates: any = { id: milestoneId, iconType };
+                if (color) {
+                  updates.color = color;
+                }
+                stateData.milestoneManager.updateMilestone(updates);
+              }}
               onMilestoneLabelEdit={(milestoneId: string, label: string) => stateData.milestoneManager.updateMilestone({ id: milestoneId, label })}
               onMilestoneDelete={(milestoneId: string) => stateData.milestoneManager.deleteMilestone(milestoneId)}
               pixelToDate={stateData.pixelToDate}

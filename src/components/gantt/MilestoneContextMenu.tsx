@@ -10,7 +10,7 @@ import { MilestoneNode } from '../../types/task';
 import { IconType } from '../../types/common';
 import { TaskIcon } from '..';
 import { calculateMenuPosition, getEstimatedMenuDimensions, calculateSubmenuPosition } from '../../utils/menuPositioning';
-import { AVAILABLE_ICONS } from '../../config/icons';
+import { AVAILABLE_ICONS, getIconConfig } from '../../config/icons';
 
 interface MilestoneContextMenuProps {
   visible: boolean;
@@ -18,7 +18,7 @@ interface MilestoneContextMenuProps {
   y: number;
   milestone?: MilestoneNode;
   onClose: () => void;
-  onIconChange: (milestoneId: string, iconType: IconType) => void;
+  onIconChange: (milestoneId: string, iconType: IconType, color?: string) => void;
   onLabelEdit: (milestoneId: string, label: string) => void;
   onDelete: (milestoneId: string) => void;
 }
@@ -169,7 +169,11 @@ const MilestoneContextMenu: React.FC<MilestoneContextMenuProps> = ({
 
   // 处理图标选择
   const handleIconSelect = (iconType: IconType) => {
-    onIconChange(milestone.id, iconType);
+    // 获取图标配置中的标准颜色
+    const iconConfig = getIconConfig(iconType);
+    const standardColor = iconConfig.color;
+    
+    onIconChange(milestone.id, iconType, standardColor);
     setShowIconSubmenu(false);
     onClose();
   };
