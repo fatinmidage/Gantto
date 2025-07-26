@@ -1,6 +1,5 @@
 import React from 'react';
 import { 
-  Target, 
   Package, 
   Code, 
   CheckCircle, 
@@ -9,7 +8,7 @@ import {
 } from './icons';
 
 interface TaskIconProps {
-  type?: 'milestone' | 'development' | 'testing' | 'delivery' | 'default';
+  type?: 'development' | 'testing' | 'delivery' | 'default';
   size?: number;
   className?: string;
   level?: number; // 任务层级，0为根任务，1为子任务
@@ -28,8 +27,6 @@ const TaskIcon: React.FC<TaskIconProps> = ({
   // 根据任务类型获取颜色
   const getTypeColor = () => {
     switch (type) {
-      case 'milestone':
-        return '#ff9800'; // 橙色
       case 'development':
         return '#2196f3'; // 蓝色
       case 'testing':
@@ -46,8 +43,6 @@ const TaskIcon: React.FC<TaskIconProps> = ({
 
   const getTypeIcon = () => {
     switch (type) {
-      case 'milestone':
-        return <Target size={adjustedSize} className={className} style={iconStyle} />;
       case 'development':
         return <Code size={adjustedSize} className={className} style={iconStyle} />;
       case 'testing':

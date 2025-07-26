@@ -1,5 +1,5 @@
 import React from 'react';
-import { Task } from '../../../types';
+import { Task, MilestoneNode } from '../../../types';
 import { TimeGranularity, LayeredTimeScale, TimelineLayerConfig } from '../../../utils/timelineLayerUtils';
 
 // 甘特图状态管理器属性接口
@@ -12,6 +12,7 @@ export interface GanttStateManagerProps {
   layerConfig?: TimelineLayerConfig;
   initialProjectRows: any[];
   initialChartTasks: any[];
+  initialMilestones?: MilestoneNode[];
   children: (state: GanttStateData) => React.ReactElement;
 }
 
@@ -83,6 +84,11 @@ export interface GanttStateData {
   
   // 标签状态
   availableTags: string[];
+  
+  // 里程碑状态
+  milestones: MilestoneNode[];
+  selectedMilestone: string | null;
+  milestoneManager: any; // TODO: 定义更具体的类型
   
   // 容器引用
   containerRef: React.RefObject<HTMLDivElement>;

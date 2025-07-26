@@ -5,7 +5,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Target, Code, CheckCircle, Package, Circle, Edit, Trash2 } from 'lucide-react';
+import { Target, Code, CheckCircle, Package, Edit, Trash2 } from 'lucide-react';
 import { MilestoneNode } from '../../types/task';
 import { TaskType } from '../../types/common';
 import { calculateMenuPosition, getEstimatedMenuDimensions } from '../../utils/menuPositioning';
@@ -114,8 +114,10 @@ const MilestoneContextMenu: React.FC<MilestoneContextMenuProps> = ({
   };
 
   const handleLabelEdit = () => {
-    setIsEditingLabel(true);
-    setLabelValue(milestone.label || '');
+    // 直接为里程碑添加当前日期作为标签
+    const dateLabel = milestone.date.toLocaleDateString('zh-CN');
+    onLabelEdit(milestone.id, dateLabel);
+    onClose();
   };
 
   const handleLabelSave = () => {
@@ -135,11 +137,10 @@ const MilestoneContextMenu: React.FC<MilestoneContextMenuProps> = ({
   };
 
   const iconOptions = [
-    { type: 'milestone' as TaskType, icon: Target, color: '#ff9800', name: '里程碑' },
     { type: 'development' as TaskType, icon: Code, color: '#2196f3', name: '开发' },
     { type: 'testing' as TaskType, icon: CheckCircle, color: '#4caf50', name: '测试' },
     { type: 'delivery' as TaskType, icon: Package, color: '#9c27b0', name: '交付' },
-    { type: 'default' as TaskType, icon: Circle, color: '#666666', name: '默认' },
+    { type: 'default' as TaskType, icon: Target, color: '#ff9800', name: '里程碑' },
   ];
 
   // 菜单内容
@@ -243,7 +244,7 @@ const MilestoneContextMenu: React.FC<MilestoneContextMenuProps> = ({
           onClick={handleLabelEdit}
         >
           <Edit size={16} />
-          <span>编辑标签</span>
+          <span>添加标签</span>
           {milestone.label && (
             <span style={{ marginLeft: 'auto', color: '#666', fontSize: '12px' }}>
               "{milestone.label}"

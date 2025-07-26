@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { Task } from '../../types';
+import { Task, MilestoneNode } from '../../types';
 
 // 导入样式常量
 import { LAYOUT_CONSTANTS } from '../../components/gantt';
@@ -8,7 +8,7 @@ import { LAYOUT_CONSTANTS } from '../../components/gantt';
 export interface GanttHandlersResult {
   // 任务操作处理器
   handleCreateTask: (task: Task) => void;
-  handleCreateMilestone: (milestone: Task) => void;
+  handleCreateMilestone: (milestone: MilestoneNode) => void;
   handleShowColorPicker: (taskId: string) => void;
   handleShowTagManager: (taskId: string) => void;
   handleTaskDelete: (taskId: string) => void;
@@ -113,7 +113,7 @@ export const useGanttHandlers = (params: UseGanttHandlersParams): GanttHandlersR
     ganttEvents.createTask(task);
   }, [ganttEvents]);
 
-  const handleCreateMilestone = useCallback((milestone: Task) => {
+  const handleCreateMilestone = useCallback((milestone: MilestoneNode) => {
     ganttEvents.createMilestone(milestone);
   }, [ganttEvents]);
 
@@ -183,7 +183,7 @@ export const useGanttHandlers = (params: UseGanttHandlersParams): GanttHandlersR
     const task = sortedChartTasks.find(t => t.id === taskId) || taskMapMemo.get(taskId);
     if (!task || !containerRef.current) return;
     
-    const currentDragType = task.type === 'milestone' ? 'move' : (() => {
+    const currentDragType = (() => {
       const edgeType = detectEdgeHover(e, task);
       return edgeType ? `resize-${edgeType}` as 'resize-left' | 'resize-right' : 'move';
     })();
@@ -241,16 +241,14 @@ export const useGanttHandlers = (params: UseGanttHandlersParams): GanttHandlersR
     if (tempDragPosition && draggedTask && draggedTaskData && dragType) {
       const newStartDate = pixelToDate(tempDragPosition.x);
       
-      // 检查是否为里程碑：type为milestone 或者 开始时间等于结束时间
-      const isTypeMilestone = draggedTaskData.type === 'milestone';
+      // 检查是否为里程碑：开始时间等于结束时间
       const isTimeEqual = draggedTaskData.startDate.getTime() === draggedTaskData.endDate.getTime();
-      const isMilestone = isTypeMilestone || isTimeEqual;
+      const isMilestone = isTimeEqual;
       
       console.log(`[GanttHandlers] 拖拽结束处理 - 里程碑判断:`, {
         taskId: draggedTask,
         taskTitle: draggedTaskData.title,
         taskType: draggedTaskData.type,
-        isTypeMilestone,
         isTimeEqual,
         isMilestone,
         dragType

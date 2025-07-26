@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react';
-import { Task } from '../../types';
+import { Task, MilestoneNode } from '../../types';
+import { formatDateToMD } from '../../utils/ganttUtils';
 
 interface ContextMenuState {
   visible: boolean;
@@ -13,6 +14,7 @@ interface ContextMenuState {
 
 interface UseGanttContextMenuProps {
   setChartTasks: React.Dispatch<React.SetStateAction<Task[]>>;
+  setMilestones: React.Dispatch<React.SetStateAction<MilestoneNode[]>>;
   leftPanelTasks: any[];
   taskHeight: number;
   timelineHeight: number;
@@ -23,6 +25,7 @@ interface UseGanttContextMenuProps {
 
 export const useGanttContextMenu = ({
   setChartTasks,
+  setMilestones,
   leftPanelTasks,
   taskHeight,
   timelineHeight,
@@ -143,27 +146,23 @@ export const useGanttContextMenu = ({
       targetRowId = lastRow ? lastRow.id : 'row-0';
     }
     
-    const newMilestone: Task = {
+    const newMilestone: MilestoneNode = {
       id: `milestone-${Date.now()}`,
       title: '新节点',
-      startDate: clickDate,
-      endDate: clickDate, // 里程碑开始和结束时间相同
+      date: clickDate,
+      iconType: 'default',
       color: '#FF5722',
+      label: formatDateToMD(clickDate), // 默认标签为M.D格式日期
       x: 0,
-      width: 0,
+      y: 0,
       rowId: targetRowId,
-      type: 'milestone',
-      status: 'pending',
-      progress: 0,
-      children: [],
-      level: 0,
       order: Date.now(),
-      tags: []
+      isCreatedFromContext: true
     };
     
-    setChartTasks(prev => [...prev, newMilestone]);
+    setMilestones(prev => [...prev, newMilestone]);
     hideContextMenu();
-  }, [contextMenu.clickPosition.x, contextMenu.clickPosition.y, pixelToDate, taskHeight, leftPanelTasks, hideContextMenu, setChartTasks]);
+  }, [contextMenu.clickPosition.x, contextMenu.clickPosition.y, pixelToDate, taskHeight, leftPanelTasks, hideContextMenu, setMilestones]);
 
   return {
     contextMenu,

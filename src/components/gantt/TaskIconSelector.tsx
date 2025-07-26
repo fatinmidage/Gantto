@@ -3,8 +3,8 @@ import { createPortal } from 'react-dom';
 import { TaskIcon } from '..';
 
 interface TaskIconSelectorProps {
-  currentType: 'milestone' | 'development' | 'testing' | 'delivery' | 'default';
-  onTypeChange: (type: 'milestone' | 'development' | 'testing' | 'delivery' | 'default') => void;
+  currentType: 'development' | 'testing' | 'delivery' | 'default';
+  onTypeChange: (type: 'development' | 'testing' | 'delivery' | 'default') => void;
   onClose: () => void;
   position: { x: number; y: number };
 }
@@ -20,7 +20,6 @@ const TaskIconSelector: React.FC<TaskIconSelectorProps> = ({
 
   const iconTypes = [
     { type: 'default' as const, label: '默认任务' },
-    { type: 'milestone' as const, label: '里程碑' },
     { type: 'development' as const, label: '开发' },
     { type: 'testing' as const, label: '测试' },
     { type: 'delivery' as const, label: '交付' }
@@ -55,7 +54,7 @@ const TaskIconSelector: React.FC<TaskIconSelectorProps> = ({
     setTimeout(onClose, 150); // 延迟关闭以显示动画
   };
 
-  const handleTypeSelect = (type: 'milestone' | 'development' | 'testing' | 'delivery' | 'default') => {
+  const handleTypeSelect = (type: 'development' | 'testing' | 'delivery' | 'default') => {
     onTypeChange(type);
     handleClose();
   };

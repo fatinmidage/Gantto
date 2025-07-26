@@ -99,9 +99,8 @@ export const useHorizontalDrag = ({
     if (!task || !containerRef.current) return;
     
     // 检测拖拽类型
-    // 里程碑始终是移动操作，不支持resize（检查type或时间相等）
-    const isMilestone = task.type === 'milestone' || task.startDate.getTime() === task.endDate.getTime();
-    const currentDragType = isMilestone ? 'move' : (() => {
+    // 普通任务支持移动和调整大小
+    const currentDragType = (() => {
       const edgeType = detectEdgeHover(e, task);
       return edgeType ? `resize-${edgeType}` as 'resize-left' | 'resize-right' : 'move';
     })();
@@ -165,44 +164,26 @@ export const useHorizontalDrag = ({
           tempDragPosition
         });
         
-        // 检查是否为里程碑：type为milestone 或者 开始时间等于结束时间
-        const isTypeMilestone = draggedTaskData.type === 'milestone';
-        const isTimeEqual = draggedTaskData.startDate.getTime() === draggedTaskData.endDate.getTime();
-        const isMilestone = isTypeMilestone || isTimeEqual;
+        // 现在所有任务都作为普通任务处理
         
-        console.log(`[HorizontalDrag] 里程碑判断详情:`, {
+        console.log(`[HorizontalDrag] 任务拖拽详情:`, {
           taskId: draggedTask,
           taskTitle: draggedTaskData.title,
           taskType: draggedTaskData.type,
           originalStartTime: draggedTaskData.startDate.getTime(),
           originalEndTime: draggedTaskData.endDate.getTime(),
-          isTypeMilestone,
-          isTimeEqual,
-          isMilestone
+          isRegularTask: true
         });
                            
-        if (isMilestone) {
-          // 里程碑只更新开始时间，结束时间保持与开始时间相同
-          newEndDate = newStartDate;
-          console.log(`[HorizontalDrag] 里程碑拖拽处理：设置 newEndDate = newStartDate`, {
-            newStartDate: newStartDate.toISOString(),
-            newEndDate: newEndDate.toISOString(),
-            reason: isTypeMilestone ? 'type=milestone' : 'times equal'
-          });
-        } else {
-          // 普通任务保持时间段长度
-          const duration = draggedTaskData.endDate.getTime() - draggedTaskData.startDate.getTime();
-          newEndDate = new Date(newStartDate.getTime() + duration);
-          console.log(`[HorizontalDrag] 普通任务拖拽处理：保持时间段长度`, {
-            duration,
-            newStartDate: newStartDate.toISOString(),
-            newEndDate: newEndDate.toISOString(),
-            isMilestone: false,
-            isTypeMilestone,
-            isTimeEqual,
-            originalDuration: duration
-          });
-        }
+        // 所有任务都保持时间段长度
+        const duration = draggedTaskData.endDate.getTime() - draggedTaskData.startDate.getTime();
+        newEndDate = new Date(newStartDate.getTime() + duration);
+        console.log(`[HorizontalDrag] 任务拖拽处理：保持时间段长度`, {
+          duration,
+          newStartDate: newStartDate.toISOString(),
+          newEndDate: newEndDate.toISOString(),
+          originalDuration: duration
+        });
       } else if (dragType === 'resize-left') {
         // 左边界拖拽：改变开始时间，保持结束时间
         newStartDate = pixelToDate(tempDragPosition.x);
@@ -226,7 +207,7 @@ export const useHorizontalDrag = ({
         newStartDate: newStartDate.toISOString(),
         newEndDate: newEndDate.toISOString(),
         newTimesEqual: newStartDate.getTime() === newEndDate.getTime(),
-        shouldRemainMilestone: draggedTaskData.type === 'milestone' || draggedTaskData.startDate.getTime() === draggedTaskData.endDate.getTime()
+        isTaskDrag: true
       });
       
       // 更新任务时间

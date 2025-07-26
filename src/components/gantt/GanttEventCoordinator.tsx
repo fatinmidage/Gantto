@@ -2,7 +2,7 @@ import React, { useCallback, useEffect } from 'react';
 import { getAllDescendantRows, getVisibleProjectRows } from './GanttHelpers';
 import { LAYOUT_CONSTANTS } from './ganttStyles';
 import { useThrottledMouseMove } from '../../hooks';
-import { Task } from '../../types';
+import { Task, MilestoneNode } from '../../types';
 
 interface GanttEventCoordinatorProps {
   // 状态数据
@@ -45,7 +45,7 @@ interface GanttEventCoordinatorProps {
 
 interface EventHandlers {
   handleCreateTask: (task: Task) => void;
-  handleCreateMilestone: (milestone: Task) => void;
+  handleCreateMilestone: (milestone: MilestoneNode) => void;
   handleEdgeHover: (e: React.MouseEvent, task: any) => void;
   handleMouseDown: (e: React.MouseEvent, taskId: string) => void;
   handleTitleMouseDown: (e: React.MouseEvent, taskId: string) => void;
@@ -317,7 +317,7 @@ const GanttEventCoordinator: React.FC<GanttEventCoordinatorProps> = ({
     ganttEvents.createTask(task);
   }, [ganttEvents]);
 
-  const handleCreateMilestone = useCallback((milestone: Task) => {
+  const handleCreateMilestone = useCallback((milestone: MilestoneNode) => {
     // 这个逻辑需要从父组件传入 ganttInteractions.contextMenu  
     // 暂时简化处理
     ganttEvents.createMilestone(milestone);

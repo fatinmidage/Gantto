@@ -3,7 +3,7 @@ import { GanttStateManager, GanttEventCoordinator, GanttContainer } from './gant
 import { useTimelineSettings } from '../hooks/gantt/useTimelineSettings';
 
 // 导入初始数据
-import { initialProjectRows, initialChartTasks } from '../data/initialData';
+import { initialProjectRows, initialChartTasks, initialMilestones } from '../data/initialData';
 
 
 interface GanttChartProps {
@@ -56,6 +56,7 @@ const GanttChart: React.FC<GanttChartProps> = ({
       taskHeight={taskHeight}
       initialProjectRows={initialProjectRows}
       initialChartTasks={initialChartTasks}
+      initialMilestones={initialMilestones}
       layerConfig={timelineSettings.config}
     >
       {(stateData) => (
@@ -149,9 +150,19 @@ const GanttChart: React.FC<GanttChartProps> = ({
               onTagAdd={stateData.ganttEvents.handleTagAdd}
               onTagRemove={stateData.ganttEvents.handleTagRemove}
               onTaskDelete={stateData.ganttEvents.deleteTaskCore}
+              onLabelEdit={stateData.ganttEvents.handleLabelEdit}
               pixelToDate={stateData.pixelToDate}
               containerRef={stateData.containerRef}
               isCurrentDateInRange={stateData.isCurrentDateInRange}
+              
+              // 里程碑相关
+              milestones={stateData.milestones}
+              selectedMilestone={stateData.selectedMilestone}
+              onMilestoneSelect={stateData.milestoneManager.selectMilestone}
+              onMilestoneContextMenu={(e, milestoneId) => {
+                // TODO: 实现里程碑右键菜单
+                console.log('Milestone context menu:', milestoneId, e);
+              }}
             />
           )}
         </GanttEventCoordinator>

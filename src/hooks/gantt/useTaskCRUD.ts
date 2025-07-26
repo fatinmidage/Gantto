@@ -1,13 +1,15 @@
 import { useCallback } from 'react';
-import { Task, ProjectRow } from '../../types';
+import { Task, ProjectRow, MilestoneNode } from '../../types';
 
 interface UseTaskCRUDProps {
   tasks: Task[];
   chartTasks: Task[];
   projectRows: ProjectRow[];
+  milestones: MilestoneNode[];
   setTasks: React.Dispatch<React.SetStateAction<Task[]>>;
   setChartTasks: React.Dispatch<React.SetStateAction<Task[]>>;
   setProjectRows: React.Dispatch<React.SetStateAction<ProjectRow[]>>;
+  setMilestones: React.Dispatch<React.SetStateAction<MilestoneNode[]>>;
 }
 
 export interface UseTaskCRUDResult {
@@ -16,7 +18,7 @@ export interface UseTaskCRUDResult {
   deleteProjectRow: (rowId: string) => void;
   deleteTaskCore: (taskId: string) => void;
   createTask: (task: Task) => void;
-  createMilestone: (milestone: Task) => void;
+  createMilestone: (milestone: MilestoneNode) => void;
   updateTaskDates: (taskId: string, startDate: Date, endDate: Date) => void;
 }
 
@@ -24,9 +26,11 @@ export const useTaskCRUD = ({
   tasks,
   chartTasks,
   projectRows,
+  milestones,
   setTasks,
   setChartTasks,
-  setProjectRows
+  setProjectRows,
+  setMilestones
 }: UseTaskCRUDProps): UseTaskCRUDResult => {
   
   // 添加新任务
@@ -193,7 +197,7 @@ export const useTaskCRUD = ({
               updatedStartDate: updatedTask.startDate.toISOString(),
               updatedEndDate: updatedTask.endDate.toISOString(),
               updatedTimesEqual: updatedTask.startDate.getTime() === updatedTask.endDate.getTime(),
-              shouldBeMilestone: updatedTask.type === 'milestone' || updatedTask.startDate.getTime() === updatedTask.endDate.getTime()
+              isTaskUpdate: true
             });
             
             return updatedTask;
@@ -224,9 +228,9 @@ export const useTaskCRUD = ({
   }, [setChartTasks]);
 
   // 创建里程碑
-  const createMilestone = useCallback((milestone: Task) => {
-    setChartTasks(prev => [...prev, milestone]);
-  }, [setChartTasks]);
+  const createMilestone = useCallback((milestone: MilestoneNode) => {
+    setMilestones(prev => [...prev, milestone]);
+  }, [setMilestones]);
 
   return {
     addNewTask,

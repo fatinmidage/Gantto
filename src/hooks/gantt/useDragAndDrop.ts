@@ -157,16 +157,14 @@ export const useDragAndDrop = () => {
       });
     }
     const taskData = dragState.draggedTaskData;
-    const isTypeMilestone = taskData.type === 'milestone';
-    const isTimeEqual = taskData.startDate.getTime() === taskData.endDate.getTime();
-    const isMilestone = isTypeMilestone || isTimeEqual;
+    // 移除了milestone类型判断，所有任务都作为普通任务处理
     
     // 简化的调试日志，只在需要时显示
     // console.log(`[useDragAndDrop] 拖拽更新位置 - 任务ID: ${taskData.id}`);
 
     if (dragState.dragType === 'move') {
       const newX = mouseX - dragState.dragOffset.x;
-      const maxX = isMilestone ? CHART_WIDTH : CHART_WIDTH - metrics.minWidth;
+      const maxX = CHART_WIDTH - metrics.minWidth;
       const constrainedX = Math.max(0, Math.min(newX, maxX));
       
       // 只在计算出 NaN 时显示详细调试信息
@@ -179,7 +177,7 @@ export const useDragAndDrop = () => {
           dragOffsetXValid: !isNaN(dragState.dragOffset.x),
           CHART_WIDTH,
           metricsMinWidth: metrics.minWidth,
-          isMilestone,
+          isRegularTask: true,
           // 计算过程诊断
           newX,
           newXValid: !isNaN(newX),
@@ -202,7 +200,7 @@ export const useDragAndDrop = () => {
         const dragUpdate = {
           id: dragState.draggedTask,
           x: fallbackX,
-          width: isMilestone ? 16 : metrics.minWidth
+          width: metrics.minWidth
         };
         console.log('🐛 Using fallback dragUpdate:', dragUpdate);
         dragState.updateHorizontalDrag(dragUpdate);
@@ -210,6 +208,8 @@ export const useDragAndDrop = () => {
       }
       
       // 里程碑拖拽移动计算
+      // 检查是否为里程碑（开始时间等于结束时间）
+      const isMilestone = taskData.startDate.getTime() === taskData.endDate.getTime();
       
       const dragUpdate = {
         id: dragState.draggedTask,

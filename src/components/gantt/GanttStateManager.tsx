@@ -13,7 +13,8 @@ import {
   useGanttEvents,
   useGanttInteractions,
   useGanttKeyboard,
-  useGlobalTags
+  useGlobalTags,
+  useMilestoneManager
 } from '../../hooks';
 
 /**
@@ -29,6 +30,7 @@ const GanttStateManager: React.FC<GanttStateManagerProps> = ({
   layerConfig,
   initialProjectRows,
   initialChartTasks,
+  initialMilestones = [],
   children
 }) => {
   // === 容器管理 ===
@@ -82,6 +84,25 @@ const GanttStateManager: React.FC<GanttStateManagerProps> = ({
   const ganttUI = useGanttUI();
   const { filteredTasks, filterStats } = useTaskFilter(chartTasks, startDate, endDate);
   const { availableTags } = useGlobalTags();
+  
+  // === 里程碑管理 ===
+  const milestoneManager = useMilestoneManager({
+    dateToPixel: timeline.dateToPixel,
+    pixelToDate: timeline.pixelToDate,
+    getTaskRowIndex: (taskId: string) => {
+      const task = chartTasks.find(t => t.id === taskId);
+      return task ? chartTasks.indexOf(task) : 0;
+    },
+    taskHeight
+  });
+  
+  // 初始化里程碑数据
+  React.useEffect(() => {
+    if (initialMilestones && initialMilestones.length > 0) {
+      // 只在第一次加载时设置初始数据
+      milestoneManager.setMilestones(initialMilestones);
+    }
+  }, []);  // 空依赖数组，只在组件挂载时执行一次
 
   // === 计算逻辑 ===
   const calculations = useGanttStateCalculations({
@@ -130,7 +151,7 @@ const GanttStateManager: React.FC<GanttStateManagerProps> = ({
   // === updateDragMetrics 适配器函数 ===
   const updateDragMetrics = React.useCallback((task: any, pixelPerDay: number) => {
     const duration = task.endDate.getTime() - task.startDate.getTime();
-    const isMilestone = task.type === 'milestone';
+    // 移除了milestone类型判断
     
     // 验证输入参数
     if (isNaN(duration)) {
@@ -146,19 +167,14 @@ const GanttStateManager: React.FC<GanttStateManagerProps> = ({
       console.error('🐛 updateDragMetrics: Invalid pixelPerDay:', pixelPerDay);
     }
     
-    // 安全的 minWidth 计算
-    let minWidth: number;
-    if (isMilestone) {
-      minWidth = 16;
-    } else {
-      const daysWidth = duration / (24 * 60 * 60 * 1000) * pixelPerDay;
-      minWidth = isNaN(daysWidth) ? 20 : Math.max(20, Math.ceil(daysWidth));
-    }
+    // 安全的 minWidth 计算 - 现在所有任务统一处理
+    const daysWidth = duration / (24 * 60 * 60 * 1000) * pixelPerDay;
+    const minWidth = isNaN(daysWidth) ? 20 : Math.max(20, Math.ceil(daysWidth));
     
-    // 修复里程碑的度量计算 - 使用传入的统一像素比率
+    // 修复任务的度量计算 - 使用传入的统一像素比率
     const metrics = {
-      duration: isMilestone ? 0 : (isNaN(duration) ? 0 : duration),
-      pixelPerDay: isNaN(pixelPerDay) ? 1 : pixelPerDay, // 使用传入的统一像素比率，不区分任务类型
+      duration: isNaN(duration) ? 0 : duration,
+      pixelPerDay: isNaN(pixelPerDay) ? 1 : pixelPerDay,
       minWidth: isNaN(minWidth) ? 20 : minWidth
     };
     
@@ -202,6 +218,11 @@ const GanttStateManager: React.FC<GanttStateManagerProps> = ({
     
     // 标签状态
     availableTags,
+    
+    // 里程碑状态
+    milestones: milestoneManager.milestones,
+    selectedMilestone: milestoneManager.selectedMilestone,
+    milestoneManager,
     
     // 容器引用
     containerRef,

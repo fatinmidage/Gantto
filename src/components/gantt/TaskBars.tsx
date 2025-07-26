@@ -6,7 +6,7 @@
 
 import React from 'react';
 import TaskBarsContainer from './TaskBarsContainer';
-import { Task } from '../../types/task';
+import { Task, MilestoneNode } from '../../types/task';
 
 // 任务行数据接口
 interface TaskRow {
@@ -30,11 +30,15 @@ interface TaskBarsProps {
   isHoveringEdge: 'left' | 'right' | null;
   dateToPixel: (date: Date) => number;
   isDragging: boolean;
+  milestones?: MilestoneNode[];
+  selectedMilestone?: string | null;
   onMouseDown: (e: React.MouseEvent, taskId: string) => void;
   onTaskSelect: (taskId: string) => void;
   onTaskContextMenu: (e: React.MouseEvent, taskId: string) => void;
   onEdgeHover: (e: React.MouseEvent, task: Task) => void;
   onMouseLeave: () => void;
+  onMilestoneSelect?: (milestoneId: string) => void;
+  onMilestoneContextMenu?: (e: React.MouseEvent, milestoneId: string) => void;
 }
 
 // 重构后的 TaskBars 组件，现在是 TaskBarsContainer 的包装器

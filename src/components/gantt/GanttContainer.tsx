@@ -3,7 +3,7 @@ import GanttChartHeader from './GanttChartHeader';
 import GanttChartBody from './GanttChartBody';
 import GanttMenuManager from './GanttMenuManager';
 import { LAYOUT_CONSTANTS } from './ganttStyles';
-import { Task } from '../../types';
+import { Task, MilestoneNode } from '../../types';
 import { TimelineLayerConfig, LayeredTimeScale, DateRange } from '../../utils/timelineLayerUtils';
 
 interface GanttContainerProps {
@@ -69,6 +69,7 @@ interface GanttContainerProps {
   onTagAdd: (taskId: string, tag: string) => void;
   onTagRemove: (taskId: string, tag: string) => void;
   onTaskDelete: (taskId: string) => void;
+  onLabelEdit?: (taskId: string, label: string) => void; // 里程碑标签编辑
   pixelToDate: (pixel: number) => Date;
   
   // 容器引用
@@ -76,6 +77,12 @@ interface GanttContainerProps {
   
   // 当前日期范围检查
   isCurrentDateInRange?: boolean;
+  
+  // 里程碑数据
+  milestones?: MilestoneNode[];
+  selectedMilestone?: string | null;
+  onMilestoneSelect?: (milestoneId: string) => void;
+  onMilestoneContextMenu?: (e: React.MouseEvent, milestoneId: string) => void;
 }
 
 const GanttContainer: React.FC<GanttContainerProps> = ({
@@ -141,9 +148,14 @@ const GanttContainer: React.FC<GanttContainerProps> = ({
   onTagAdd,
   onTagRemove,
   onTaskDelete,
+  onLabelEdit,
   pixelToDate,
   containerRef,
-  isCurrentDateInRange = true
+  isCurrentDateInRange = true,
+  milestones = [],
+  selectedMilestone,
+  onMilestoneSelect,
+  onMilestoneContextMenu
 }) => {
   // 标题列宽度状态
   const [titleColumnWidth, setTitleColumnWidth] = useState<number>(LAYOUT_CONSTANTS.TITLE_COLUMN_WIDTH);
@@ -205,6 +217,10 @@ const GanttContainer: React.FC<GanttContainerProps> = ({
         onTitleMouseUp={onTitleMouseUp}
         containerRef={containerRef}
         isCurrentDateInRange={isCurrentDateInRange}
+        milestones={milestones}
+        selectedMilestone={selectedMilestone}
+        onMilestoneSelect={onMilestoneSelect}
+        onMilestoneContextMenu={onMilestoneContextMenu}
       />
 
       <GanttMenuManager
@@ -223,6 +239,7 @@ const GanttContainer: React.FC<GanttContainerProps> = ({
         onTagAdd={onTagAdd}
         onTagRemove={onTagRemove}
         onTaskDelete={onTaskDelete}
+        onLabelEdit={onLabelEdit}
         pixelToDate={pixelToDate}
       />
     </div>

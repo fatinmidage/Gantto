@@ -1,8 +1,8 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef } from 'react';
 import TaskTitleColumn from './TaskTitleColumn';
 import TaskBars from './TaskBars';
 import TimelineHeader from './TimelineHeader';
-import { Task } from '../../types';
+import { Task, MilestoneNode } from '../../types';
 import { COMPONENT_STYLES } from './ganttStyles';
 import { TimelineLayerConfig, LayeredTimeScale, DateRange } from '../../utils/timelineLayerUtils';
 
@@ -49,6 +49,10 @@ interface GanttChartBodyProps {
   // 当前日期范围检查
   isCurrentDateInRange?: boolean;
   
+  // 里程碑数据
+  milestones?: MilestoneNode[];
+  selectedMilestone?: string | null;
+  
   // 分层时间轴数据 - 移除传统timeScales参数
   layeredTimeScales: LayeredTimeScale;
   layerConfig: TimelineLayerConfig;
@@ -68,6 +72,8 @@ interface GanttChartBodyProps {
   onEdgeHover: (e: React.MouseEvent, task: any) => void;
   onMouseLeave: () => void;
   onContextMenu: (e: React.MouseEvent) => void;
+  onMilestoneSelect?: (milestoneId: string) => void;
+  onMilestoneContextMenu?: (e: React.MouseEvent, milestoneId: string) => void;
   
   // 事件监听器
   onMouseMove: (e: MouseEvent) => void;
@@ -103,6 +109,8 @@ const GanttChartBody: React.FC<GanttChartBodyProps> = ({
   onEdgeHover,
   onMouseLeave,
   onContextMenu,
+  onMilestoneSelect,
+  onMilestoneContextMenu,
   dateToPixel,
   onMouseMove,
   onMouseUp,
@@ -110,6 +118,8 @@ const GanttChartBody: React.FC<GanttChartBodyProps> = ({
   onTitleMouseUp,
   containerRef: externalContainerRef,
   isCurrentDateInRange = true,
+  milestones = [],
+  selectedMilestone,
 }) => {
   const localContainerRef = useRef<HTMLDivElement>(null);
   const containerRef = externalContainerRef || localContainerRef;
@@ -172,11 +182,15 @@ const GanttChartBody: React.FC<GanttChartBodyProps> = ({
           isHoveringEdge={isHoveringEdge}
           dateToPixel={dateToPixel}
           isDragging={isDragging}
+          milestones={milestones}
+          selectedMilestone={selectedMilestone}
           onMouseDown={onMouseDown}
           onTaskSelect={onChartTaskSelect}
           onTaskContextMenu={onTaskContextMenu}
           onEdgeHover={onEdgeHover}
           onMouseLeave={onMouseLeave}
+          onMilestoneSelect={onMilestoneSelect}
+          onMilestoneContextMenu={onMilestoneContextMenu}
         />
       </div>
     </div>

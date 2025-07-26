@@ -74,7 +74,7 @@ export const useGanttStateCalculations = ({
     rowId: row.id,
     isCreatedFromContext: false,
     isPlaceholder: false,
-    type: (row.type || 'default') as 'milestone' | 'development' | 'testing' | 'delivery' | 'default'
+    type: (row.type || 'default') as 'development' | 'testing' | 'delivery' | 'default'
   })), [visibleProjectRows]);
 
   // 图表任务行

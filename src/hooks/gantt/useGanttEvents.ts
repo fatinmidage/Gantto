@@ -2,24 +2,28 @@ import { useTaskCRUD } from './useTaskCRUD';
 import { useTaskAttributes } from './useTaskAttributes';
 import { useTaskBatch } from './useTaskBatch';
 import { useGlobalTags } from './useGlobalTags';
-import { Task, ProjectRow } from '../../types';
+import { Task, ProjectRow, MilestoneNode } from '../../types';
 
 interface UseGanttEventsProps {
   tasks: Task[];
   chartTasks: Task[];
   projectRows: ProjectRow[];
+  milestones?: MilestoneNode[];
   setTasks: React.Dispatch<React.SetStateAction<Task[]>>;
   setChartTasks: React.Dispatch<React.SetStateAction<Task[]>>;
   setProjectRows: React.Dispatch<React.SetStateAction<ProjectRow[]>>;
+  setMilestones?: React.Dispatch<React.SetStateAction<MilestoneNode[]>>;
 }
 
 export const useGanttEvents = ({
   tasks,
   chartTasks,
   projectRows,
+  milestones = [],
   setTasks,
   setChartTasks,
-  setProjectRows
+  setProjectRows,
+  setMilestones = () => {}
 }: UseGanttEventsProps) => {
   
   // 使用统一的全局标签管理（供后续扩展使用）
@@ -30,9 +34,11 @@ export const useGanttEvents = ({
     tasks,
     chartTasks,
     projectRows,
+    milestones,
     setTasks,
     setChartTasks,
-    setProjectRows
+    setProjectRows,
+    setMilestones
   });
   
   const taskAttributes = useTaskAttributes({

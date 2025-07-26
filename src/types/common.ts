@@ -4,7 +4,7 @@
  */
 
 // 任务类型枚举
-export type TaskType = 'milestone' | 'development' | 'testing' | 'delivery' | 'default';
+export type TaskType = 'development' | 'testing' | 'delivery' | 'default';
 
 // 任务状态枚举
 export type TaskStatus = 'pending' | 'in-progress' | 'completed' | 'overdue';

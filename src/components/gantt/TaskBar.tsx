@@ -5,6 +5,7 @@
 
 import React from 'react';
 import { Task } from '../../types/task';
+import EditableLabel from './EditableLabel';
 
 interface TaskBarProps {
   task: Task;
@@ -20,6 +21,7 @@ interface TaskBarProps {
   onTaskContextMenu: (e: React.MouseEvent, taskId: string) => void;
   onEdgeHover: (e: React.MouseEvent, task: Task) => void;
   onMouseLeave: () => void;
+  onTagEdit?: (taskId: string, oldTag: string, newTag: string) => void;
 }
 
 const TaskBar: React.FC<TaskBarProps> = ({
@@ -35,7 +37,8 @@ const TaskBar: React.FC<TaskBarProps> = ({
   onTaskSelect,
   onTaskContextMenu,
   onEdgeHover,
-  onMouseLeave
+  onMouseLeave,
+  onTagEdit
 }) => {
   const taskX = displayX !== undefined ? displayX : (task.x || 0);
   const taskWidth = displayWidth !== undefined ? displayWidth : (task.width || 100);
@@ -82,7 +85,23 @@ const TaskBar: React.FC<TaskBarProps> = ({
         {task.tags && task.tags.length > 0 && (
           <div className="task-tags">
             {task.tags.map(tag => (
-              <span key={tag} className="task-tag">{tag}</span>
+              <span key={tag} className="task-tag">
+                {onTagEdit ? (
+                  <EditableLabel
+                    value={tag}
+                    onSave={(newTag) => onTagEdit(task.id, tag, newTag)}
+                    style={{
+                      fontSize: '11px',
+                      color: 'inherit',
+                      whiteSpace: 'nowrap',
+                      maxWidth: '60px',
+                    }}
+                    maxLength={15}
+                  />
+                ) : (
+                  tag
+                )}
+              </span>
             ))}
           </div>
         )}

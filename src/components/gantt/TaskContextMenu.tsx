@@ -13,6 +13,7 @@ interface TaskContextMenuProps {
   onColorChange: (taskId: string) => void;
   onTagManage: (taskId: string) => void;
   onDelete: (taskId: string) => void;
+  onLabelEdit?: (taskId: string, label: string) => void; // 里程碑标签编辑回调
 }
 
 const TaskContextMenu: React.FC<TaskContextMenuProps> = ({
@@ -24,7 +25,8 @@ const TaskContextMenu: React.FC<TaskContextMenuProps> = ({
   onClose,
   onColorChange,
   onTagManage,
-  onDelete
+  onDelete,
+  onLabelEdit
 }) => {
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -54,6 +56,9 @@ const TaskContextMenu: React.FC<TaskContextMenuProps> = ({
   }, [visible, onClose]);
 
   if (!visible) return null;
+
+  // 现在所有任务都作为普通任务处理
+  const isMilestone = false;
 
   // 获取菜单尺寸估算
   const menuDimensions = getEstimatedMenuDimensions(3); // 3个菜单项：更改颜色、管理标签、删除任务
@@ -99,7 +104,14 @@ const TaskContextMenu: React.FC<TaskContextMenuProps> = ({
 
   const handleTagManage = () => {
     if (taskId) {
-      onTagManage(taskId);
+      if (isMilestone && onLabelEdit) {
+        // 里程碑添加标签：使用当前日期作为默认标签
+        const dateLabel = task?.startDate ? task.startDate.toLocaleDateString('zh-CN') : '';
+        onLabelEdit(taskId, dateLabel);
+      } else {
+        // 普通任务：调用标签管理
+        onTagManage(taskId);
+      }
       onClose();
     }
   };
@@ -149,7 +161,12 @@ const TaskContextMenu: React.FC<TaskContextMenuProps> = ({
         onClick={handleTagManage}
       >
         <span style={{ fontSize: '12px' }}>🏷️</span>
-        管理标签
+        {isMilestone ? '添加标签' : '管理标签'}
+        {isMilestone && task?.label && (
+          <span style={{ marginLeft: 'auto', color: '#666', fontSize: '12px' }}>
+            "{task.label}"
+          </span>
+        )}
       </div>
       
       <div

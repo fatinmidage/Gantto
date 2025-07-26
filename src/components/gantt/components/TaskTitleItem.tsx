@@ -132,9 +132,9 @@ export const TaskTitleItem: React.FC<TaskTitleItemProps> = ({
   };
 
   // 处理图标更改
-  const handleIconChange = (taskId: string, iconType: 'milestone' | 'development' | 'testing' | 'delivery' | 'default') => {
+  const handleIconChange = (taskId: string, iconType: 'development' | 'testing' | 'delivery' | 'default' | 'milestone') => {
     if (onTaskUpdate) {
-      onTaskUpdate(taskId, { type: iconType });
+      onTaskUpdate(taskId, { type: iconType as any });
     }
   };
 

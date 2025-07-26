@@ -22,7 +22,6 @@ export { default as TimelineHeader } from './TimelineHeader';
 export { default as TaskBars } from './TaskBars';
 export { default as TaskBarsContainer } from './TaskBarsContainer';
 export { default as TaskBar } from './TaskBar';
-export { default as MilestoneTaskBar } from './MilestoneTaskBar';
 export { default as TaskTitleColumn } from './TaskTitleColumn';
 export { default as TaskIconSelector } from './TaskIconSelector';
 export { default as TaskContextMenu } from './TaskContextMenu';
@@ -33,6 +32,7 @@ export { default as MilestoneContextMenu } from './MilestoneContextMenu';
 export { default as TagManager } from './TagManager';
 export { default as ColorPicker } from './ColorPicker';
 export { default as GanttContextMenu } from './GanttContextMenu';
+export { default as EditableLabel } from './EditableLabel';
 
 // === 子组件导出 ===
 export { TaskHierarchyControls } from './components/TaskHierarchyControls';

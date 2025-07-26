@@ -31,6 +31,7 @@ export interface Task {
   
   // 显示属性
   color: string;
+  label?: string; // 里程碑标签（仅用于里程碑类型任务）
   tags?: string[]; // 改为可选，兼容现有代码
   order?: number; // 改为可选，兼容现有代码
   

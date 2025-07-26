@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect } from 'react';
-import { Task } from '../../types';
+import { Task, MilestoneNode } from '../../types';
 
 // 导入样式常量
 import { LAYOUT_CONSTANTS } from './ganttStyles';
@@ -50,7 +50,11 @@ interface GanttEventHandlerProps {
   
   // 时间轴方法
   pixelToDate: (pixel: number) => Date;
-  dateRange: { pixelPerDay: number };
+  dateRange: { 
+    startDate: Date; 
+    endDate: Date; 
+    pixelPerDay?: number; 
+  };
   
   // 容器引用
   containerRef: React.RefObject<HTMLDivElement>;
@@ -105,7 +109,7 @@ export const GanttEventHandler: React.FC<GanttEventHandlerProps> = ({
     ganttEvents.createTask(task);
   }, [ganttEvents]);
 
-  const handleCreateMilestone = useCallback((milestone: Task) => {
+  const handleCreateMilestone = useCallback((milestone: MilestoneNode) => {
     ganttEvents.createMilestone(milestone);
   }, [ganttEvents]);
 
@@ -175,7 +179,7 @@ export const GanttEventHandler: React.FC<GanttEventHandlerProps> = ({
     const task = sortedChartTasks.find(t => t.id === taskId) || taskMapMemo.get(taskId);
     if (!task || !containerRef.current) return;
     
-    const currentDragType = task.type === 'milestone' ? 'move' : (() => {
+    const currentDragType = (() => {
       const edgeType = detectEdgeHover(e, task);
       return edgeType ? `resize-${edgeType}` as 'resize-left' | 'resize-right' : 'move';
     })();
@@ -254,9 +258,7 @@ export const GanttEventHandler: React.FC<GanttEventHandlerProps> = ({
     if (tempDragPosition && draggedTask && draggedTaskData && dragType) {
       const newStartDate = pixelToDate(tempDragPosition.x);
       const newEndDate = dragType === 'move' 
-        ? (draggedTaskData.type === 'milestone' 
-          ? newStartDate 
-          : new Date(newStartDate.getTime() + (draggedTaskData.endDate.getTime() - draggedTaskData.startDate.getTime())))
+        ? new Date(newStartDate.getTime() + (draggedTaskData.endDate.getTime() - draggedTaskData.startDate.getTime()))
         : dragType === 'resize-left' 
         ? draggedTaskData.endDate 
         : pixelToDate(tempDragPosition.x + tempDragPosition.width);

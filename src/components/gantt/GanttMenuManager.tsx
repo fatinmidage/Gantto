@@ -3,7 +3,7 @@ import GanttContextMenu from './GanttContextMenu';
 import TaskContextMenu from './TaskContextMenu';
 import ColorPicker from './ColorPicker';
 import TagManager from './TagManager';
-import { Task } from '../../types';
+import { Task, MilestoneNode } from '../../types';
 import { COLOR_CONSTANTS } from './ganttStyles';
 
 interface GanttMenuManagerProps {
@@ -39,11 +39,12 @@ interface GanttMenuManagerProps {
   onContextMenuClose: () => void;
   onTaskContextMenuClose: () => void;
   onCreateTask: (task: Task) => void;
-  onCreateMilestone: (milestone: Task) => void;
+  onCreateMilestone: (milestone: MilestoneNode) => void;
   onColorChange: (taskId: string, color: string) => void;
   onTagAdd: (taskId: string, tag: string) => void;
   onTagRemove: (taskId: string, tag: string) => void;
   onTaskDelete: (taskId: string) => void;
+  onLabelEdit?: (taskId: string, label: string) => void; // 里程碑标签编辑
   
   // 工具函数
   pixelToDate: (pixel: number) => Date;
@@ -65,6 +66,7 @@ const GanttMenuManager: React.FC<GanttMenuManagerProps> = ({
   onTagAdd,
   onTagRemove,
   onTaskDelete,
+  onLabelEdit,
   pixelToDate
 }) => {
   // 颜色选择器状态
@@ -100,17 +102,11 @@ const GanttMenuManager: React.FC<GanttMenuManagerProps> = ({
     });
   }, [tasks, taskContextMenuState]);
 
-  // 显示标签管理器
+  // 直接添加标签
   const handleShowTagManager = useCallback((taskId: string) => {
-    const task = tasks.find(t => t.id === taskId);
-    setTagManagerState({
-      visible: true,
-      x: taskContextMenuState.x,
-      y: taskContextMenuState.y,
-      taskId,
-      task
-    });
-  }, [tasks, taskContextMenuState]);
+    // 直接为任务添加默认标签"新建标签"
+    onTagAdd(taskId, '新建标签');
+  }, [onTagAdd]);
 
   // 颜色选择处理
   const handleColorSelect = useCallback((taskId: string, color: string) => {
@@ -156,6 +152,7 @@ const GanttMenuManager: React.FC<GanttMenuManagerProps> = ({
         onColorChange={handleShowColorPicker}
         onTagManage={handleShowTagManager}
         onDelete={onTaskDelete}
+        onLabelEdit={onLabelEdit}
       />
 
       {/* 颜色选择器 */}

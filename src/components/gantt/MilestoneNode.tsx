@@ -4,9 +4,10 @@
  */
 
 import React from 'react';
-import { Target, Code, CheckCircle, Package, Circle } from 'lucide-react';
+import { Target, Code, CheckCircle, Package } from 'lucide-react';
 import { MilestoneNode as MilestoneNodeData } from '../../types/task';
 import { TaskType } from '../../types/common';
+import EditableLabel from './EditableLabel';
 
 interface MilestoneNodeProps {
   milestone: MilestoneNodeData;
@@ -16,13 +17,12 @@ interface MilestoneNodeProps {
   onMouseDown?: (e: React.MouseEvent, milestoneId: string) => void;
   onContextMenu?: (e: React.MouseEvent, milestoneId: string) => void;
   onClick?: (milestoneId: string) => void;
+  onLabelEdit?: (milestoneId: string, newLabel: string) => void;
 }
 
 // 根据类型获取图标组件
 const getIconComponent = (iconType: TaskType) => {
   switch (iconType) {
-    case 'milestone':
-      return Target;
     case 'development':
       return Code;
     case 'testing':
@@ -30,15 +30,13 @@ const getIconComponent = (iconType: TaskType) => {
     case 'delivery':
       return Package;
     default:
-      return Circle;
+      return Target; // 默认使用Target图标作为里程碑
   }
 };
 
 // 根据类型获取颜色
 const getIconColor = (iconType: TaskType) => {
   switch (iconType) {
-    case 'milestone':
-      return '#ff9800'; // 橙色
     case 'development':
       return '#2196f3'; // 蓝色
     case 'testing':
@@ -57,7 +55,8 @@ const MilestoneNode: React.FC<MilestoneNodeProps> = ({
   isDragging = false,
   onMouseDown,
   onContextMenu,
-  onClick
+  onClick,
+  onLabelEdit
 }) => {
   const IconComponent = getIconComponent(milestone.iconType);
   const iconColor = getIconColor(milestone.iconType);
@@ -137,23 +136,28 @@ const MilestoneNode: React.FC<MilestoneNodeProps> = ({
       </div>
       
       {/* 标签文本（如果有） */}
-      {milestone.label && (
+      {milestone.label && onLabelEdit && (
         <div
           style={{
             position: 'absolute',
             top: nodeSize + 2,
             left: '50%',
             transform: 'translateX(-50%)',
-            fontSize: '10px',
-            color: '#666',
-            whiteSpace: 'nowrap',
-            pointerEvents: 'none',
-            maxWidth: '80px',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
+            pointerEvents: 'auto',
           }}
         >
-          {milestone.label}
+          <EditableLabel
+            value={milestone.label}
+            onSave={(newLabel) => onLabelEdit(milestone.id, newLabel)}
+            style={{
+              fontSize: '10px',
+              color: '#666',
+              whiteSpace: 'nowrap',
+              maxWidth: '80px',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+            }}
+          />
         </div>
       )}
     </div>

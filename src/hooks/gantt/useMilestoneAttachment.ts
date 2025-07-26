@@ -109,8 +109,8 @@ export const useMilestoneAttachment = () => {
 
     // 检查与所有任务条的重叠
     for (const task of allTasks) {
-      // 跳过里程碑类型的任务
-      if (task.startDate.getTime() === task.endDate.getTime() || task.type === 'milestone') {
+      // 跳过同一天开始和结束的任务（视为单点任务）
+      if (task.startDate.getTime() === task.endDate.getTime()) {
         continue;
       }
 

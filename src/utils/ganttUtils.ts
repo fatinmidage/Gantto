@@ -59,6 +59,17 @@ export const formatDateForDisplay = (date: Date): string => {
 };
 
 /**
+ * 格式化日期为M.D格式的标签字符串（用于里程碑默认标签）
+ * @param date 日期对象
+ * @returns M.D格式的字符串，如"1.15"、"12.3"
+ */
+export const formatDateToMD = (date: Date): string => {
+  const month = date.getMonth() + 1; // getMonth() 返回0-11，需要+1
+  const day = date.getDate();
+  return `${month}.${day}`;
+};
+
+/**
  * 检查任务是否与现有任务重叠
  * @param startDate 新任务开始时间
  * @param endDate 新任务结束时间

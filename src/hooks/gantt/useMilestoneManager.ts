@@ -7,6 +7,7 @@ import { useState, useCallback } from 'react';
 import { MilestoneNode, MilestoneCreateInput, MilestoneUpdateInput, Task } from '../../types/task';
 import { useMilestoneDrag } from './useMilestoneDrag';
 import { useMilestoneAttachment } from './useMilestoneAttachment';
+import { formatDateToMD } from '../../utils/ganttUtils';
 
 interface MilestoneManagerCallbacks {
   dateToPixel: (date: Date) => number;
@@ -14,6 +15,15 @@ interface MilestoneManagerCallbacks {
   getTaskRowIndex: (taskId: string) => number;
   taskHeight: number;
 }
+
+// 检查标签是否为日期格式
+const isDateLabel = (label: string): boolean => {
+  // 检查是否为中文日期格式 (YYYY/M/D 或 YYYY/MM/DD 或 YYYY-M-D 或 YYYY-MM-DD)
+  const dateRegex = /^\d{4}[\/\-]\d{1,2}[\/\-]\d{1,2}$/;
+  // 检查是否为M.D格式 (1.15, 12.3等)
+  const mdFormatRegex = /^\d{1,2}\.\d{1,2}$/;
+  return dateRegex.test(label) || mdFormatRegex.test(label);
+};
 
 export const useMilestoneManager = (callbacks: MilestoneManagerCallbacks) => {
   const [milestones, setMilestones] = useState<MilestoneNode[]>([]);
@@ -58,8 +68,8 @@ export const useMilestoneManager = (callbacks: MilestoneManagerCallbacks) => {
       id: `milestone-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       title: input.title,
       date: input.date,
-      iconType: input.iconType || 'milestone',
-      label: input.label,
+      iconType: input.iconType || 'default',
+      label: input.label || formatDateToMD(input.date), // 如果没有提供标签，自动生成M.D格式标签
       color: input.color || '#ff9800',
       attachedToBar: input.attachedToBar,
       relativePosition: input.relativePosition,
@@ -83,6 +93,11 @@ export const useMilestoneManager = (callbacks: MilestoneManagerCallbacks) => {
         // 如果日期发生变化，重新计算 X 位置
         if (updates.date && updates.date !== milestone.date) {
           updated.x = callbacks.dateToPixel(updates.date);
+          
+          // 如果标签是日期格式，自动更新为新日期的M.D格式
+          if (milestone.label && isDateLabel(milestone.label)) {
+            updated.label = formatDateToMD(updates.date);
+          }
         }
         
         return updated;

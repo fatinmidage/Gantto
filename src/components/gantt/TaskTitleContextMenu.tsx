@@ -37,7 +37,6 @@ const TaskTitleContextMenu: React.FC<TaskTitleContextMenuProps> = ({
   // 图标类型选项
   const iconTypes = [
     { type: 'default' as const, label: '默认任务' },
-    { type: 'milestone' as const, label: '里程碑' },
     { type: 'development' as const, label: '开发' },
     { type: 'testing' as const, label: '测试' },
     { type: 'delivery' as const, label: '交付' }

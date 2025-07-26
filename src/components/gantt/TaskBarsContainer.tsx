@@ -5,8 +5,8 @@
 
 import React from 'react';
 import TaskBar from './TaskBar';
-import MilestoneTaskBar from './MilestoneTaskBar';
-import { Task } from '../../types/task';
+import MilestoneNode from './MilestoneNode';
+import { Task, MilestoneNode as MilestoneNodeType } from '../../types/task';
 import { COLOR_CONSTANTS } from './ganttStyles';
 
 // 任务行数据接口
@@ -31,11 +31,15 @@ interface TaskBarsContainerProps {
   isHoveringEdge: 'left' | 'right' | null;
   dateToPixel: (date: Date) => number;
   isDragging: boolean;
+  milestones?: MilestoneNodeType[];
+  selectedMilestone?: string | null;
   onMouseDown: (e: React.MouseEvent, taskId: string) => void;
   onTaskSelect: (taskId: string) => void;
   onTaskContextMenu: (e: React.MouseEvent, taskId: string) => void;
   onEdgeHover: (e: React.MouseEvent, task: Task) => void;
   onMouseLeave: () => void;
+  onMilestoneSelect?: (milestoneId: string) => void;
+  onMilestoneContextMenu?: (e: React.MouseEvent, milestoneId: string) => void;
 }
 
 const TaskBarsContainer: React.FC<TaskBarsContainerProps> = ({
@@ -47,32 +51,17 @@ const TaskBarsContainer: React.FC<TaskBarsContainerProps> = ({
   isHoveringEdge,
   dateToPixel,
   isDragging,
+  milestones = [],
+  selectedMilestone,
   onMouseDown,
   onTaskSelect,
   onTaskContextMenu,
   onEdgeHover,
-  onMouseLeave
+  onMouseLeave,
+  onMilestoneSelect,
+  onMilestoneContextMenu
 }) => {
-  // 判断是否为里程碑
-  const isMilestone = (task: Task): boolean => {
-    const isTimeEqual = task.startDate.getTime() === task.endDate.getTime();
-    const isTypemilestone = task.type === 'milestone';
-    const result = isTimeEqual || isTypemilestone;
-    
-    // 🔍 调试日志：里程碑判断逻辑
-    console.log(`[TaskBarsContainer] 里程碑判断 - 任务ID: ${task.id}`, {
-      taskTitle: task.title,
-      startDate: task.startDate.toISOString(),
-      endDate: task.endDate.toISOString(),
-      taskType: task.type,
-      isTimeEqual,
-      isTypemilestone,
-      isMilestoneResult: result,
-      taskData: task
-    });
-    
-    return result;
-  };
+  // 现在所有任务都作为普通任务条渲染，不再区分里程碑任务条
 
   return (
     <div className="tasks" style={{
@@ -89,42 +78,8 @@ const TaskBarsContainer: React.FC<TaskBarsContainerProps> = ({
           const isBeingDragged = draggedTask === chartTask.id;
           const displayX = isBeingDragged && tempDragPosition ? tempDragPosition.x : chartTask.x;
           const displayWidth = isBeingDragged && tempDragPosition ? tempDragPosition.width : chartTask.width;
-          const milestoneCheck = isMilestone(chartTask);
           
-          // 🔍 调试日志：任务渲染前的状态检查
-          console.log(`[TaskBarsContainer] 渲染任务 ${chartTask.id}:`, {
-            taskTitle: chartTask.title,
-            taskType: chartTask.type,
-            startDate: chartTask.startDate.toISOString(),
-            endDate: chartTask.endDate.toISOString(),
-            timesEqual: chartTask.startDate.getTime() === chartTask.endDate.getTime(),
-            isMilestone: milestoneCheck,
-            isBeingDragged,
-            displayX,
-            displayWidth,
-            tempDragPosition,
-            willRenderAs: milestoneCheck ? 'MilestoneTaskBar' : 'TaskBar'
-          });
-
-          // 渲染里程碑任务条
-          if (isMilestone(chartTask)) {
-            return (
-              <MilestoneTaskBar
-                key={chartTask.id}
-                task={chartTask}
-                rowIndex={rowIndex}
-                taskHeight={taskHeight}
-                isBeingDragged={isBeingDragged}
-                displayX={displayX}
-                dateToPixel={dateToPixel}
-                onMouseDown={onMouseDown}
-                onTaskSelect={onTaskSelect}
-                onTaskContextMenu={onTaskContextMenu}
-              />
-            );
-          }
-
-          // 渲染普通任务条
+          // 所有任务都作为普通任务条渲染
           return (
             <TaskBar
               key={chartTask.id}
@@ -145,6 +100,45 @@ const TaskBarsContainer: React.FC<TaskBarsContainerProps> = ({
           );
         })
       )}
+      
+      {/* 渲染独立的里程碑节点 */}
+      {milestones.map((milestone) => {
+        // 计算里程碑的位置
+        const milestoneX = dateToPixel(milestone.date);
+        const milestoneY = milestone.y || 0; // 使用预计算的Y位置，或默认为0
+        
+        // 更新里程碑的位置
+        const updatedMilestone = {
+          ...milestone,
+          x: milestoneX,
+          y: milestoneY
+        };
+        
+        return (
+          <MilestoneNode
+            key={milestone.id}
+            milestone={updatedMilestone}
+            taskHeight={taskHeight}
+            isSelected={selectedMilestone === milestone.id}
+            isDragging={false} // TODO: 集成拖拽状态
+            onMouseDown={(_e, milestoneId) => {
+              if (onMilestoneSelect) {
+                onMilestoneSelect(milestoneId);
+              }
+            }}
+            onContextMenu={(e, milestoneId) => {
+              if (onMilestoneContextMenu) {
+                onMilestoneContextMenu(e, milestoneId);
+              }
+            }}
+            onClick={(milestoneId) => {
+              if (onMilestoneSelect) {
+                onMilestoneSelect(milestoneId);
+              }
+            }}
+          />
+        );
+      })}
     </div>
   );
 };

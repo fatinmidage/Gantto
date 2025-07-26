@@ -17,7 +17,7 @@ export interface ProjectRow {
   title: string;
   order: number; // 显示顺序
   level?: number; // 缩进层级，0为根级，改为可选兼容现有代码
-  type?: 'milestone' | 'development' | 'testing' | 'delivery' | 'default'; // 添加type字段兼容现有代码
+  type?: 'development' | 'testing' | 'delivery' | 'default'; // 添加type字段兼容现有代码
   
   // 状态
   isExpanded?: boolean; // 是否展开子行，改为可选

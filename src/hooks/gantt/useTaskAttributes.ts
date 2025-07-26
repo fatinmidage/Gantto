@@ -12,6 +12,7 @@ export interface UseTaskAttributesResult {
   handleColorChange: (taskId: string, color: string) => void;
   handleTagAdd: (taskId: string, tag: string) => void;
   handleTagRemove: (taskId: string, tag: string) => void;
+  handleLabelEdit: (taskId: string, label: string) => void; // 里程碑标签编辑
   updateTaskStatus: (taskId: string, status: Task['status']) => void;
   updateTaskProgress: (taskId: string, progress: number) => void;
 }
@@ -98,6 +99,22 @@ export const useTaskAttributes = ({
     }
   }, [chartTasks, setChartTasks, setTasks]);
 
+  // 里程碑标签编辑
+  const handleLabelEdit = useCallback((taskId: string, label: string) => {
+    // 优先更新图表任务
+    const chartTask = chartTasks.find(t => t.id === taskId);
+    if (chartTask) {
+      setChartTasks(prev => prev.map(task => 
+        task.id === taskId ? { ...task, label: label.trim() || undefined } : task
+      ));
+    } else {
+      // 兼容性：更新传统任务
+      setTasks(prev => prev.map(task => 
+        task.id === taskId ? { ...task, label: label.trim() || undefined } : task
+      ));
+    }
+  }, [chartTasks, setChartTasks, setTasks]);
+
   // 任务状态管理
   const updateTaskStatus = useCallback((taskId: string, status: Task['status']) => {
     // 优先更新图表任务
@@ -134,6 +151,7 @@ export const useTaskAttributes = ({
     handleColorChange,
     handleTagAdd,
     handleTagRemove,
+    handleLabelEdit,
     updateTaskStatus,
     updateTaskProgress
   };
