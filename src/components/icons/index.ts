@@ -22,49 +22,17 @@ export {
   ChevronRight,
   Layers,
   
-  // 原有任务图标
-  Package,
-  Code,
-  CheckCircle,
+  // 任务图标选择器 - 仅保留8个指定图标
   Circle,
-  GripVertical,
-  
-  // 扩展的任务图标 - 开发相关
-  Bug,
-  Cpu,
-  Database,
-  Globe,
-  Server,
-  Monitor,
-  Smartphone,
-  Laptop,
-  
-  // 扩展的任务图标 - 业务相关
-  Users,
-  User,
-  Calendar,
-  Clock,
+  CircleCheck,
+  CircleDashed,
+  Package,
   Flag,
   Star,
-  Heart,
-  BookOpen,
+  BatteryFull,
+  Milestone,
   
-  // 扩展的任务图标 - 状态相关
-  Play,
-  Pause,
-  Square,
-  AlertTriangle,
-  CheckCircle2,
-  XCircle,
-  Info,
-  Zap,
-  
-  // 扩展的任务图标 - 工具相关
-  Wrench,
-  Hammer,
-  Scissors,
-  Paintbrush,
-  Camera,
-  Image,
-  Video
+  // 其他组件必需图标
+  GripVertical,
+  CheckCircle
 } from 'lucide-react';

@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { TaskIcon } from '..';
-import { AVAILABLE_ICONS, ICON_CATEGORIES } from '../../config/icons';
+import { AVAILABLE_ICONS } from '../../config/icons';
 import { IconType } from '../../types/common';
 
 interface TaskIconSelectorProps {
@@ -19,7 +19,6 @@ const TaskIconSelector: React.FC<TaskIconSelectorProps> = ({
 }) => {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = useState(true);
-  const [selectedCategory, setSelectedCategory] = useState(ICON_CATEGORIES[0].id);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -53,15 +52,13 @@ const TaskIconSelector: React.FC<TaskIconSelectorProps> = ({
     handleClose();
   };
 
-  // 根据选中的分类过滤图标
-  const filteredIcons = AVAILABLE_ICONS.filter(icon => 
-    selectedCategory === 'default' ? true : icon.category === selectedCategory
-  );
+  // 使用所有图标（不再需要分类过滤）
+  const filteredIcons = AVAILABLE_ICONS;
 
-  // 调整位置以避免超出视口
+  // 调整位置以避免超出视口 - 由于图标减少，菜单更小
   const adjustedPosition = {
-    x: Math.min(position.x, window.innerWidth - 400), // 400是菜单的大概宽度
-    y: Math.min(position.y, window.innerHeight - 300) // 300是菜单的大概高度
+    x: Math.min(position.x, window.innerWidth - 320), // 320是菜单的大概宽度
+    y: Math.min(position.y, window.innerHeight - 200) // 200是菜单的大概高度
   };
 
   const dropdownContent = (
@@ -73,8 +70,8 @@ const TaskIconSelector: React.FC<TaskIconSelectorProps> = ({
         top: adjustedPosition.y,
         transformOrigin: 'top left',
         zIndex: 9999,
-        width: '380px',
-        maxHeight: '400px',
+        width: '300px',
+        maxHeight: '280px',
         backgroundColor: 'white',
         border: '1px solid #e5e7eb',
         borderRadius: '8px',
@@ -87,33 +84,16 @@ const TaskIconSelector: React.FC<TaskIconSelectorProps> = ({
         e.stopPropagation();
       }}
     >
-      {/* 分类选择器 */}
-      <div style={{borderBottom: '1px solid #e5e7eb', padding: '8px'}}>
-        <div style={{display: 'flex', flexWrap: 'wrap', gap: '4px'}}>
-          {ICON_CATEGORIES.map((category) => (
-            <button
-              key={category.id}
-              style={{
-                padding: '4px 8px',
-                fontSize: '12px',
-                borderRadius: '4px',
-                border: 'none',
-                cursor: 'pointer',
-                backgroundColor: selectedCategory === category.id ? '#dbeafe' : 'transparent',
-                color: selectedCategory === category.id ? '#1d4ed8' : '#6b7280',
-                transition: 'all 150ms ease-in-out'
-              }}
-              onClick={() => setSelectedCategory(category.id)}
-            >
-              {category.label}
-            </button>
-          ))}
-        </div>
+      {/* 标题栏 */}
+      <div style={{borderBottom: '1px solid #e5e7eb', padding: '12px', textAlign: 'center'}}>
+        <h3 style={{margin: 0, fontSize: '14px', fontWeight: '500', color: '#374151'}}>
+          选择任务图标
+        </h3>
       </div>
 
       {/* 图标网格 */}
-      <div style={{padding: '12px', maxHeight: '256px', overflowY: 'auto'}}>
-        <div style={{display: 'grid', gridTemplateColumns: 'repeat(8, 1fr)', gap: '8px'}}>
+      <div style={{padding: '16px', maxHeight: '200px', overflowY: 'auto'}}>
+        <div style={{display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px'}}>
           {filteredIcons.map((icon) => (
             <div
               key={icon.id}
@@ -121,12 +101,13 @@ const TaskIconSelector: React.FC<TaskIconSelectorProps> = ({
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
-                padding: '8px',
-                borderRadius: '4px',
+                padding: '12px 8px',
+                borderRadius: '6px',
                 cursor: 'pointer',
                 backgroundColor: currentIconType === icon.id ? '#eff6ff' : 'transparent',
                 border: currentIconType === icon.id ? '2px solid #3b82f6' : '2px solid transparent',
-                transition: 'all 150ms ease-in-out'
+                transition: 'all 150ms ease-in-out',
+                minHeight: '60px'
               }}
               onMouseDown={(e) => {
                 e.stopPropagation();
@@ -145,10 +126,10 @@ const TaskIconSelector: React.FC<TaskIconSelectorProps> = ({
                 }
               }}
             >
-              <div style={{marginBottom: '4px'}}>
-                <TaskIcon iconType={icon.id} size={20} />
+              <div style={{marginBottom: '6px'}}>
+                <TaskIcon iconType={icon.id} size={24} />
               </div>
-              <span style={{fontSize: '12px', color: '#6b7280', textAlign: 'center', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', width: '100%'}}>
+              <span style={{fontSize: '11px', color: '#6b7280', textAlign: 'center', lineHeight: '1.2', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', width: '100%'}}>
                 {icon.label}
               </span>
             </div>
@@ -157,8 +138,8 @@ const TaskIconSelector: React.FC<TaskIconSelectorProps> = ({
       </div>
 
       {/* 底部信息 */}
-      <div style={{borderTop: '1px solid #e5e7eb', padding: '8px', fontSize: '12px', color: '#6b7280', textAlign: 'center'}}>
-        选择图标来自定义任务外观
+      <div style={{borderTop: '1px solid #e5e7eb', padding: '10px', fontSize: '12px', color: '#9ca3af', textAlign: 'center'}}>
+        8个精选图标，满足日常需求
       </div>
     </div>
   );
