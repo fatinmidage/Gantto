@@ -95,19 +95,6 @@ export const useMilestoneDrag = (callbacks: MilestoneDragCallbacks): MilestoneDr
       return 'dateToPixel函数不在callbacks中';
     })() : '无法获取dateToPixel函数';
     
-    console.log('=== 里程碑拖拽开始调试信息 ===');
-    console.log('里程碑ID:', milestone.id);
-    console.log('里程碑日期:', milestone.date);
-    console.log('里程碑存储坐标:', { x: milestone.x, y: milestone.y });
-    console.log('基于日期重新计算的坐标 (需要dateToPixel):', dateBasedX);
-    console.log('渲染位置计算:', { renderedX, renderedY });
-    console.log('鼠标点击位置:', { clientX, clientY });
-    console.log('容器边界:', bounds);
-    console.log('计算的偏移量:', {
-      x: clientX - bounds.left - renderedX,
-      y: clientY - bounds.top - renderedY
-    });
-    console.log('=============================');
     
     const offset = {
       x: clientX - bounds.left - renderedX,

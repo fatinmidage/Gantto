@@ -157,16 +157,9 @@ const GanttStateManager: React.FC<GanttStateManagerProps> = ({
     
     // 验证输入参数
     if (isNaN(duration)) {
-      console.error('updateDragMetrics: Invalid duration:', {
-        task: { id: task.id, title: task.title, startDate: task.startDate, endDate: task.endDate },
-        duration,
-        startTime: task.startDate.getTime(),
-        endTime: task.endDate.getTime()
-      });
     }
     
     if (isNaN(pixelPerDay) || pixelPerDay <= 0) {
-      console.error('updateDragMetrics: Invalid pixelPerDay:', pixelPerDay);
     }
     
     // 安全的 minWidth 计算 - 现在所有任务统一处理

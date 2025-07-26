@@ -77,7 +77,6 @@ export const useTaskBarDrag = () => {
       dragState.startHorizontalDrag(taskId, task, newDragType, offset);
       
     } else {
-      console.error('❌ 容器边界获取失败');
     }
   }, [dragState, updateContainerBounds]);
 
@@ -96,21 +95,12 @@ export const useTaskBarDrag = () => {
     
     
     if (!metrics || !bounds) {
-      console.error('🐛 updateHorizontalDragPosition: Missing metrics or bounds');
       return;
     }
 
     const mouseX = clientX - bounds.left;
     
     if (isNaN(mouseX)) {
-      console.error('🐛 mouseX is NaN:', {
-        clientX,
-        clientXValid: !isNaN(clientX),
-        boundsLeft: bounds.left,
-        boundsLeftValid: !isNaN(bounds.left),
-        mouseX,
-        mouseXValid: !isNaN(mouseX)
-      });
     }
     const taskData = dragState.draggedTaskData;
     // 移除了milestone类型判断，所有任务都作为普通任务处理
@@ -122,33 +112,6 @@ export const useTaskBarDrag = () => {
       const constrainedX = Math.max(0, Math.min(newX, maxX));
       
       if (isNaN(constrainedX)) {
-        console.error('🐛 constrainedX is NaN - Full diagnostic:', {
-          // 输入值诊断
-          mouseX,
-          dragOffsetX: dragState.dragOffset.x,
-          mouseXValid: !isNaN(mouseX),
-          dragOffsetXValid: !isNaN(dragState.dragOffset.x),
-          CHART_WIDTH,
-          metricsMinWidth: metrics.minWidth,
-          isRegularTask: true,
-          // 计算过程诊断
-          newX,
-          newXValid: !isNaN(newX),
-          maxX,
-          maxXValid: !isNaN(maxX),
-          constrainedX,
-          constrainedXValid: !isNaN(constrainedX),
-          // 更深层的数据检查
-          clientX: mouseX + bounds.left, // 反推 clientX
-          boundsLeft: bounds.left,
-          taskData: {
-            id: taskData.id,
-            title: taskData.title,
-            x: taskData.x,
-            width: taskData.width
-          }
-        });
-        
         const fallbackX = 0;
         const dragUpdate = {
           id: dragState.draggedTask,

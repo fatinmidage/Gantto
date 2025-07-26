@@ -86,18 +86,11 @@ export const useTimeline = (
     
     // 1. 输入参数验证
     if (typeof pixel !== 'number' || isNaN(pixel)) {
-      console.error('🐛 pixelToDate: Invalid pixel parameter:', pixel);
       return new Date(dateRange.startDate); // 返回起始日期作为降级方案
     }
     
     // 2. 日期范围验证
     if (isNaN(dateRange.startDate.getTime()) || isNaN(dateRange.endDate.getTime())) {
-      console.error('🐛 pixelToDate: Invalid dateRange:', {
-        startDate: dateRange.startDate,
-        endDate: dateRange.endDate,
-        startDateValid: !isNaN(dateRange.startDate.getTime()),
-        endDateValid: !isNaN(dateRange.endDate.getTime())
-      });
       return new Date(); // 返回当前时间作为降级方案
     }
     
@@ -105,7 +98,6 @@ export const useTimeline = (
     
     // 3. 总天数验证
     if (totalDays <= 0) {
-      console.error('🐛 pixelToDate: Invalid totalDays:', totalDays);
       return new Date(dateRange.startDate); // 返回起始日期
     }
     
@@ -117,7 +109,6 @@ export const useTimeline = (
     
     // 4. 像素密度验证
     if (pixelPerDay <= 0 || isNaN(pixelPerDay)) {
-      console.error('🐛 pixelToDate: Invalid pixelPerDay:', pixelPerDay);
       return new Date(dateRange.startDate);
     }
     
@@ -128,11 +119,6 @@ export const useTimeline = (
     
     // 5. 结果验证
     if (isNaN(resultDate.getTime())) {
-      console.error('🐛 pixelToDate: Calculated invalid date:', {
-        days,
-        resultTimestamp,
-        resultDate
-      });
       return new Date(dateRange.startDate);
     }
     

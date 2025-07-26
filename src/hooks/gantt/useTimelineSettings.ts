@@ -39,7 +39,6 @@ export const useTimelineSettings = (initialConfig?: TimelineLayerConfig): UseTim
     const validation = validateTimelineConfig(newConfig);
     
     if (!validation.isValid) {
-      console.warn('时间轴配置验证失败:', validation.errors);
       
       // 返回修正后的配置或默认配置
       return validation.correctedConfig || DEFAULT_CONFIG;

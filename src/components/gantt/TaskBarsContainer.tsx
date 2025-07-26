@@ -114,29 +114,16 @@ const TaskBarsContainer: React.FC<TaskBarsContainerProps> = ({
         // 🔧 同步里程碑坐标：确保存储坐标与渲染坐标一致
         const hasCoordinateDrift = milestone.x && Math.abs(milestoneX - milestone.x) > 0.1;
         
-        console.log('=== 里程碑坐标同步调试信息 ===');
-        console.log('里程碑ID:', milestone.id);
-        console.log('里程碑原始日期:', milestone.date);
-        console.log('里程碑存储的X坐标:', milestone.x);
-        console.log('基于日期重新计算的X坐标:', milestoneX);
-        console.log('坐标差异:', milestone.x ? (milestoneX - milestone.x) : '无存储坐标');
-        console.log('需要同步坐标:', hasCoordinateDrift);
-        console.log('是否正在被拖拽:', isBeingDragged);
-        console.log('临时拖拽位置:', tempDragPosition);
         
         // 如果正在拖拽且有临时位置，使用临时位置的 x 坐标
         if (isBeingDragged && tempDragPosition) {
-          console.log('使用临时拖拽位置X:', tempDragPosition.x);
           milestoneX = tempDragPosition.x;
         }
         
-        console.log('最终使用的X坐标:', milestoneX);
-        console.log('==============================');
         
         // 🔧 坐标漂移检测（暂时注释掉同步逻辑，避免崩溃）
         // 这样可以避免每次渲染都重新计算，提高性能
         if (hasCoordinateDrift && !isBeingDragged) {
-          console.log('🔧 检测到里程碑坐标漂移:', milestone.id, milestone.x, '→', milestoneX);
           // 注意：如果需要自动同步坐标，需要传递 onMilestoneUpdate 回调函数
           // 当前暂时跳过自动同步，避免程序崩溃
         }

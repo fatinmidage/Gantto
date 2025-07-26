@@ -122,11 +122,6 @@ const GanttEventCoordinator: React.FC<GanttEventCoordinatorProps> = ({
         // 解决：使用基于日期重新计算的坐标，确保拖拽起始位置与渲染位置一致
         const currentRenderX = dateToPixel(milestone.date);
         
-        console.log('=== 里程碑坐标修复调试信息 ===');
-        console.log('里程碑ID:', milestone.id);
-        console.log('存储的旧坐标:', milestone.x);
-        console.log('基于日期计算的当前渲染坐标:', currentRenderX);
-        console.log('使用坐标:', currentRenderX);
         
         // 将里程碑转换为任务对象以便拖拽处理
         task = {
@@ -141,8 +136,6 @@ const GanttEventCoordinator: React.FC<GanttEventCoordinatorProps> = ({
           color: milestone.color || '#666666'
         };
         
-        console.log('修复后任务对象X坐标:', task.x);
-        console.log('============================');
       }
     }
     
@@ -275,7 +268,6 @@ const GanttEventCoordinator: React.FC<GanttEventCoordinatorProps> = ({
       
       // 验证日期有效性
       if (isNaN(newStartDate.getTime())) {
-        console.error('Invalid start date calculated:', newStartDate);
         resetHorizontalDrag();
         return;
       }
@@ -290,7 +282,6 @@ const GanttEventCoordinator: React.FC<GanttEventCoordinatorProps> = ({
       
       // 验证结束日期有效性
       if (isNaN(newEndDate.getTime())) {
-        console.error('Invalid end date calculated:', newEndDate);
         resetHorizontalDrag();
         return;
       }
