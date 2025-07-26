@@ -8,8 +8,8 @@ import { createPortal } from 'react-dom';
 import { Task } from '../../types';
 import { TaskIcon } from '..';
 import { IconType } from '../../types/common';
-import TaskIconSelector from './TaskIconSelector';
-import { calculateMenuPosition, getEstimatedMenuDimensions } from '../../utils/menuPositioning';
+import { calculateMenuPosition, getEstimatedMenuDimensions, calculateSubmenuPosition } from '../../utils/menuPositioning';
+import { AVAILABLE_ICONS } from '../../config/icons';
 
 interface TaskTitleContextMenuProps {
   visible: boolean;
@@ -32,14 +32,21 @@ const TaskTitleContextMenu: React.FC<TaskTitleContextMenuProps> = ({
   onNameEdit,
   onIconChange
 }) => {
-  const [showIconSelector, setShowIconSelector] = useState(false);
+  const [showIconSubmenu, setShowIconSubmenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const submenuRef = useRef<HTMLDivElement>(null);
+  const showSubmenuTimeoutRef = useRef<number | null>(null);
+  const hideSubmenuTimeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (!visible) return;
 
     const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+      const target = event.target as Node;
+      const clickedInMenu = menuRef.current && menuRef.current.contains(target);
+      const clickedInSubmenu = submenuRef.current && submenuRef.current.contains(target);
+      
+      if (!clickedInMenu && !clickedInSubmenu) {
         onClose();
       }
     };
@@ -56,6 +63,14 @@ const TaskTitleContextMenu: React.FC<TaskTitleContextMenuProps> = ({
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('keydown', handleEscape);
+      
+      // 清理定时器
+      if (showSubmenuTimeoutRef.current !== null) {
+        clearTimeout(showSubmenuTimeoutRef.current);
+      }
+      if (hideSubmenuTimeoutRef.current !== null) {
+        clearTimeout(hideSubmenuTimeoutRef.current);
+      }
     };
   }, [visible, onClose]);
 
@@ -67,6 +82,16 @@ const TaskTitleContextMenu: React.FC<TaskTitleContextMenuProps> = ({
   const mainMenuPosition = calculateMenuPosition(
     { x, y },
     mainMenuDimensions
+  );
+  
+  // 子菜单智能定位
+  const submenuDimensions = { width: 260, height: 150 }; // 预估子菜单尺寸（宽度260px适配4列图标，删除标题后减少高度）
+  const iconItemOffset = 44; // "更改任务图标"菜单项的垂直偏移（第二个菜单项）
+  const submenuPosition = calculateSubmenuPosition(
+    mainMenuPosition,
+    mainMenuDimensions,
+    submenuDimensions,
+    iconItemOffset
   );
   
   
@@ -99,21 +124,56 @@ const TaskTitleContextMenu: React.FC<TaskTitleContextMenuProps> = ({
     onClose();
   };
 
-  // 处理图标选择器显示
-  const handleShowIconSelector = () => {
-    setShowIconSelector(true);
+  // 处理图标子菜单悬停显示
+  const handleIconMenuEnter = () => {
+    // 清除隐藏定时器
+    if (hideSubmenuTimeoutRef.current !== null) {
+      clearTimeout(hideSubmenuTimeoutRef.current);
+      hideSubmenuTimeoutRef.current = null;
+    }
+    
+    // 设置显示定时器
+    showSubmenuTimeoutRef.current = window.setTimeout(() => {
+      setShowIconSubmenu(true);
+    }, 300);
+  };
+
+  // 处理图标子菜单悬停离开
+  const handleIconMenuLeave = () => {
+    // 清除显示定时器
+    if (showSubmenuTimeoutRef.current !== null) {
+      clearTimeout(showSubmenuTimeoutRef.current);
+      showSubmenuTimeoutRef.current = null;
+    }
+    
+    // 设置隐藏定时器
+    hideSubmenuTimeoutRef.current = window.setTimeout(() => {
+      setShowIconSubmenu(false);
+    }, 500);
+  };
+
+  // 处理子菜单区域悬停
+  const handleSubmenuEnter = () => {
+    // 清除隐藏定时器
+    if (hideSubmenuTimeoutRef.current !== null) {
+      clearTimeout(hideSubmenuTimeoutRef.current);
+      hideSubmenuTimeoutRef.current = null;
+    }
+  };
+
+  // 处理子菜单区域离开
+  const handleSubmenuLeave = () => {
+    // 设置隐藏定时器
+    hideSubmenuTimeoutRef.current = window.setTimeout(() => {
+      setShowIconSubmenu(false);
+    }, 500);
   };
 
   // 处理图标选择
   const handleIconSelect = (iconType: IconType) => {
     onIconChange(taskId, iconType);
-    setShowIconSelector(false);
+    setShowIconSubmenu(false);
     onClose();
-  };
-
-  // 处理图标选择器关闭
-  const handleIconSelectorClose = () => {
-    setShowIconSelector(false);
   };
 
   // 使用Portal将菜单渲染到document.body，绕过CSS层叠上下文限制
@@ -151,25 +211,97 @@ const TaskTitleContextMenu: React.FC<TaskTitleContextMenuProps> = ({
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.backgroundColor = '#f5f5f5';
+            handleIconMenuEnter();
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.backgroundColor = 'transparent';
+            handleIconMenuLeave();
           }}
-          onClick={handleShowIconSelector}
         >
           <TaskIcon iconType={task.iconType || task.type} size={16} />
           更改任务图标
+          <span style={{ marginLeft: 'auto', fontSize: '12px', color: '#999' }}>▶</span>
         </div>
       </div>
 
-      {/* 图标选择器 */}
-      {showIconSelector && (
-        <TaskIconSelector
-          currentIconType={task.iconType || task.type || 'default'}
-          onIconTypeChange={handleIconSelect}
-          onClose={handleIconSelectorClose}
-          position={{ x: mainMenuPosition.x + 200, y: mainMenuPosition.y }}
-        />
+      {/* 图标子菜单 */}
+      {showIconSubmenu && (
+        <div
+          ref={submenuRef}
+          style={{
+            position: 'fixed',
+            top: submenuPosition.y,
+            left: submenuPosition.x,
+            backgroundColor: '#fff',
+            border: '1px solid #ddd',
+            borderRadius: '8px',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+            zIndex: 10000,
+            width: '260px',
+            padding: '12px',
+            opacity: showIconSubmenu ? 1 : 0,
+            transform: showIconSubmenu ? 'scale(1)' : 'scale(0.95)',
+            transition: 'all 150ms ease-in-out'
+          }}
+          onMouseEnter={handleSubmenuEnter}
+          onMouseLeave={handleSubmenuLeave}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* 图标网格 */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: '8px'
+          }}>
+            {AVAILABLE_ICONS.map((icon) => (
+              <div
+                key={icon.id}
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  padding: '8px 4px',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  backgroundColor: (task.iconType || task.type) === icon.id ? '#eff6ff' : 'transparent',
+                  border: (task.iconType || task.type) === icon.id ? '1px solid #3b82f6' : '1px solid transparent',
+                  transition: 'all 150ms ease-in-out'
+                }}
+                onMouseDown={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  handleIconSelect(icon.id);
+                }}
+                title={icon.label}
+                onMouseEnter={(e) => {
+                  if ((task.iconType || task.type) !== icon.id) {
+                    e.currentTarget.style.backgroundColor = '#f9fafb';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if ((task.iconType || task.type) !== icon.id) {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                  }
+                }}
+              >
+                <TaskIcon iconType={icon.id} size={16} />
+                <span style={{
+                  fontSize: '10px',
+                  color: '#6b7280',
+                  textAlign: 'center',
+                  lineHeight: '1.2',
+                  marginTop: '4px',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                  width: '100%'
+                }}>
+                  {icon.label}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
       )}
     </>
   );

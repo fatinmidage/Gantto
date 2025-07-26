@@ -19,11 +19,11 @@ export const AVAILABLE_ICONS: IconConfig[] = [
   { id: 'circle', label: '基础任务', component: Icons.Circle, color: '#666666', category: 'default' },
   { id: 'circle-check', label: '已完成', component: Icons.CircleCheck, color: '#4caf50', category: 'default' },
   { id: 'circle-dashed', label: '进行中', component: Icons.CircleDashed, color: '#2196f3', category: 'default' },
-  { id: 'package', label: '交付包', component: Icons.Package, color: '#9c27b0', category: 'default' },
+  { id: 'milestone', label: '关键节点', component: Icons.Milestone, color: '#673ab7', category: 'default' },
   { id: 'flag', label: '里程碑', component: Icons.Flag, color: '#f44336', category: 'default' },
   { id: 'star', label: '重要任务', component: Icons.Star, color: '#ffc107', category: 'default' },
   { id: 'battery-full', label: '高优先级', component: Icons.BatteryFull, color: '#ff5722', category: 'default' },
-  { id: 'milestone', label: '关键节点', component: Icons.Milestone, color: '#673ab7', category: 'default' }
+  { id: 'package', label: '交付包', component: Icons.Package, color: '#9c27b0', category: 'default' }
 ];
 
 // 根据ID获取图标配置
