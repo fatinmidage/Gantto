@@ -6,11 +6,11 @@ import { useDragReducer, DragType } from './useDragReducer';
 export type { DragType, EdgeHover } from './useDragReducer';
 
 /**
- * 拖拽状态管理Hook - 重构版本
+ * 任务条拖拽状态管理Hook
+ * 专门处理任务条（TaskBar）的拖拽逻辑，包括移动、调整大小、垂直拖拽等
  * 使用 useReducer 模式统一管理复杂拖拽状态
- * 提供向后兼容的API接口
  */
-export const useDragAndDrop = () => {
+export const useTaskBarDrag = () => {
   // 使用新的 reducer 模式管理拖拽状态
   const dragState = useDragReducer();
   
@@ -59,13 +59,20 @@ export const useDragAndDrop = () => {
     const bounds = containerBounds.current;
     
     if (bounds) {
-      const taskX = task.x || 0;
+      // 🔧 修复：区分里程碑和任务条的偏移量计算
+      const isMilestone = task.startDate.getTime() === task.endDate.getTime();
+      let taskX = task.x || 0;
+      
+      if (isMilestone) {
+        // 里程碑：task.x 是中心点，需要转换为左边缘位置
+        const nodeSize = 16;
+        taskX = taskX - nodeSize / 2;
+      }
       
       const offset = {
         x: clientX - bounds.left - taskX,
         y: clientY - bounds.top
       };
-      
       
       dragState.startHorizontalDrag(taskId, task, newDragType, offset);
       
@@ -152,13 +159,19 @@ export const useDragAndDrop = () => {
         return;
       }
       
-      // 里程碑拖拽移动计算
-      // 检查是否为里程碑（开始时间等于结束时间）
+      // 🔧 修复：里程碑拖拽移动计算
       const isMilestone = taskData.startDate.getTime() === taskData.endDate.getTime();
+      
+      let finalX = constrainedX;
+      if (isMilestone) {
+        // 里程碑：constrainedX 是左边缘位置，需要转换回中心点位置
+        const nodeSize = 16;
+        finalX = constrainedX + nodeSize / 2;
+      }
       
       const dragUpdate = {
         id: dragState.draggedTask,
-        x: constrainedX,
+        x: finalX,
         width: isMilestone ? 16 : metrics.minWidth
       };
       

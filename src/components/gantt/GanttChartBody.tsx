@@ -74,6 +74,7 @@ interface GanttChartBodyProps {
   onContextMenu: (e: React.MouseEvent) => void;
   onMilestoneSelect?: (milestoneId: string) => void;
   onMilestoneContextMenu?: (e: React.MouseEvent, milestoneId: string) => void;
+  onMilestoneDragStart?: (e: React.MouseEvent, milestone: any) => void;
   
   // 事件监听器
   onMouseMove: (e: MouseEvent) => void;
@@ -111,6 +112,7 @@ const GanttChartBody: React.FC<GanttChartBodyProps> = ({
   onContextMenu,
   onMilestoneSelect,
   onMilestoneContextMenu,
+  onMilestoneDragStart,
   dateToPixel,
   onMouseMove,
   onMouseUp,
@@ -191,6 +193,7 @@ const GanttChartBody: React.FC<GanttChartBodyProps> = ({
           onMouseLeave={onMouseLeave}
           onMilestoneSelect={onMilestoneSelect}
           onMilestoneContextMenu={onMilestoneContextMenu}
+          onMilestoneDragStart={onMilestoneDragStart}
         />
       </div>
     </div>

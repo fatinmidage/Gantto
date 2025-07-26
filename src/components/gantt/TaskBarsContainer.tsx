@@ -40,6 +40,7 @@ interface TaskBarsContainerProps {
   onMouseLeave: () => void;
   onMilestoneSelect?: (milestoneId: string) => void;
   onMilestoneContextMenu?: (e: React.MouseEvent, milestoneId: string) => void;
+  onMilestoneDragStart?: (e: React.MouseEvent, milestone: MilestoneNodeType) => void;
 }
 
 const TaskBarsContainer: React.FC<TaskBarsContainerProps> = ({
@@ -59,7 +60,8 @@ const TaskBarsContainer: React.FC<TaskBarsContainerProps> = ({
   onEdgeHover,
   onMouseLeave,
   onMilestoneSelect,
-  onMilestoneContextMenu
+  onMilestoneContextMenu,
+  onMilestoneDragStart
 }) => {
   // 现在所有任务都作为普通任务条渲染，不再区分里程碑任务条
 
@@ -141,10 +143,7 @@ const TaskBarsContainer: React.FC<TaskBarsContainerProps> = ({
             taskHeight={taskHeight}
             isSelected={selectedMilestone === milestone.id}
             isDragging={draggedTask === milestone.id}
-            onMouseDown={(e, milestoneId) => {
-              // 触发拖拽处理器，就像普通任务一样
-              onMouseDown(e, milestoneId);
-            }}
+            onMilestoneDragStart={onMilestoneDragStart}
             onContextMenu={(e, milestoneId) => {
               if (onMilestoneContextMenu) {
                 onMilestoneContextMenu(e, milestoneId);

@@ -163,6 +163,12 @@ const GanttChart: React.FC<GanttChartProps> = ({
               onMilestoneContextMenu={(e, milestoneId) => {
                 // TODO: 实现里程碑右键菜单
               }}
+              onMilestoneDragStart={(e, milestone) => {
+                // 调用 GanttEventCoordinator 的拖拽处理逻辑
+                if (handlers?.handleMouseDown) {
+                  handlers.handleMouseDown(e, milestone.id);
+                }
+              }}
             />
           )}
         </GanttEventCoordinator>

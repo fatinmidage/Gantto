@@ -5,24 +5,23 @@
 
 import { useCallback, useRef } from 'react';
 import { MilestoneNode, Task } from '../../types/task';
+import { 
+  MilestoneDragCallbacks, 
+  MilestoneDragOperations,
+  MilestoneDragState as DragTypeMilestoneState
+} from '../../types/drag';
 import { useMilestoneAttachment } from './useMilestoneAttachment';
 
-interface MilestoneDragState {
+interface LocalMilestoneDragState {
   isDragging: boolean;
   draggedMilestone: string | null;
   dragOffset: { x: number; y: number };
   originalPosition: { x: number; y: number } | null;
+  previewPosition: { x: number; y: number } | null;
+  isWithinBounds: boolean;
 }
 
-interface MilestoneDragCallbacks {
-  onMilestoneUpdate: (milestoneId: string, updates: Partial<MilestoneNode>) => void;
-  onAttachmentChange: (milestoneId: string, attachedToBar?: string, relativePosition?: number) => void;
-  dateToPixel: (date: Date) => number;
-  pixelToDate: (pixel: number) => Date;
-  getTaskRowIndex: (taskId: string) => number;
-}
-
-export const useMilestoneDrag = (callbacks: MilestoneDragCallbacks) => {
+export const useMilestoneDrag = (callbacks: MilestoneDragCallbacks): MilestoneDragOperations => {
   const {
     onMilestoneUpdate,
     onAttachmentChange,
@@ -31,11 +30,13 @@ export const useMilestoneDrag = (callbacks: MilestoneDragCallbacks) => {
   } = callbacks;
 
   // 拖拽状态
-  const dragStateRef = useRef<MilestoneDragState>({
+  const dragStateRef = useRef<LocalMilestoneDragState>({
     isDragging: false,
     draggedMilestone: null,
     dragOffset: { x: 0, y: 0 },
-    originalPosition: null
+    originalPosition: null,
+    previewPosition: null,
+    isWithinBounds: true
   });
 
   // 容器边界缓存
@@ -43,6 +44,22 @@ export const useMilestoneDrag = (callbacks: MilestoneDragCallbacks) => {
 
   // 引入附着检测逻辑
   const attachment = useMilestoneAttachment();
+
+  // 边界检测函数
+  const checkBounds = useCallback((x: number, y: number, containerWidth?: number, containerHeight?: number): boolean => {
+    const nodeSize = 16;
+    const margin = 8; // 边界缓冲区
+    
+    // 检查X轴边界
+    const minX = nodeSize / 2 + margin;
+    const maxX = (containerWidth || 800) - nodeSize / 2 - margin;
+    
+    // 检查Y轴边界
+    const minY = nodeSize / 2 + margin;
+    const maxY = (containerHeight || 600) - nodeSize / 2 - margin;
+    
+    return x >= minX && x <= maxX && y >= minY && y <= maxY;
+  }, []);
 
   // 更新容器边界
   const updateContainerBounds = useCallback((element: HTMLElement | null) => {
@@ -61,20 +78,30 @@ export const useMilestoneDrag = (callbacks: MilestoneDragCallbacks) => {
     updateContainerBounds(containerElement);
     
     const bounds = containerBoundsRef.current;
-    if (!bounds || !milestone.x || !milestone.y) return;
+    if (!bounds || !milestone.x || !milestone.y) {
+      return;
+    }
 
-    // 计算拖拽偏移量
+    // 🔧 修复：计算正确的拖拽偏移量
+    // 里程碑的渲染位置是 milestone.x - nodeSize/2，所以需要基于渲染位置计算偏移
+    const nodeSize = 16;
+    const renderedX = milestone.x - nodeSize / 2; // 这是里程碑实际的渲染left位置
+    const renderedY = milestone.y - nodeSize / 2; // 这是里程碑实际的渲染top位置
+    
     const offset = {
-      x: clientX - bounds.left - milestone.x,
-      y: clientY - bounds.top - milestone.y
+      x: clientX - bounds.left - renderedX,
+      y: clientY - bounds.top - renderedY
     };
+
 
     // 更新拖拽状态
     dragStateRef.current = {
       isDragging: true,
       draggedMilestone: milestone.id,
       dragOffset: offset,
-      originalPosition: { x: milestone.x, y: milestone.y }
+      originalPosition: { x: milestone.x, y: milestone.y },
+      previewPosition: null,
+      isWithinBounds: true
     };
   }, [updateContainerBounds]);
 
@@ -83,7 +110,9 @@ export const useMilestoneDrag = (callbacks: MilestoneDragCallbacks) => {
     clientX: number,
     clientY: number,
     allTasks: Task[],
-    taskHeight: number
+    taskHeight: number,
+    containerWidth?: number,
+    containerHeight?: number
   ) => {
     const dragState = dragStateRef.current;
     if (!dragState.isDragging || !dragState.draggedMilestone) return;
@@ -91,9 +120,37 @@ export const useMilestoneDrag = (callbacks: MilestoneDragCallbacks) => {
     const bounds = containerBoundsRef.current;
     if (!bounds) return;
 
-    // 计算新位置
-    const newX = clientX - bounds.left - dragState.dragOffset.x;
-    const newY = clientY - bounds.top - dragState.dragOffset.y;
+    // 🔧 修复：计算新位置时需要还原到中心点坐标
+    // 因为offset是基于渲染位置计算的，所以需要还原到里程碑的中心点坐标
+    const nodeSize = 16;
+    const renderedX = clientX - bounds.left - dragState.dragOffset.x;
+    const renderedY = clientY - bounds.top - dragState.dragOffset.y;
+    
+    // 将渲染位置转换回里程碑的中心点坐标
+    let newX = renderedX + nodeSize / 2;
+    let newY = renderedY + nodeSize / 2;
+
+    // 边界检测和约束
+    const isWithinBounds = checkBounds(newX, newY, containerWidth, containerHeight);
+    
+    // 如果超出边界，约束到边界内
+    if (!isWithinBounds && containerWidth && containerHeight) {
+      const margin = 8;
+      const minX = nodeSize / 2 + margin;
+      const maxX = containerWidth - nodeSize / 2 - margin;
+      const minY = nodeSize / 2 + margin;
+      const maxY = containerHeight - nodeSize / 2 - margin;
+      
+      newX = Math.max(minX, Math.min(newX, maxX));
+      newY = Math.max(minY, Math.min(newY, maxY));
+    }
+
+    // 更新拖拽状态（包含预览位置和边界状态）
+    dragStateRef.current = {
+      ...dragState,
+      previewPosition: { x: newX, y: newY },
+      isWithinBounds
+    };
 
     // 创建临时的里程碑对象用于检测附着
     const tempMilestone: MilestoneNode = {
@@ -136,7 +193,8 @@ export const useMilestoneDrag = (callbacks: MilestoneDragCallbacks) => {
     onMilestoneUpdate,
     onAttachmentChange,
     pixelToDate,
-    getTaskRowIndex
+    getTaskRowIndex,
+    checkBounds
   ]);
 
   // 结束拖拽
@@ -149,7 +207,9 @@ export const useMilestoneDrag = (callbacks: MilestoneDragCallbacks) => {
       isDragging: false,
       draggedMilestone: null,
       dragOffset: { x: 0, y: 0 },
-      originalPosition: null
+      originalPosition: null,
+      previewPosition: null,
+      isWithinBounds: true
     };
 
     // 清除容器边界缓存
@@ -203,9 +263,34 @@ export const useMilestoneDrag = (callbacks: MilestoneDragCallbacks) => {
     return attachment.handleMilestoneOverlap(milestones, nodeSize);
   }, [attachment]);
 
-  // 获取当前拖拽状态
-  const getDragState = useCallback((): MilestoneDragState => {
-    return { ...dragStateRef.current };
+  // 获取当前拖拽状态  
+  const getDragState = useCallback((): DragTypeMilestoneState => {
+    const state = dragStateRef.current;
+    return {
+      isDragging: state.isDragging,
+      draggedMilestoneId: state.draggedMilestone,
+      draggedMilestoneData: null, // 需要从上下文获取
+      tempDragPosition: state.previewPosition ? {
+        id: state.draggedMilestone || '',
+        x: state.previewPosition.x,
+        y: state.previewPosition.y
+      } : null,
+      previewPosition: state.previewPosition,
+      originalPosition: state.originalPosition,
+      potentialAttachmentBar: null, // 需要从上下文获取
+      startOffset: state.dragOffset,
+      isWithinBounds: state.isWithinBounds
+    };
+  }, []);
+
+  // 获取拖拽预览位置
+  const getPreviewPosition = useCallback(() => {
+    return dragStateRef.current.previewPosition;
+  }, []);
+
+  // 检查是否在边界内
+  const getIsWithinBounds = useCallback(() => {
+    return dragStateRef.current.isWithinBounds;
   }, []);
 
   return {
@@ -221,14 +306,16 @@ export const useMilestoneDrag = (callbacks: MilestoneDragCallbacks) => {
     
     // 状态查询
     getDragState,
+    getPreviewPosition,
+    getIsWithinBounds,
+    
+    // 边界检测
+    checkBounds,
     
     // 状态属性（便于组件使用）
-    get isDragging() {
-      return dragStateRef.current.isDragging;
-    },
-    
-    get draggedMilestone() {
-      return dragStateRef.current.draggedMilestone;
-    }
+    isDragging: dragStateRef.current.isDragging,
+    draggedMilestone: dragStateRef.current.draggedMilestone,
+    previewPosition: dragStateRef.current.previewPosition,
+    isWithinBounds: dragStateRef.current.isWithinBounds
   };
 };

@@ -1,7 +1,7 @@
 // Hooks 统一导出入口
 
 // Gantt相关Hooks
-export { useDragAndDrop } from './gantt/useDragAndDrop';
+export { useTaskBarDrag } from './gantt/useTaskBarDrag';
 export { useTaskManager } from './gantt/useTaskManager';
 export { useTimeline } from './gantt/useTimeline';
 export { useTaskFilter } from './gantt/useTaskFilter';

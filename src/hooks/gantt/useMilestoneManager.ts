@@ -40,10 +40,11 @@ export const useMilestoneManager = (callbacks: MilestoneManagerCallbacks) => {
 
   // 附着关系变化回调
   const handleAttachmentChange = useCallback((
-    milestoneId: string, 
-    attachedToBar?: string, 
-    relativePosition?: number
+    _milestoneId: string, 
+    _attachedToBar?: string, 
+    _relativePosition?: number
   ) => {
+    // 可以在这里添加附着变化的处理逻辑
   }, []);
 
   // 初始化拖拽功能
@@ -237,8 +238,8 @@ export const useMilestoneManager = (callbacks: MilestoneManagerCallbacks) => {
     updateMilestoneDragPosition: milestoneDrag.updateMilestoneDragPosition,
     endMilestoneDrag: milestoneDrag.endMilestoneDrag,
     cancelMilestoneDrag: milestoneDrag.cancelMilestoneDrag,
-    isDraggingMilestone: milestoneDrag.isDragging,
-    draggedMilestone: milestoneDrag.draggedMilestone,
+    isDraggingMilestone: milestoneDrag.getDragState().isDragging,
+    draggedMilestone: milestoneDrag.getDragState().draggedMilestoneId,
     
     // 重叠处理
     handleMilestoneOverlap: milestoneDrag.handleMilestoneOverlap,

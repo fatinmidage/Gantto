@@ -83,6 +83,7 @@ interface GanttContainerProps {
   selectedMilestone?: string | null;
   onMilestoneSelect?: (milestoneId: string) => void;
   onMilestoneContextMenu?: (e: React.MouseEvent, milestoneId: string) => void;
+  onMilestoneDragStart?: (e: React.MouseEvent, milestone: MilestoneNode) => void;
 }
 
 const GanttContainer: React.FC<GanttContainerProps> = ({
@@ -155,7 +156,8 @@ const GanttContainer: React.FC<GanttContainerProps> = ({
   milestones = [],
   selectedMilestone,
   onMilestoneSelect,
-  onMilestoneContextMenu
+  onMilestoneContextMenu,
+  onMilestoneDragStart
 }) => {
   // 标题列宽度状态
   const [titleColumnWidth, setTitleColumnWidth] = useState<number>(LAYOUT_CONSTANTS.TITLE_COLUMN_WIDTH);
@@ -221,6 +223,7 @@ const GanttContainer: React.FC<GanttContainerProps> = ({
         selectedMilestone={selectedMilestone}
         onMilestoneSelect={onMilestoneSelect}
         onMilestoneContextMenu={onMilestoneContextMenu}
+        onMilestoneDragStart={onMilestoneDragStart}
       />
 
       <GanttMenuManager

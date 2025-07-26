@@ -5,7 +5,7 @@ import { useGanttStateCalculations } from './state/GanttStateCalculations';
 
 // 导入自定义 Hooks
 import {
-  useDragAndDrop,
+  useTaskBarDrag,
   useTaskManager,
   useTimeline,
   useTaskFilter,
@@ -52,7 +52,7 @@ const GanttStateManager: React.FC<GanttStateManagerProps> = ({
   } = taskManager;
 
   // === 功能性Hooks ===
-  const dragAndDrop = useDragAndDrop();
+  const taskBarDrag = useTaskBarDrag();
   // 转换旧的timeGranularity参数为layerConfig
   const computedLayerConfig = React.useMemo(() => {
     // 优先使用传入的layerConfig
@@ -180,8 +180,8 @@ const GanttStateManager: React.FC<GanttStateManagerProps> = ({
       minWidth: isNaN(minWidth) ? 20 : minWidth
     };
     
-    dragAndDrop.updateDragMetrics(metrics);
-  }, [dragAndDrop]);
+    taskBarDrag.updateDragMetrics(metrics);
+  }, [taskBarDrag]);
 
   // === 状态数据组装 ===
   
@@ -199,7 +199,7 @@ const GanttStateManager: React.FC<GanttStateManagerProps> = ({
     filterStats,
     
     // 拖拽状态
-    ...dragAndDrop,
+    ...taskBarDrag,
     updateDragMetrics, // 添加高级适配器函数
     
     // 时间轴状态

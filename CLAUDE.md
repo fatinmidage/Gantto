@@ -60,7 +60,7 @@ This is a **Tauri-based cross-platform Gantt chart application** built with Reac
 - **Gantt Hooks**: 20+ specialized hooks for different gantt functionality
 - **State Hooks**: `useGanttState`, optimized `useGanttUIState` (122 lines), `useDragReducer`
 - **UI State Modules**: `ui/useSelectionState.ts`, `ui/useMenuState.ts`, `ui/useModalState.ts`, `ui/useUIKeyboard.ts`
-- **Interaction Hooks**: `useDragAndDrop`, `useTaskManager`, `useTimeline`, `useLayeredTimeline`
+- **Interaction Hooks**: `useTaskBarDrag`, `useTaskManager`, `useTimeline`, `useLayeredTimeline`
 - **Timeline Hooks**: `useTimelineSettings` for layered timeline configuration
 - **Common Hooks**: `useThrottle`, `useCache`, `useErrorHandler`
 
@@ -105,7 +105,7 @@ This is a **Tauri-based cross-platform Gantt chart application** built with Reac
 
 **Interaction Flow:**
 1. User interactions captured by `GanttEventHandler`
-2. Events processed by specialized hooks (`useDragAndDrop`, `useTaskSelection`)
+2. Events processed by specialized hooks (`useTaskBarDrag`, `useTaskSelection`)
 3. State updates propagated through `GanttEventCoordinator`
 4. UI updates triggered via React state changes
 

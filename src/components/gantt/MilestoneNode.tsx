@@ -14,7 +14,7 @@ interface MilestoneNodeProps {
   taskHeight: number;
   isSelected?: boolean;
   isDragging?: boolean;
-  onMouseDown?: (e: React.MouseEvent, milestoneId: string) => void;
+  onMilestoneDragStart?: (e: React.MouseEvent, milestone: MilestoneNodeData) => void;
   onContextMenu?: (e: React.MouseEvent, milestoneId: string) => void;
   onClick?: (milestoneId: string) => void;
   onLabelEdit?: (milestoneId: string, newLabel: string) => void;
@@ -37,7 +37,7 @@ const MilestoneNode: React.FC<MilestoneNodeProps> = ({
   taskHeight,
   isSelected = false,
   isDragging = false,
-  onMouseDown,
+  onMilestoneDragStart,
   onContextMenu,
   onClick,
   onLabelEdit
@@ -45,14 +45,18 @@ const MilestoneNode: React.FC<MilestoneNodeProps> = ({
   const IconComponent = getIconComponent(milestone.iconType);
   const iconColor = getIconColor(milestone.iconType);
   
-  // 节点大小基于任务高度计算
-  const nodeSize = Math.max(12, Math.min(20, taskHeight * 0.7));
+  // 节点大小固定为16像素
+  const nodeSize = 16;
   
   // 节点位置
+  const calculatedLeft = milestone.x ? milestone.x - nodeSize / 2 : 0;
+  const calculatedTop = milestone.y ? milestone.y - nodeSize / 2 : taskHeight / 2 - nodeSize / 2;
+  
+  
   const nodeStyle: React.CSSProperties = {
     position: 'absolute',
-    left: milestone.x ? milestone.x - nodeSize / 2 : 0,
-    top: milestone.y ? milestone.y - nodeSize / 2 : taskHeight / 2 - nodeSize / 2,
+    left: calculatedLeft,
+    top: calculatedTop,
     width: nodeSize,
     height: nodeSize,
     cursor: isDragging ? 'grabbing' : 'grab',
@@ -77,9 +81,11 @@ const MilestoneNode: React.FC<MilestoneNodeProps> = ({
 
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
-    // 移除 e.stopPropagation() 以允许拖拽事件传播
-    if (onMouseDown) {
-      onMouseDown(e, milestone.id);
+    e.stopPropagation(); // 阻止事件传播，由专用处理器处理
+    
+    // 使用专用的里程碑拖拽处理器
+    if (onMilestoneDragStart) {
+      onMilestoneDragStart(e, milestone);
     }
   };
 

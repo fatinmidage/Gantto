@@ -46,8 +46,11 @@ export interface MilestoneDragState {
   draggedMilestoneId: string | null;
   draggedMilestoneData: MilestoneNode | null;
   tempDragPosition: TempMilestoneDragPosition | null;
+  previewPosition: { x: number; y: number } | null;
+  originalPosition: { x: number; y: number } | null;
   potentialAttachmentBar: string | null; // 潜在的附着任务条ID
   startOffset: DragOffset;
+  isWithinBounds: boolean;
 }
 
 // 拖拽缓存
@@ -95,4 +98,41 @@ export interface DragOperations {
   resetDragState: () => void;
   updateDragMetrics: (metrics: DragMetrics) => void;
   getDragMetrics: () => DragMetrics;
+}
+
+// 里程碑拖拽操作接口
+export interface MilestoneDragOperations {
+  startMilestoneDrag: (milestone: MilestoneNode, clientX: number, clientY: number, containerElement: HTMLElement | null) => void;
+  updateMilestoneDragPosition: (clientX: number, clientY: number, allTasks: Task[], taskHeight: number, containerWidth?: number, containerHeight?: number) => void;
+  endMilestoneDrag: () => void;
+  cancelMilestoneDrag: () => void;
+  syncAttachedMilestones: (task: Task, milestones: MilestoneNode[], taskHeight: number) => MilestoneNode[];
+  handleMilestoneOverlap: (milestones: MilestoneNode[], nodeSize?: number) => MilestoneNode[];
+  getDragState: () => MilestoneDragState;
+  getPreviewPosition: () => { x: number; y: number } | null;
+  getIsWithinBounds: () => boolean;
+  checkBounds: (x: number, y: number, containerWidth?: number, containerHeight?: number) => boolean;
+  
+  // 状态属性
+  isDragging: boolean;
+  draggedMilestone: string | null;
+  previewPosition: { x: number; y: number } | null;
+  isWithinBounds: boolean;
+}
+
+// 里程碑拖拽回调接口
+export interface MilestoneDragCallbacks {
+  onMilestoneUpdate: (milestoneId: string, updates: Partial<MilestoneNode>) => void;
+  onAttachmentChange: (milestoneId: string, attachedToBar?: string, relativePosition?: number) => void;
+  dateToPixel: (date: Date) => number;
+  pixelToDate: (pixel: number) => Date;
+  getTaskRowIndex: (taskId: string) => number;
+}
+
+// 里程碑边界检测配置
+export interface MilestoneBoundsConfig {
+  nodeSize: number;
+  margin: number;
+  containerWidth?: number;
+  containerHeight?: number;
 }

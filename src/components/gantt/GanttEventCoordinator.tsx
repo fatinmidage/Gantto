@@ -133,7 +133,6 @@ const GanttEventCoordinator: React.FC<GanttEventCoordinatorProps> = ({
     }
     
     if (!task || !containerRef.current) {
-      console.warn('🐛 handleMouseDown: task or containerRef not found', { taskId, task, hasContainer: !!containerRef.current });
       return;
     }
     
@@ -141,7 +140,6 @@ const GanttEventCoordinator: React.FC<GanttEventCoordinatorProps> = ({
       const edgeType = detectEdgeHover(e, task);
       return edgeType ? `resize-${edgeType}` as 'resize-left' | 'resize-right' : 'move';
     })();
-    
     
     // 计算正确的 pixelPerDay
     const totalDays = Math.ceil((dateRange.endDate.getTime() - dateRange.startDate.getTime()) / (24 * 60 * 60 * 1000));
