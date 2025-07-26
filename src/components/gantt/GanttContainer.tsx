@@ -59,10 +59,12 @@ interface GanttContainerProps {
   tasks: Task[];
   contextMenuState: any;
   taskContextMenuState: any;
+  milestoneContextMenuState?: any;
   defaultRowId: string;
   availableTags: string[];
   onContextMenuClose: () => void;
   onTaskContextMenuClose: () => void;
+  onMilestoneContextMenuClose?: () => void;
   onCreateTask: (task: any) => void;
   onCreateMilestone: (milestone: any) => void;
   onColorChange: (taskId: string, color: string) => void;
@@ -70,6 +72,9 @@ interface GanttContainerProps {
   onTagRemove: (taskId: string, tag: string) => void;
   onTaskDelete: (taskId: string) => void;
   onLabelEdit?: (taskId: string, label: string) => void; // 里程碑标签编辑
+  onMilestoneIconChange?: (milestoneId: string, iconType: any) => void;
+  onMilestoneLabelEdit?: (milestoneId: string, label: string) => void;
+  onMilestoneDelete?: (milestoneId: string) => void;
   pixelToDate: (pixel: number) => Date;
   
   // 容器引用
@@ -139,10 +144,12 @@ const GanttContainer: React.FC<GanttContainerProps> = ({
   tasks,
   contextMenuState,
   taskContextMenuState,
+  milestoneContextMenuState,
   defaultRowId,
   availableTags,
   onContextMenuClose,
   onTaskContextMenuClose,
+  onMilestoneContextMenuClose,
   onCreateTask,
   onCreateMilestone,
   onColorChange,
@@ -150,6 +157,9 @@ const GanttContainer: React.FC<GanttContainerProps> = ({
   onTagRemove,
   onTaskDelete,
   onLabelEdit,
+  onMilestoneIconChange,
+  onMilestoneLabelEdit,
+  onMilestoneDelete,
   pixelToDate,
   containerRef,
   isCurrentDateInRange = true,
@@ -228,14 +238,17 @@ const GanttContainer: React.FC<GanttContainerProps> = ({
 
       <GanttMenuManager
         tasks={tasks}
+        milestones={milestones}
         contextMenuState={contextMenuState}
         taskContextMenuState={taskContextMenuState}
+        milestoneContextMenuState={milestoneContextMenuState || { visible: false, x: 0, y: 0, milestoneId: null }}
         defaultRowId={defaultRowId}
         availableTags={availableTags}
         visibleRows={leftPanelTasks}
         taskHeight={taskHeight}
         onContextMenuClose={onContextMenuClose}
         onTaskContextMenuClose={onTaskContextMenuClose}
+        onMilestoneContextMenuClose={onMilestoneContextMenuClose || (() => {})}
         onCreateTask={onCreateTask}
         onCreateMilestone={onCreateMilestone}
         onColorChange={onColorChange}
@@ -243,6 +256,9 @@ const GanttContainer: React.FC<GanttContainerProps> = ({
         onTagRemove={onTagRemove}
         onTaskDelete={onTaskDelete}
         onLabelEdit={onLabelEdit}
+        onMilestoneIconChange={onMilestoneIconChange}
+        onMilestoneLabelEdit={onMilestoneLabelEdit}
+        onMilestoneDelete={onMilestoneDelete}
         pixelToDate={pixelToDate}
       />
     </div>

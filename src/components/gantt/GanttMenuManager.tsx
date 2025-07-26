@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import GanttContextMenu from './GanttContextMenu';
 import TaskContextMenu from './TaskContextMenu';
+import MilestoneContextMenu from './MilestoneContextMenu';
 import ColorPicker from './ColorPicker';
 import TagManager from './TagManager';
 import { Task, MilestoneNode } from '../../types';
@@ -9,6 +10,7 @@ import { COLOR_CONSTANTS } from './ganttStyles';
 interface GanttMenuManagerProps {
   // 任务数据
   tasks: Task[];
+  milestones: MilestoneNode[];
   
   // 上下文菜单状态
   contextMenuState: {
@@ -25,6 +27,13 @@ interface GanttMenuManagerProps {
     taskId: string | null;
   };
   
+  milestoneContextMenuState: {
+    visible: boolean;
+    x: number;
+    y: number;
+    milestoneId: string | null;
+  };
+  
   // 默认行ID
   defaultRowId: string;
   
@@ -38,6 +47,7 @@ interface GanttMenuManagerProps {
   // 事件处理
   onContextMenuClose: () => void;
   onTaskContextMenuClose: () => void;
+  onMilestoneContextMenuClose: () => void;
   onCreateTask: (task: Task) => void;
   onCreateMilestone: (milestone: MilestoneNode) => void;
   onColorChange: (taskId: string, color: string) => void;
@@ -45,6 +55,9 @@ interface GanttMenuManagerProps {
   onTagRemove: (taskId: string, tag: string) => void;
   onTaskDelete: (taskId: string) => void;
   onLabelEdit?: (taskId: string, label: string) => void; // 里程碑标签编辑
+  onMilestoneIconChange?: (milestoneId: string, iconType: any) => void;
+  onMilestoneLabelEdit?: (milestoneId: string, label: string) => void;
+  onMilestoneDelete?: (milestoneId: string) => void;
   
   // 工具函数
   pixelToDate: (pixel: number) => Date;
@@ -52,14 +65,17 @@ interface GanttMenuManagerProps {
 
 const GanttMenuManager: React.FC<GanttMenuManagerProps> = ({
   tasks,
+  milestones,
   contextMenuState,
   taskContextMenuState,
+  milestoneContextMenuState,
   defaultRowId,
   availableTags,
   visibleRows,
   taskHeight,
   onContextMenuClose,
   onTaskContextMenuClose,
+  onMilestoneContextMenuClose,
   onCreateTask,
   onCreateMilestone,
   onColorChange,
@@ -67,6 +83,9 @@ const GanttMenuManager: React.FC<GanttMenuManagerProps> = ({
   onTagRemove,
   onTaskDelete,
   onLabelEdit,
+  onMilestoneIconChange,
+  onMilestoneLabelEdit,
+  onMilestoneDelete,
   pixelToDate
 }) => {
   // 颜色选择器状态
@@ -153,6 +172,18 @@ const GanttMenuManager: React.FC<GanttMenuManagerProps> = ({
         onTagManage={handleShowTagManager}
         onDelete={onTaskDelete}
         onLabelEdit={onLabelEdit}
+      />
+
+      {/* 里程碑右键菜单 */}
+      <MilestoneContextMenu
+        visible={milestoneContextMenuState.visible}
+        x={milestoneContextMenuState.x}
+        y={milestoneContextMenuState.y}
+        milestone={milestoneContextMenuState.milestoneId ? milestones.find(m => m.id === milestoneContextMenuState.milestoneId) : undefined}
+        onClose={onMilestoneContextMenuClose}
+        onIconChange={onMilestoneIconChange || (() => {})}
+        onLabelEdit={onMilestoneLabelEdit || (() => {})}
+        onDelete={onMilestoneDelete || (() => {})}
       />
 
       {/* 颜色选择器 */}

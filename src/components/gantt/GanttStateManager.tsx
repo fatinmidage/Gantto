@@ -95,6 +95,19 @@ const GanttStateManager: React.FC<GanttStateManagerProps> = ({
     },
     taskHeight
   });
+
+  // === 里程碑菜单状态 ===
+  const [milestoneContextMenuState, setMilestoneContextMenuState] = React.useState<{
+    visible: boolean;
+    x: number;
+    y: number;
+    milestoneId: string | null;
+  }>({
+    visible: false,
+    x: 0,
+    y: 0,
+    milestoneId: null
+  });
   
   // 初始化里程碑数据
   React.useEffect(() => {
@@ -216,6 +229,10 @@ const GanttStateManager: React.FC<GanttStateManagerProps> = ({
     milestones: milestoneManager.milestones,
     selectedMilestone: milestoneManager.selectedMilestone,
     milestoneManager,
+    
+    // 里程碑上下文菜单状态
+    milestoneContextMenuState,
+    setMilestoneContextMenuState,
     
     // 容器引用
     containerRef,

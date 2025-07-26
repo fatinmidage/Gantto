@@ -69,7 +69,7 @@ const TaskContextMenu: React.FC<TaskContextMenuProps> = ({
     menuDimensions
   );
 
-  const menuItemStyle = {
+  const menuItemStyle: React.CSSProperties = {
     padding: '10px 16px',
     cursor: 'pointer',
     display: 'flex',

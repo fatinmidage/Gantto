@@ -5,10 +5,12 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Target, Code, CheckCircle, Package, Edit, Trash2 } from 'lucide-react';
+import { Edit, Trash2 } from 'lucide-react';
 import { MilestoneNode } from '../../types/task';
-import { TaskType } from '../../types/common';
-import { calculateMenuPosition, getEstimatedMenuDimensions } from '../../utils/menuPositioning';
+import { IconType } from '../../types/common';
+import { TaskIcon } from '..';
+import { calculateMenuPosition, getEstimatedMenuDimensions, calculateSubmenuPosition } from '../../utils/menuPositioning';
+import { AVAILABLE_ICONS } from '../../config/icons';
 
 interface MilestoneContextMenuProps {
   visible: boolean;
@@ -16,7 +18,7 @@ interface MilestoneContextMenuProps {
   y: number;
   milestone?: MilestoneNode;
   onClose: () => void;
-  onIconChange: (milestoneId: string, iconType: TaskType) => void;
+  onIconChange: (milestoneId: string, iconType: IconType) => void;
   onLabelEdit: (milestoneId: string, label: string) => void;
   onDelete: (milestoneId: string) => void;
 }
@@ -31,16 +33,21 @@ const MilestoneContextMenu: React.FC<MilestoneContextMenuProps> = ({
   onLabelEdit,
   onDelete
 }) => {
-  const [isEditingLabel, setIsEditingLabel] = useState(false);
-  const [labelValue, setLabelValue] = useState(milestone?.label || '');
+  const [showIconSubmenu, setShowIconSubmenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const submenuRef = useRef<HTMLDivElement>(null);
+  const showSubmenuTimeoutRef = useRef<number | null>(null);
+  const hideSubmenuTimeoutRef = useRef<number | null>(null);
 
-  // 处理点击外部关闭菜单
   useEffect(() => {
     if (!visible) return;
 
     const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+      const target = event.target as Node;
+      const clickedInMenu = menuRef.current && menuRef.current.contains(target);
+      const clickedInSubmenu = submenuRef.current && submenuRef.current.contains(target);
+      
+      if (!clickedInMenu && !clickedInSubmenu) {
         onClose();
       }
     };
@@ -57,33 +64,47 @@ const MilestoneContextMenu: React.FC<MilestoneContextMenuProps> = ({
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('keydown', handleEscape);
+      
+      // 清理定时器
+      if (showSubmenuTimeoutRef.current !== null) {
+        clearTimeout(showSubmenuTimeoutRef.current);
+      }
+      if (hideSubmenuTimeoutRef.current !== null) {
+        clearTimeout(hideSubmenuTimeoutRef.current);
+      }
     };
   }, [visible, onClose]);
 
   if (!visible || !milestone) return null;
 
-  // 根据编辑状态获取菜单尺寸估算
-  const itemCount = 7; // 5个图标选项 + 1个标签编辑 + 1个删除按钮
-  const menuDimensions = getEstimatedMenuDimensions(itemCount, isEditingLabel);
-  
-  // 计算智能定位
-  const adjustedPosition = calculateMenuPosition(
+  // 主菜单智能定位
+  const mainMenuDimensions = getEstimatedMenuDimensions(3); // 3个菜单项：更改图标、添加标签、删除
+  const mainMenuPosition = calculateMenuPosition(
     { x, y },
-    menuDimensions
+    mainMenuDimensions
+  );
+  
+  // 子菜单智能定位
+  const submenuDimensions = { width: 260, height: 120 }; // 预估子菜单尺寸（宽度260px适配4列图标，2行布局）
+  const iconItemOffset = 0; // "更改图标"菜单项的垂直偏移（第一个菜单项）
+  const submenuPosition = calculateSubmenuPosition(
+    mainMenuPosition,
+    mainMenuDimensions,
+    submenuDimensions,
+    iconItemOffset
   );
 
   const menuStyle: React.CSSProperties = {
     position: 'fixed',
-    left: adjustedPosition.x,
-    top: adjustedPosition.y,
-    backgroundColor: 'white',
+    top: mainMenuPosition.y,
+    left: mainMenuPosition.x,
+    backgroundColor: '#fff',
     border: '1px solid #ddd',
     borderRadius: '8px',
-    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
     zIndex: 9999, // 提高z-index确保在最顶层
-    minWidth: '200px',
-    fontSize: '14px',
-    userSelect: 'none',
+    minWidth: '160px',
+    overflow: 'hidden'
   };
 
   const menuItemStyle: React.CSSProperties = {
@@ -96,20 +117,60 @@ const MilestoneContextMenu: React.FC<MilestoneContextMenuProps> = ({
     fontSize: '14px'
   };
 
-  const handleMouseEnter = (e: React.MouseEvent<HTMLDivElement>) => {
-    e.currentTarget.style.backgroundColor = '#f5f5f5';
-  };
-
-  const handleMouseLeave = (e: React.MouseEvent<HTMLDivElement>) => {
-    e.currentTarget.style.backgroundColor = 'transparent';
-  };
 
   const handleDeleteMouseEnter = (e: React.MouseEvent<HTMLDivElement>) => {
     e.currentTarget.style.backgroundColor = '#ffebee';
   };
 
-  const handleIconSelect = (iconType: TaskType) => {
+  // 处理图标子菜单悬停显示
+  const handleIconMenuEnter = () => {
+    // 清除隐藏定时器
+    if (hideSubmenuTimeoutRef.current !== null) {
+      clearTimeout(hideSubmenuTimeoutRef.current);
+      hideSubmenuTimeoutRef.current = null;
+    }
+    
+    // 设置显示定时器
+    showSubmenuTimeoutRef.current = window.setTimeout(() => {
+      setShowIconSubmenu(true);
+    }, 300);
+  };
+
+  // 处理图标子菜单悬停离开
+  const handleIconMenuLeave = () => {
+    // 清除显示定时器
+    if (showSubmenuTimeoutRef.current !== null) {
+      clearTimeout(showSubmenuTimeoutRef.current);
+      showSubmenuTimeoutRef.current = null;
+    }
+    
+    // 设置隐藏定时器
+    hideSubmenuTimeoutRef.current = window.setTimeout(() => {
+      setShowIconSubmenu(false);
+    }, 500);
+  };
+
+  // 处理子菜单区域悬停
+  const handleSubmenuEnter = () => {
+    // 清除隐藏定时器
+    if (hideSubmenuTimeoutRef.current !== null) {
+      clearTimeout(hideSubmenuTimeoutRef.current);
+      hideSubmenuTimeoutRef.current = null;
+    }
+  };
+
+  // 处理子菜单区域离开
+  const handleSubmenuLeave = () => {
+    // 设置隐藏定时器
+    hideSubmenuTimeoutRef.current = window.setTimeout(() => {
+      setShowIconSubmenu(false);
+    }, 500);
+  };
+
+  // 处理图标选择
+  const handleIconSelect = (iconType: IconType) => {
     onIconChange(milestone.id, iconType);
+    setShowIconSubmenu(false);
     onClose();
   };
 
@@ -120,156 +181,161 @@ const MilestoneContextMenu: React.FC<MilestoneContextMenuProps> = ({
     onClose();
   };
 
-  const handleLabelSave = () => {
-    onLabelEdit(milestone.id, labelValue.trim());
-    setIsEditingLabel(false);
-    onClose();
-  };
-
-  const handleLabelCancel = () => {
-    setIsEditingLabel(false);
-    setLabelValue(milestone.label || '');
-  };
-
   const handleDelete = () => {
     onDelete(milestone.id);
     onClose();
   };
 
-  const iconOptions = [
-    { type: 'development' as TaskType, icon: Code, color: '#2196f3', name: '开发' },
-    { type: 'testing' as TaskType, icon: CheckCircle, color: '#4caf50', name: '测试' },
-    { type: 'delivery' as TaskType, icon: Package, color: '#9c27b0', name: '交付' },
-    { type: 'default' as TaskType, icon: Target, color: '#ff9800', name: '里程碑' },
-  ];
-
-  // 菜单内容
+  // 使用Portal将菜单渲染到document.body，绕过CSS层叠上下文限制
   const menuContent = (
-    <div 
-      ref={menuRef} 
-      style={menuStyle} 
-      onClick={(e) => e.stopPropagation()}
-    >
-      {/* 图标选择区域 */}
-      <div style={{ ...menuItemStyle, borderBottom: 'none', fontWeight: 'bold', color: '#666' }}>
-        更改图标
-      </div>
-      
-      {iconOptions.map((option) => {
-        const IconComponent = option.icon;
-        const isSelected = milestone.iconType === option.type;
-        
-        return (
-          <div
-            key={option.type}
-            style={{
-              ...menuItemStyle,
-              backgroundColor: isSelected ? '#e3f2fd' : 'transparent',
-              paddingLeft: '24px'
-            }}
-            onMouseEnter={handleMouseEnter}
-            onMouseLeave={handleMouseLeave}
-            onClick={() => handleIconSelect(option.type)}
-          >
-            <IconComponent size={16} style={{ color: option.color }} />
-            <span>{option.name}</span>
-            {isSelected && <span style={{ marginLeft: 'auto', color: '#1976d2', fontSize: '12px' }}>✓</span>}
-          </div>
-        );
-      })}
-
-      {/* 分隔线 */}
-      <div style={{ height: '1px', backgroundColor: '#ddd', margin: '4px 0' }} />
-
-      {/* 标签编辑 */}
-      {isEditingLabel ? (
-        <div style={{ ...menuItemStyle, flexDirection: 'column', alignItems: 'stretch', gap: '8px' }}>
-          <input
-            type="text"
-            value={labelValue}
-            onChange={(e) => setLabelValue(e.target.value)}
-            placeholder="输入标签文本"
-            style={{
-              padding: '6px 8px',
-              border: '1px solid #ddd',
-              borderRadius: '4px',
-              fontSize: '14px',
-              outline: 'none',
-              width: '100%'
-            }}
-            autoFocus
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                handleLabelSave();
-              } else if (e.key === 'Escape') {
-                handleLabelCancel();
-              }
-            }}
-          />
-          <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-            <button
-              onClick={handleLabelCancel}
-              style={{
-                padding: '4px 8px',
-                border: '1px solid #ddd',
-                borderRadius: '4px',
-                backgroundColor: 'white',
-                cursor: 'pointer',
-                fontSize: '12px'
-              }}
-            >
-              取消
-            </button>
-            <button
-              onClick={handleLabelSave}
-              style={{
-                padding: '4px 8px',
-                border: '1px solid #1976d2',
-                borderRadius: '4px',
-                backgroundColor: '#1976d2',
-                color: 'white',
-                cursor: 'pointer',
-                fontSize: '12px'
-              }}
-            >
-              保存
-            </button>
-          </div>
-        </div>
-      ) : (
+    <>
+      {/* 主菜单 */}
+      <div
+        ref={menuRef}
+        className="milestone-context-menu"
+        style={menuStyle}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* 更改图标 */}
         <div
+          className="menu-item"
           style={menuItemStyle}
-          onMouseEnter={handleMouseEnter}
-          onMouseLeave={handleMouseLeave}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = '#f5f5f5';
+            handleIconMenuEnter();
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = 'transparent';
+            handleIconMenuLeave();
+          }}
+        >
+          <TaskIcon iconType={milestone.iconType || 'circle'} size={16} />
+          更改图标
+          <span style={{ marginLeft: 'auto', fontSize: '12px', color: '#999' }}>▶</span>
+        </div>
+        
+        {/* 添加标签 */}
+        <div
+          className="menu-item"
+          style={menuItemStyle}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = '#f5f5f5';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = 'transparent';
+          }}
           onClick={handleLabelEdit}
         >
           <Edit size={16} />
-          <span>添加标签</span>
+          添加标签
           {milestone.label && (
             <span style={{ marginLeft: 'auto', color: '#666', fontSize: '12px' }}>
               "{milestone.label}"
             </span>
           )}
         </div>
-      )}
-
-      {/* 分隔线 */}
-      <div style={{ height: '1px', backgroundColor: '#ddd', margin: '4px 0' }} />
-
-      {/* 删除选项 */}
-      <div
-        style={{ ...menuItemStyle, borderBottom: 'none', color: '#d32f2f' }}
-        onMouseEnter={handleDeleteMouseEnter}
-        onMouseLeave={handleMouseLeave}
-        onClick={handleDelete}
-      >
-        <Trash2 size={16} />
-        <span>删除里程碑</span>
+        
+        {/* 删除里程碑 */}
+        <div
+          className="menu-item"
+          style={{
+            ...menuItemStyle,
+            color: '#f44336',
+            borderBottom: 'none'
+          }}
+          onMouseEnter={handleDeleteMouseEnter}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = 'transparent';
+          }}
+          onClick={handleDelete}
+        >
+          <Trash2 size={16} />
+          删除里程碑
+        </div>
       </div>
-    </div>
+
+      {/* 图标子菜单 */}
+      {showIconSubmenu && (
+        <div
+          ref={submenuRef}
+          style={{
+            position: 'fixed',
+            top: submenuPosition.y,
+            left: submenuPosition.x,
+            backgroundColor: '#fff',
+            border: '1px solid #ddd',
+            borderRadius: '8px',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+            zIndex: 10000,
+            width: '260px',
+            padding: '12px',
+            opacity: showIconSubmenu ? 1 : 0,
+            transform: showIconSubmenu ? 'scale(1)' : 'scale(0.95)',
+            transition: 'all 150ms ease-in-out'
+          }}
+          onMouseEnter={handleSubmenuEnter}
+          onMouseLeave={handleSubmenuLeave}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* 图标网格 - 4×2布局 */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: '8px'
+          }}>
+            {AVAILABLE_ICONS.map((icon) => (
+              <div
+                key={icon.id}
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  padding: '8px 4px',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  backgroundColor: milestone.iconType === icon.id ? '#eff6ff' : 'transparent',
+                  border: milestone.iconType === icon.id ? '1px solid #3b82f6' : '1px solid transparent',
+                  transition: 'all 150ms ease-in-out'
+                }}
+                onMouseDown={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  handleIconSelect(icon.id);
+                }}
+                title={icon.label}
+                onMouseEnter={(e) => {
+                  if (milestone.iconType !== icon.id) {
+                    e.currentTarget.style.backgroundColor = '#f9fafb';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (milestone.iconType !== icon.id) {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                  }
+                }}
+              >
+                <TaskIcon iconType={icon.id} size={16} />
+                <span style={{
+                  fontSize: '10px',
+                  color: '#6b7280',
+                  textAlign: 'center',
+                  lineHeight: '1.2',
+                  marginTop: '4px',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                  width: '100%'
+                }}>
+                  {icon.label}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </>
   );
 
-  // 使用Portal将菜单渲染到document.body，绕过CSS层叠上下文限制
   return createPortal(menuContent, document.body);
 };
 

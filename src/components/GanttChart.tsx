@@ -141,10 +141,12 @@ const GanttChart: React.FC<GanttChartProps> = ({
               tasks={stateData.tasks}
               contextMenuState={stateData.ganttInteractions.contextMenu}
               taskContextMenuState={stateData.ganttInteractions.taskContextMenu}
+              milestoneContextMenuState={stateData.milestoneContextMenuState}
               defaultRowId={stateData.leftPanelTasks[0]?.id || 'row-0'}
               availableTags={stateData.availableTags}
               onContextMenuClose={() => stateData.ganttInteractions.setContextMenu({ visible: false, x: 0, y: 0, clickPosition: { x: 0, y: 0 } })}
               onTaskContextMenuClose={() => stateData.ganttInteractions.setTaskContextMenu({ visible: false, x: 0, y: 0, taskId: null })}
+              onMilestoneContextMenuClose={() => stateData.setMilestoneContextMenuState({ visible: false, x: 0, y: 0, milestoneId: null })}
               onCreateTask={handlers.handleCreateTask}
               onCreateMilestone={handlers.handleCreateMilestone}
               onColorChange={stateData.ganttEvents.handleColorChange}
@@ -152,6 +154,9 @@ const GanttChart: React.FC<GanttChartProps> = ({
               onTagRemove={stateData.ganttEvents.handleTagRemove}
               onTaskDelete={stateData.ganttEvents.deleteTaskCore}
               onLabelEdit={stateData.ganttEvents.handleLabelEdit}
+              onMilestoneIconChange={(milestoneId: string, iconType: any) => stateData.milestoneManager.updateMilestone({ id: milestoneId, iconType })}
+              onMilestoneLabelEdit={(milestoneId: string, label: string) => stateData.milestoneManager.updateMilestone({ id: milestoneId, label })}
+              onMilestoneDelete={(milestoneId: string) => stateData.milestoneManager.deleteMilestone(milestoneId)}
               pixelToDate={stateData.pixelToDate}
               containerRef={stateData.containerRef}
               isCurrentDateInRange={stateData.isCurrentDateInRange}
@@ -161,7 +166,14 @@ const GanttChart: React.FC<GanttChartProps> = ({
               selectedMilestone={stateData.selectedMilestone}
               onMilestoneSelect={stateData.milestoneManager.selectMilestone}
               onMilestoneContextMenu={(e, milestoneId) => {
-                // TODO: 实现里程碑右键菜单
+                e.preventDefault();
+                e.stopPropagation();
+                stateData.setMilestoneContextMenuState({
+                  visible: true,
+                  x: e.clientX,
+                  y: e.clientY,
+                  milestoneId
+                });
               }}
               onMilestoneDragStart={(e, milestone) => {
                 // 调用 GanttEventCoordinator 的拖拽处理逻辑

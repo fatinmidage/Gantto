@@ -90,6 +90,20 @@ export interface GanttStateData {
   selectedMilestone: string | null;
   milestoneManager: any; // TODO: 定义更具体的类型
   
+  // 里程碑上下文菜单状态
+  milestoneContextMenuState: {
+    visible: boolean;
+    x: number;
+    y: number;
+    milestoneId: string | null;
+  };
+  setMilestoneContextMenuState: React.Dispatch<React.SetStateAction<{
+    visible: boolean;
+    x: number;
+    y: number;
+    milestoneId: string | null;
+  }>>;
+  
   // 容器引用
   containerRef: React.RefObject<HTMLDivElement>;
   
