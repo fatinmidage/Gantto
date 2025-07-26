@@ -3,7 +3,7 @@
  * 统一的任务数据模型
  */
 
-import { TaskType, TaskStatus, DateRange } from './common';
+import { TaskType, TaskStatus, DateRange, IconType } from './common';
 
 // 核心任务接口 - 数据的单一来源
 export interface Task {
@@ -17,12 +17,12 @@ export interface Task {
   endDate: Date;
   
   // 状态信息
-  type: TaskType;
+  type: TaskType; // 保留向后兼容
   status: TaskStatus;
   progress?: number; // 0-100，改为可选兼容现有代码
   
-  // 图标类型（用于里程碑图标显示，普通任务可忽略）
-  iconType?: TaskType;
+  // 图标类型（支持扩展的图标选择）
+  iconType?: IconType;
   
   // 层级关系
   parentId?: string;
@@ -58,7 +58,7 @@ export interface MilestoneNode {
   id: string;
   title: string;
   date: Date;
-  iconType: TaskType;
+  iconType: IconType;
   label?: string;
   color: string;
   
@@ -95,6 +95,7 @@ export interface TaskCreateInput {
   startDate: Date;
   endDate: Date;
   type?: TaskType;
+  iconType?: IconType; // 添加图标类型选择
   parentId?: string;
   color?: string;
   description?: string;
@@ -105,7 +106,7 @@ export interface TaskCreateInput {
 export interface MilestoneCreateInput {
   title: string;
   date: Date;
-  iconType?: TaskType;
+  iconType?: IconType;
   label?: string;
   color?: string;
   attachedToBar?: string;
@@ -132,7 +133,7 @@ export interface MilestoneUpdateInput {
   id: string;
   title?: string;
   date?: Date;
-  iconType?: TaskType;
+  iconType?: IconType;
   label?: string;
   color?: string;
   attachedToBar?: string;

@@ -156,10 +156,28 @@ export const useTaskCRUD = ({
     }
     
     
-    // 优先更新图表任务
+    // 首先检查是否为里程碑
+    const milestone = milestones.find(m => m.id === taskId);
+    if (milestone) {
+      setMilestones(prev => {
+        const updatedMilestones = prev.map(m => {
+          if (m.id === taskId) {
+            const updatedMilestone = { 
+              ...m, 
+              date: startDate  // 里程碑只有一个日期
+            };
+            return updatedMilestone;
+          }
+          return m;
+        });
+        return updatedMilestones;
+      });
+      return;
+    }
+    
+    // 然后检查图表任务
     const chartTask = chartTasks.find(t => t.id === taskId);
     if (chartTask) {
-      
       setChartTasks(prev => {
         const updatedTasks = prev.map(task => {
           if (task.id === taskId) {
@@ -170,7 +188,6 @@ export const useTaskCRUD = ({
               // 保持原有的 type 字段不变，这是关键！
               type: task.type
             };
-            
             
             return updatedTask;
           }
@@ -191,7 +208,7 @@ export const useTaskCRUD = ({
         } : task
       ));
     }
-  }, [chartTasks, setChartTasks, setTasks]);
+  }, [milestones, chartTasks, setMilestones, setChartTasks, setTasks]);
 
   // 创建新任务
   const createTask = useCallback((task: Task) => {

@@ -7,7 +7,9 @@ import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Task } from '../../types';
 import { TaskIcon } from '..';
-import { calculateMenuPosition, calculateSubmenuPosition, getEstimatedMenuDimensions } from '../../utils/menuPositioning';
+import { IconType } from '../../types/common';
+import TaskIconSelector from './TaskIconSelector';
+import { calculateMenuPosition, getEstimatedMenuDimensions } from '../../utils/menuPositioning';
 
 interface TaskTitleContextMenuProps {
   visible: boolean;
@@ -17,7 +19,7 @@ interface TaskTitleContextMenuProps {
   task?: Task;
   onClose: () => void;
   onNameEdit: (taskId: string) => void;
-  onIconChange: (taskId: string, iconType: 'milestone' | 'development' | 'testing' | 'delivery' | 'default') => void;
+  onIconChange: (taskId: string, iconType: IconType) => void;
 }
 
 const TaskTitleContextMenu: React.FC<TaskTitleContextMenuProps> = ({
@@ -30,27 +32,14 @@ const TaskTitleContextMenu: React.FC<TaskTitleContextMenuProps> = ({
   onNameEdit,
   onIconChange
 }) => {
-  const [showIconSubmenu, setShowIconSubmenu] = useState(false);
+  const [showIconSelector, setShowIconSelector] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
-  const iconSubmenuRef = useRef<HTMLDivElement>(null);
-
-  // 图标类型选项
-  const iconTypes = [
-    { type: 'default' as const, label: '默认任务' },
-    { type: 'development' as const, label: '开发' },
-    { type: 'testing' as const, label: '测试' },
-    { type: 'delivery' as const, label: '交付' }
-  ];
 
   useEffect(() => {
     if (!visible) return;
 
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        menuRef.current && 
-        !menuRef.current.contains(event.target as Node) &&
-        (!iconSubmenuRef.current || !iconSubmenuRef.current.contains(event.target as Node))
-      ) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         onClose();
       }
     };
@@ -70,6 +59,7 @@ const TaskTitleContextMenu: React.FC<TaskTitleContextMenuProps> = ({
     };
   }, [visible, onClose]);
 
+
   if (!visible || !taskId || !task) return null;
 
   // 主菜单智能定位
@@ -77,15 +67,6 @@ const TaskTitleContextMenu: React.FC<TaskTitleContextMenuProps> = ({
   const mainMenuPosition = calculateMenuPosition(
     { x, y },
     mainMenuDimensions
-  );
-
-  // 子菜单智能定位
-  const submenuDimensions = getEstimatedMenuDimensions(5); // 5个图标选项
-  const submenuPosition = calculateSubmenuPosition(
-    mainMenuPosition,
-    mainMenuDimensions,
-    submenuDimensions,
-    44 // 第二个菜单项的偏移量（44px）
   );
   
   
@@ -118,23 +99,21 @@ const TaskTitleContextMenu: React.FC<TaskTitleContextMenuProps> = ({
     onClose();
   };
 
+  // 处理图标选择器显示
+  const handleShowIconSelector = () => {
+    setShowIconSelector(true);
+  };
+
   // 处理图标选择
-  const handleIconSelect = (iconType: 'milestone' | 'development' | 'testing' | 'delivery' | 'default') => {
+  const handleIconSelect = (iconType: IconType) => {
     onIconChange(taskId, iconType);
+    setShowIconSelector(false);
     onClose();
   };
 
-  const submenuStyle: React.CSSProperties = {
-    position: 'fixed',
-    top: submenuPosition.y,
-    left: submenuPosition.x,
-    backgroundColor: '#fff',
-    border: '1px solid #ddd',
-    borderRadius: '8px',
-    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-    zIndex: 10000, // 子菜单层级更高
-    minWidth: '140px',
-    overflow: 'hidden'
+  // 处理图标选择器关闭
+  const handleIconSelectorClose = () => {
+    setShowIconSelector(false);
   };
 
   // 使用Portal将菜单渲染到document.body，绕过CSS层叠上下文限制
@@ -172,70 +151,25 @@ const TaskTitleContextMenu: React.FC<TaskTitleContextMenuProps> = ({
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.backgroundColor = '#f5f5f5';
-            setShowIconSubmenu(true);
           }}
-          onMouseLeave={() => {
-            // 延迟隐藏，允许鼠标移动到子菜单
-            setTimeout(() => {
-              if (!iconSubmenuRef.current?.matches(':hover')) {
-                setShowIconSubmenu(false);
-              }
-            }, 100);
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = 'transparent';
           }}
+          onClick={handleShowIconSelector}
         >
-          <TaskIcon type={task.type} size={16} />
+          <TaskIcon iconType={task.iconType || task.type} size={16} />
           更改任务图标
-          <span style={{ marginLeft: 'auto', fontSize: '12px' }}>▶</span>
         </div>
       </div>
 
-      {/* 图标选择子菜单 */}
-      {showIconSubmenu && (
-        <div
-          ref={iconSubmenuRef}
-          className="icon-submenu"
-          style={submenuStyle}
-          onMouseEnter={() => setShowIconSubmenu(true)}
-          onMouseLeave={() => setShowIconSubmenu(false)}
-          onClick={(e) => e.stopPropagation()}
-        >
-          {iconTypes.map((iconType) => (
-            <div
-              key={iconType.type}
-              className="submenu-item"
-              style={{
-                ...menuItemStyle,
-                borderBottom: iconType.type === 'delivery' ? 'none' : '1px solid #eee',
-                backgroundColor: task.type === iconType.type ? '#e3f2fd' : 'transparent'
-              }}
-              onMouseEnter={(e) => {
-                if (task.type !== iconType.type) {
-                  e.currentTarget.style.backgroundColor = '#f5f5f5';
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (task.type !== iconType.type) {
-                  e.currentTarget.style.backgroundColor = 'transparent';
-                } else {
-                  e.currentTarget.style.backgroundColor = '#e3f2fd';
-                }
-              }}
-              onClick={() => handleIconSelect(iconType.type)}
-            >
-              <TaskIcon type={iconType.type} size={16} />
-              <span>{iconType.label}</span>
-              {task.type === iconType.type && (
-                <div className="ml-auto w-2 h-2 bg-blue-500 rounded-full" style={{
-                  marginLeft: 'auto',
-                  width: '8px',
-                  height: '8px',
-                  backgroundColor: '#2196F3',
-                  borderRadius: '50%'
-                }}></div>
-              )}
-            </div>
-          ))}
-        </div>
+      {/* 图标选择器 */}
+      {showIconSelector && (
+        <TaskIconSelector
+          currentIconType={task.iconType || task.type || 'default'}
+          onIconTypeChange={handleIconSelect}
+          onClose={handleIconSelectorClose}
+          position={{ x: mainMenuPosition.x + 200, y: mainMenuPosition.y }}
+        />
       )}
     </>
   );

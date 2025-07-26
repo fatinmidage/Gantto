@@ -6,6 +6,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { TaskIcon, DragHandle } from '../..';
 import { Task } from '../../../types';
+import { IconType } from '../../../types/common';
 import { TaskHierarchyControls } from './TaskHierarchyControls';
 import TaskTitleContextMenu from '../TaskTitleContextMenu';
 
@@ -132,9 +133,13 @@ export const TaskTitleItem: React.FC<TaskTitleItemProps> = ({
   };
 
   // 处理图标更改
-  const handleIconChange = (taskId: string, iconType: 'development' | 'testing' | 'delivery' | 'default' | 'milestone') => {
+  const handleIconChange = (taskId: string, iconType: IconType) => {
     if (onTaskUpdate) {
-      onTaskUpdate(taskId, { type: iconType as any });
+      // 支持新的 iconType 字段，同时保持向后兼容的 type 字段
+      onTaskUpdate(taskId, { 
+        iconType,
+        type: iconType as any // 保持向后兼容
+      });
     }
   };
 
@@ -203,9 +208,10 @@ export const TaskTitleItem: React.FC<TaskTitleItemProps> = ({
         />
         
         <TaskIcon 
+          iconType={task.iconType || task.type}
           type={task.type} 
           size={16} 
-          className={`task-icon-${task.type}`}
+          className={`task-icon-${task.iconType || task.type}`}
           level={task.level}
         />
         

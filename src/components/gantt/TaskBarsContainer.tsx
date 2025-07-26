@@ -103,8 +103,16 @@ const TaskBarsContainer: React.FC<TaskBarsContainerProps> = ({
       
       {/* 渲染独立的里程碑节点 */}
       {milestones.map((milestone) => {
+        // 检查此里程碑是否正在被拖拽
+        const isBeingDragged = draggedTask === milestone.id;
+        
         // 计算里程碑的位置
-        const milestoneX = dateToPixel(milestone.date);
+        let milestoneX = dateToPixel(milestone.date);
+        
+        // 如果正在拖拽且有临时位置，使用临时位置的 x 坐标
+        if (isBeingDragged && tempDragPosition) {
+          milestoneX = tempDragPosition.x;
+        }
         
         // 根据 rowId 找到对应的行索引来计算正确的Y坐标
         let milestoneY = milestone.y || 0; // 默认使用里程碑自带的Y坐标
@@ -132,11 +140,10 @@ const TaskBarsContainer: React.FC<TaskBarsContainerProps> = ({
             milestone={updatedMilestone}
             taskHeight={taskHeight}
             isSelected={selectedMilestone === milestone.id}
-            isDragging={false} // TODO: 集成拖拽状态
-            onMouseDown={(_e, milestoneId) => {
-              if (onMilestoneSelect) {
-                onMilestoneSelect(milestoneId);
-              }
+            isDragging={draggedTask === milestone.id}
+            onMouseDown={(e, milestoneId) => {
+              // 触发拖拽处理器，就像普通任务一样
+              onMouseDown(e, milestoneId);
             }}
             onContextMenu={(e, milestoneId) => {
               if (onMilestoneContextMenu) {
@@ -144,6 +151,7 @@ const TaskBarsContainer: React.FC<TaskBarsContainerProps> = ({
               }
             }}
             onClick={(milestoneId) => {
+              // 选择里程碑
               if (onMilestoneSelect) {
                 onMilestoneSelect(milestoneId);
               }

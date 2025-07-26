@@ -3,8 +3,11 @@
  * 包含项目中使用的基础类型和枚举
  */
 
-// 任务类型枚举
+// 任务类型枚举 (保留向后兼容)
 export type TaskType = 'development' | 'testing' | 'delivery' | 'default';
+
+// 图标类型 - 使用字符串以支持扩展
+export type IconType = string;
 
 // 任务状态枚举
 export type TaskStatus = 'pending' | 'in-progress' | 'completed' | 'overdue';

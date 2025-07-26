@@ -22,10 +22,49 @@ export {
   ChevronRight,
   Layers,
   
-  // TaskIcon 组件图标
+  // 原有任务图标
   Package,
   Code,
   CheckCircle,
   Circle,
-  GripVertical
+  GripVertical,
+  
+  // 扩展的任务图标 - 开发相关
+  Bug,
+  Cpu,
+  Database,
+  Globe,
+  Server,
+  Monitor,
+  Smartphone,
+  Laptop,
+  
+  // 扩展的任务图标 - 业务相关
+  Users,
+  User,
+  Calendar,
+  Clock,
+  Flag,
+  Star,
+  Heart,
+  BookOpen,
+  
+  // 扩展的任务图标 - 状态相关
+  Play,
+  Pause,
+  Square,
+  AlertTriangle,
+  CheckCircle2,
+  XCircle,
+  Info,
+  Zap,
+  
+  // 扩展的任务图标 - 工具相关
+  Wrench,
+  Hammer,
+  Scissors,
+  Paintbrush,
+  Camera,
+  Image,
+  Video
 } from 'lucide-react';

@@ -120,6 +120,7 @@ const GanttStateManager: React.FC<GanttStateManagerProps> = ({
     tasks,
     chartTasks,
     projectRows,
+    milestones: milestoneManager.milestones,
     setTasks,
     setChartTasks,
     setProjectRows,
@@ -183,6 +184,7 @@ const GanttStateManager: React.FC<GanttStateManagerProps> = ({
   }, [dragAndDrop]);
 
   // === 状态数据组装 ===
+  
   const stateData: GanttStateData = {
     // 数据状态
     projectRows,
@@ -212,6 +214,7 @@ const GanttStateManager: React.FC<GanttStateManagerProps> = ({
     // 事件处理
     ganttEvents,
     ganttInteractions,
+    handleTaskUpdate: taskManager.updateTask, // 添加任务更新处理函数
     
     // 标签状态
     availableTags,
@@ -227,6 +230,7 @@ const GanttStateManager: React.FC<GanttStateManagerProps> = ({
     // 当前日期范围检查
     isCurrentDateInRange: timeline.isCurrentDateInRange()
   };
+
 
   return children(stateData);
 };

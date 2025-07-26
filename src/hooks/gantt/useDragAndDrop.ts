@@ -61,7 +61,6 @@ export const useDragAndDrop = () => {
     if (bounds) {
       const taskX = task.x || 0;
       
-      
       const offset = {
         x: clientX - bounds.left - taskX,
         y: clientY - bounds.top
@@ -70,9 +69,8 @@ export const useDragAndDrop = () => {
       
       dragState.startHorizontalDrag(taskId, task, newDragType, offset);
       
-      
-      // 拖拽处理已在度量适配器中完成
     } else {
+      console.error('❌ 容器边界获取失败');
     }
   }, [dragState, updateContainerBounds]);
 
@@ -97,7 +95,6 @@ export const useDragAndDrop = () => {
 
     const mouseX = clientX - bounds.left;
     
-    // 只在 mouseX 是 NaN 时才记录调试信息
     if (isNaN(mouseX)) {
       console.error('🐛 mouseX is NaN:', {
         clientX,
@@ -111,15 +108,12 @@ export const useDragAndDrop = () => {
     const taskData = dragState.draggedTaskData;
     // 移除了milestone类型判断，所有任务都作为普通任务处理
     
-    // 简化的调试日志，只在需要时显示
-    // console.log(`[useDragAndDrop] 拖拽更新位置 - 任务ID: ${taskData.id}`);
 
     if (dragState.dragType === 'move') {
       const newX = mouseX - dragState.dragOffset.x;
       const maxX = CHART_WIDTH - metrics.minWidth;
       const constrainedX = Math.max(0, Math.min(newX, maxX));
       
-      // 只在计算出 NaN 时显示详细调试信息
       if (isNaN(constrainedX)) {
         console.error('🐛 constrainedX is NaN - Full diagnostic:', {
           // 输入值诊断

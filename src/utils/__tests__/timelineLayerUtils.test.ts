@@ -71,25 +71,6 @@ describe('月份分隔线位置准确性测试', () => {
         const august1st = new Date(2025, 7, 1);
         const expectedAugust1stPixel = Math.round(mockDateToPixel(august1st));
         
-        console.log('7月份分隔线位置验证:', {
-          julyItem: {
-            label: julyItem.label,
-            startDate: julyItem.startDate.toLocaleDateString(),
-            endDate: julyItem.endDate.toLocaleDateString(),
-            x: julyItem.x,
-            width: julyItem.width,
-            endX: julyItem.x + julyItem.width
-          },
-          expected: {
-            july1stPixel: expectedJuly1stPixel,
-            august1stPixel: expectedAugust1stPixel,
-            expectedWidth: expectedAugust1stPixel - expectedJuly1stPixel
-          },
-          accuracy: {
-            startDiff: Math.abs(julyItem.x - expectedJuly1stPixel),
-            endDiff: Math.abs((julyItem.x + julyItem.width) - expectedAugust1stPixel)
-          }
-        });
         
         // 验证7月份的左边分隔线（应该在7月1日的位置）
         expect(Math.abs(julyItem.x - expectedJuly1stPixel)).toBeLessThanOrEqual(1);
@@ -120,16 +101,6 @@ describe('月份分隔线位置准确性测试', () => {
         const expectedEndPixel = Math.round(mockDateToPixel(monthItem.endDate));
         expect(Math.abs((monthItem.x + monthItem.width) - expectedEndPixel)).toBeLessThanOrEqual(1);
         
-        console.log(`月份${monthItem.label}对齐验证:`, {
-          startDate: monthItem.startDate.toLocaleDateString(),
-          endDate: monthItem.endDate.toLocaleDateString(),
-          actualX: monthItem.x,
-          expectedX: expectedStartPixel,
-          actualEndX: monthItem.x + monthItem.width,
-          expectedEndX: expectedEndPixel,
-          startDiff: Math.abs(monthItem.x - expectedStartPixel),
-          endDiff: Math.abs((monthItem.x + monthItem.width) - expectedEndPixel)
-        });
       });
     }
   });

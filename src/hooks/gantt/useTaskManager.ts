@@ -60,9 +60,24 @@ export const useTaskManager = (initialData?: InitialTaskData) => {
 
   // 更新任务
   const updateTask = useCallback((taskId: string, updates: Partial<Task>) => {
-    setTasks(prev => prev.map(task => 
-      task.id === taskId ? { ...task, ...updates } : task
-    ));
+    setTasks(prev => {
+      return prev.map(task => {
+        if (task.id === taskId) {
+          return { ...task, ...updates };
+        }
+        return task;
+      });
+    });
+
+    // 同步更新 projectRows 数组（用于任务标题列显示）
+    setProjectRows(prev => {
+      return prev.map(row => {
+        if (row.id === taskId) {
+          return { ...row, ...updates };
+        }
+        return row;
+      });
+    });
   }, []);
 
   // 更新项目行

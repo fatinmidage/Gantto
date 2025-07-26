@@ -4,9 +4,9 @@
  */
 
 import React from 'react';
-import { Target, Code, CheckCircle, Package } from 'lucide-react';
 import { MilestoneNode as MilestoneNodeData } from '../../types/task';
-import { TaskType } from '../../types/common';
+import { IconType } from '../../types/common';
+import { getIconConfig } from '../../config/icons';
 import EditableLabel from './EditableLabel';
 
 interface MilestoneNodeProps {
@@ -21,31 +21,15 @@ interface MilestoneNodeProps {
 }
 
 // 根据类型获取图标组件
-const getIconComponent = (iconType: TaskType) => {
-  switch (iconType) {
-    case 'development':
-      return Code;
-    case 'testing':
-      return CheckCircle;
-    case 'delivery':
-      return Package;
-    default:
-      return Target; // 默认使用Target图标作为里程碑
-  }
+const getIconComponent = (iconType: IconType) => {
+  const iconConfig = getIconConfig(iconType);
+  return iconConfig.component;
 };
 
 // 根据类型获取颜色
-const getIconColor = (iconType: TaskType) => {
-  switch (iconType) {
-    case 'development':
-      return '#2196f3'; // 蓝色
-    case 'testing':
-      return '#4caf50'; // 绿色
-    case 'delivery':
-      return '#9c27b0'; // 紫色
-    default:
-      return '#666666'; // 灰色
-  }
+const getIconColor = (iconType: IconType) => {
+  const iconConfig = getIconConfig(iconType);
+  return iconConfig.color;
 };
 
 const MilestoneNode: React.FC<MilestoneNodeProps> = ({
@@ -102,7 +86,7 @@ const MilestoneNode: React.FC<MilestoneNodeProps> = ({
 
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
-    e.stopPropagation();
+    // 移除 e.stopPropagation() 以允许拖拽事件传播
     if (onMouseDown) {
       onMouseDown(e, milestone.id);
     }
@@ -110,7 +94,7 @@ const MilestoneNode: React.FC<MilestoneNodeProps> = ({
 
   const handleContextMenu = (e: React.MouseEvent) => {
     e.preventDefault();
-    e.stopPropagation();
+    e.stopPropagation(); // 右键菜单应该阻止事件传播
     if (onContextMenu) {
       onContextMenu(e, milestone.id);
     }
