@@ -152,38 +152,13 @@ export const useHorizontalDrag = ({
         // 移动任务条：保持时间段长度，改变开始和结束时间
         newStartDate = pixelToDate(tempDragPosition.x);
         
-        // 🔍 调试日志：拖拽结束处理开始
-        console.log(`[HorizontalDrag] 拖拽结束处理开始 - Task ${draggedTask}:`, {
-          taskTitle: draggedTaskData.title,
-          originalType: draggedTaskData.type,
-          originalStartDate: draggedTaskData.startDate.toISOString(),
-          originalEndDate: draggedTaskData.endDate.toISOString(),
-          originalTimesEqual: draggedTaskData.startDate.getTime() === draggedTaskData.endDate.getTime(),
-          newStartDate: newStartDate.toISOString(),
-          dragType: dragType,
-          tempDragPosition
-        });
         
         // 现在所有任务都作为普通任务处理
         
-        console.log(`[HorizontalDrag] 任务拖拽详情:`, {
-          taskId: draggedTask,
-          taskTitle: draggedTaskData.title,
-          taskType: draggedTaskData.type,
-          originalStartTime: draggedTaskData.startDate.getTime(),
-          originalEndTime: draggedTaskData.endDate.getTime(),
-          isRegularTask: true
-        });
                            
         // 所有任务都保持时间段长度
         const duration = draggedTaskData.endDate.getTime() - draggedTaskData.startDate.getTime();
         newEndDate = new Date(newStartDate.getTime() + duration);
-        console.log(`[HorizontalDrag] 任务拖拽处理：保持时间段长度`, {
-          duration,
-          newStartDate: newStartDate.toISOString(),
-          newEndDate: newEndDate.toISOString(),
-          originalDuration: duration
-        });
       } else if (dragType === 'resize-left') {
         // 左边界拖拽：改变开始时间，保持结束时间
         newStartDate = pixelToDate(tempDragPosition.x);
@@ -197,18 +172,6 @@ export const useHorizontalDrag = ({
         return;
       }
       
-      // 🔍 调试日志：调用 updateTaskDates 前的最终数据
-      console.log(`[HorizontalDrag] 即将调用 updateTaskDates:`, {
-        taskId: draggedTask,
-        taskTitle: draggedTaskData.title,
-        originalType: draggedTaskData.type,
-        originalStartDate: draggedTaskData.startDate.toISOString(),
-        originalEndDate: draggedTaskData.endDate.toISOString(),
-        newStartDate: newStartDate.toISOString(),
-        newEndDate: newEndDate.toISOString(),
-        newTimesEqual: newStartDate.getTime() === newEndDate.getTime(),
-        isTaskDrag: true
-      });
       
       // 更新任务时间
       updateTaskDates(draggedTask, newStartDate, newEndDate);

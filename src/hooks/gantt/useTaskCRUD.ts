@@ -145,7 +145,7 @@ export const useTaskCRUD = ({
   const updateTaskDates = useCallback((taskId: string, startDate: Date, endDate: Date) => {
     // 验证日期有效性
     if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-      console.error('🐛 Invalid dates passed to updateTaskDates:', {
+      console.error('Invalid dates passed to updateTaskDates:', {
         taskId,
         startDate,
         endDate,
@@ -155,29 +155,10 @@ export const useTaskCRUD = ({
       return;
     }
     
-    // 🔍 调试日志：updateTaskDates 函数开始执行
-    console.log(`[TaskCRUD] updateTaskDates 开始执行:`, {
-      taskId,
-      newStartDate: startDate.toISOString(),
-      newEndDate: endDate.toISOString(),
-      newTimesEqual: startDate.getTime() === endDate.getTime()
-    });
     
     // 优先更新图表任务
     const chartTask = chartTasks.find(t => t.id === taskId);
     if (chartTask) {
-      console.log(`[TaskCRUD] 找到图表任务，准备更新:`, {
-        taskId,
-        taskTitle: chartTask.title,
-        originalType: chartTask.type,
-        originalStartDate: chartTask.startDate.toISOString(),
-        originalEndDate: chartTask.endDate.toISOString(),
-        originalTimesEqual: chartTask.startDate.getTime() === chartTask.endDate.getTime(),
-        newStartDate: startDate.toISOString(),
-        newEndDate: endDate.toISOString(),
-        newTimesEqual: startDate.getTime() === endDate.getTime(),
-        typeWillBePreserved: chartTask.type
-      });
       
       setChartTasks(prev => {
         const updatedTasks = prev.map(task => {
@@ -190,22 +171,12 @@ export const useTaskCRUD = ({
               type: task.type
             };
             
-            console.log(`[TaskCRUD] 任务更新完成:`, {
-              taskId,
-              taskTitle: updatedTask.title,
-              updatedType: updatedTask.type,
-              updatedStartDate: updatedTask.startDate.toISOString(),
-              updatedEndDate: updatedTask.endDate.toISOString(),
-              updatedTimesEqual: updatedTask.startDate.getTime() === updatedTask.endDate.getTime(),
-              isTaskUpdate: true
-            });
             
             return updatedTask;
           }
           return task;
         });
         
-        console.log(`[TaskCRUD] setChartTasks 调用完成，更新后的任务数量:`, updatedTasks.length);
         return updatedTasks;
       });
     } else {

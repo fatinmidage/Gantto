@@ -66,6 +66,7 @@ const GanttContextMenu: React.FC<GanttContextMenuProps> = ({
 
   if (!visible) return null;
 
+
   // 获取菜单尺寸估算
   const menuDimensions = getEstimatedMenuDimensions(2); // 2个菜单项：任务条和节点
   
@@ -80,6 +81,7 @@ const GanttContextMenu: React.FC<GanttContextMenuProps> = ({
 
   // 根据点击位置的Y坐标计算目标行ID和类型
   const calculateTargetRowData = () => {
+    
     if (!clickPosition || !visibleRows.length) {
       return { id: defaultRowId, type: undefined };
     }
@@ -93,7 +95,12 @@ const GanttContextMenu: React.FC<GanttContextMenuProps> = ({
       const targetRow = visibleRows[clickedRowIndex];
       return { id: targetRow.id, type: targetRow.type };
     } else {
-      return { id: defaultRowId, type: undefined };
+      // 如果点击在空白区域，使用最后一个有效行或默认行
+      const fallbackRow = visibleRows.length > 0 ? visibleRows[visibleRows.length - 1] : null;
+      const result = fallbackRow 
+        ? { id: fallbackRow.id, type: fallbackRow.type }
+        : { id: defaultRowId, type: undefined };
+      return result;
     }
   };
 
@@ -123,6 +130,7 @@ const GanttContextMenu: React.FC<GanttContextMenuProps> = ({
   };
 
   const handleCreateMilestone = () => {
+    
     // 计算点击位置的日期
     const clickDate = clickPosition && pixelToDate ? pixelToDate(clickPosition.x) : new Date();
     
@@ -147,6 +155,7 @@ const GanttContextMenu: React.FC<GanttContextMenuProps> = ({
     
     const iconType = targetRowType || 'default'; // 继承行的类型，用于图标显示
     const typeColor = getTypeColor(iconType); // 使用图标类型的颜色
+    
     
     const newMilestone: MilestoneNode = {
       id: `milestone-${Date.now()}`,

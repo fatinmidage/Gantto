@@ -105,7 +105,19 @@ const TaskBarsContainer: React.FC<TaskBarsContainerProps> = ({
       {milestones.map((milestone) => {
         // 计算里程碑的位置
         const milestoneX = dateToPixel(milestone.date);
-        const milestoneY = milestone.y || 0; // 使用预计算的Y位置，或默认为0
+        
+        // 根据 rowId 找到对应的行索引来计算正确的Y坐标
+        let milestoneY = milestone.y || 0; // 默认使用里程碑自带的Y坐标
+        
+        if (milestone.rowId) {
+          // 查找该 rowId 对应的行索引
+          const rowIndex = chartTaskRows.findIndex(row => row.rowId === milestone.rowId);
+          
+          if (rowIndex !== -1) {
+            // 计算正确的Y坐标：行索引 * (任务高度 + 间距) + 任务高度的一半（居中）
+            milestoneY = rowIndex * (taskHeight + 10) + taskHeight / 2;
+          }
+        }
         
         // 更新里程碑的位置
         const updatedMilestone = {

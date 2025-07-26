@@ -234,32 +234,12 @@ const GanttEventCoordinator: React.FC<GanttEventCoordinatorProps> = ({
 
   const handleMouseUp = useCallback(() => {
     if (tempDragPosition && draggedTask && draggedTaskData && dragType) {
-      console.log('🐛 handleMouseUp data:', {
-        tempDragPosition: tempDragPosition ? {
-          id: tempDragPosition.id,
-          x: tempDragPosition.x,
-          width: tempDragPosition.width,
-          xValid: !isNaN(tempDragPosition.x),
-          widthValid: !isNaN(tempDragPosition.width)
-        } : null,
-        draggedTask,
-        draggedTaskData: draggedTaskData ? {
-          id: draggedTaskData.id,
-          title: draggedTaskData.title,
-          startDate: draggedTaskData.startDate,
-          endDate: draggedTaskData.endDate,
-          startDateValid: !isNaN(draggedTaskData.startDate.getTime()),
-          endDateValid: !isNaN(draggedTaskData.endDate.getTime())
-        } : null,
-        dragType
-      });
       
       const newStartDate = pixelToDate(tempDragPosition.x);
-      console.log('🐛 newStartDate from pixelToDate:', newStartDate, 'isValid:', !isNaN(newStartDate.getTime()));
       
       // 验证日期有效性
       if (isNaN(newStartDate.getTime())) {
-        console.error('🐛 Invalid start date calculated:', newStartDate);
+        console.error('Invalid start date calculated:', newStartDate);
         resetHorizontalDrag();
         return;
       }
@@ -272,11 +252,10 @@ const GanttEventCoordinator: React.FC<GanttEventCoordinatorProps> = ({
         ? draggedTaskData.endDate 
         : pixelToDate(tempDragPosition.x + tempDragPosition.width);
       
-      console.log('🐛 newEndDate calculated:', newEndDate, 'isValid:', !isNaN(newEndDate.getTime()));
       
       // 验证结束日期有效性
       if (isNaN(newEndDate.getTime())) {
-        console.error('🐛 Invalid end date calculated:', newEndDate);
+        console.error('Invalid end date calculated:', newEndDate);
         resetHorizontalDrag();
         return;
       }

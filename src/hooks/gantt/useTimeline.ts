@@ -83,17 +83,6 @@ export const useTimeline = (
   }, [dateRange, containerWidth, zoomLevel]);
 
   const pixelToDate = useCallback((pixel: number): Date => {
-    console.log('🐛 pixelToDate called with:', {
-      pixel,
-      containerWidth,
-      zoomLevel,
-      dateRange: {
-        startDate: dateRange.startDate,
-        endDate: dateRange.endDate,
-        startDateValid: !isNaN(dateRange.startDate.getTime()),
-        endDateValid: !isNaN(dateRange.endDate.getTime())
-      }
-    });
     
     // 1. 输入参数验证
     if (typeof pixel !== 'number' || isNaN(pixel)) {
@@ -113,7 +102,6 @@ export const useTimeline = (
     }
     
     const totalDays = Math.ceil((dateRange.endDate.getTime() - dateRange.startDate.getTime()) / (24 * 60 * 60 * 1000));
-    console.log('🐛 totalDays calculated:', totalDays);
     
     // 3. 总天数验证
     if (totalDays <= 0) {
@@ -126,7 +114,6 @@ export const useTimeline = (
       ? containerWidth / totalDays 
       : Math.max(1, 80 * zoomLevel);
     
-    console.log('🐛 pixelPerDay calculated:', pixelPerDay);
     
     // 4. 像素密度验证
     if (pixelPerDay <= 0 || isNaN(pixelPerDay)) {
@@ -138,12 +125,6 @@ export const useTimeline = (
     const resultTimestamp = dateRange.startDate.getTime() + days * 24 * 60 * 60 * 1000;
     const resultDate = new Date(resultTimestamp);
     
-    console.log('🐛 pixelToDate calculation:', {
-      days,
-      resultTimestamp,
-      resultDate,
-      isValidResult: !isNaN(resultDate.getTime())
-    });
     
     // 5. 结果验证
     if (isNaN(resultDate.getTime())) {

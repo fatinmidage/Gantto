@@ -122,7 +122,8 @@ const GanttStateManager: React.FC<GanttStateManagerProps> = ({
     projectRows,
     setTasks,
     setChartTasks,
-    setProjectRows
+    setProjectRows,
+    setMilestones: milestoneManager.setMilestones
   });
 
   const ganttInteractions = useGanttInteractions({
@@ -155,7 +156,7 @@ const GanttStateManager: React.FC<GanttStateManagerProps> = ({
     
     // 验证输入参数
     if (isNaN(duration)) {
-      console.error('🐛 updateDragMetrics: Invalid duration:', {
+      console.error('updateDragMetrics: Invalid duration:', {
         task: { id: task.id, title: task.title, startDate: task.startDate, endDate: task.endDate },
         duration,
         startTime: task.startDate.getTime(),
@@ -164,7 +165,7 @@ const GanttStateManager: React.FC<GanttStateManagerProps> = ({
     }
     
     if (isNaN(pixelPerDay) || pixelPerDay <= 0) {
-      console.error('🐛 updateDragMetrics: Invalid pixelPerDay:', pixelPerDay);
+      console.error('updateDragMetrics: Invalid pixelPerDay:', pixelPerDay);
     }
     
     // 安全的 minWidth 计算 - 现在所有任务统一处理
@@ -177,10 +178,6 @@ const GanttStateManager: React.FC<GanttStateManagerProps> = ({
       pixelPerDay: isNaN(pixelPerDay) ? 1 : pixelPerDay,
       minWidth: isNaN(minWidth) ? 20 : minWidth
     };
-    
-    // 度量计算完成
-    
-    // 里程碑度量适配器处理完成
     
     dragAndDrop.updateDragMetrics(metrics);
   }, [dragAndDrop]);

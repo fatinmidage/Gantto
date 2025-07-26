@@ -53,58 +53,26 @@ export const useDragAndDrop = () => {
     newDragType: DragType,
     containerElement: HTMLElement | null
   ) => {
-    console.log('🐛 useDragAndDrop startHorizontalDrag called:', {
-      taskId,
-      task: task ? { id: task.id, title: task.title, x: task.x, width: task.width } : null,
-      clientX,
-      clientY,
-      newDragType,
-      hasContainer: !!containerElement
-    });
     
     updateContainerBounds(containerElement);
     
     const bounds = containerBounds.current;
-    console.log('🐛 Container bounds:', bounds);
     
     if (bounds) {
       const taskX = task.x || 0;
       
-      console.log('🐛 Offset calculation inputs:', {
-        clientX,
-        clientY,
-        boundsLeft: bounds.left,
-        boundsTop: bounds.top,
-        taskX,
-        clientXValid: !isNaN(clientX),
-        clientYValid: !isNaN(clientY),
-        boundsLeftValid: !isNaN(bounds.left),
-        boundsTopValid: !isNaN(bounds.top),
-        taskXValid: !isNaN(taskX)
-      });
       
       const offset = {
         x: clientX - bounds.left - taskX,
         y: clientY - bounds.top
       };
       
-      console.log('🐛 Starting drag with offset:', {
-        offset,
-        offsetXValid: !isNaN(offset.x),
-        offsetYValid: !isNaN(offset.y)
-      });
       
       dragState.startHorizontalDrag(taskId, task, newDragType, offset);
       
-      console.log('🐛 Drag state after start:', {
-        isDragging: dragState.isDragging,
-        draggedTask: dragState.draggedTask,
-        dragType: dragState.dragType
-      });
       
       // 拖拽处理已在度量适配器中完成
     } else {
-      console.log('🐛 Failed to get container bounds');
     }
   }, [dragState, updateContainerBounds]);
 
@@ -113,30 +81,14 @@ export const useDragAndDrop = () => {
     CHART_WIDTH: number = 800,
     minWidth: number = 20
   ) => {
-    console.log('🐛 updateHorizontalDragPosition called:', {
-      clientX,
-      CHART_WIDTH,
-      minWidth,
-      isDragging: dragState.isDragging,
-      draggedTask: dragState.draggedTask,
-      hasDraggedTaskData: !!dragState.draggedTaskData,
-      dragType: dragState.dragType
-    });
     
     if (!dragState.isDragging || !dragState.draggedTask || !dragState.draggedTaskData || !dragState.dragType) {
-      console.log('🐛 updateHorizontalDragPosition: Early return due to missing state');
       return;
     }
 
     const metrics = dragState.getDragMetrics();
     const bounds = containerBounds.current;
     
-    console.log('🐛 updateHorizontalDragPosition dependencies:', {
-      hasMetrics: !!metrics,
-      hasBounds: !!bounds,
-      metrics,
-      bounds
-    });
     
     if (!metrics || !bounds) {
       console.error('🐛 updateHorizontalDragPosition: Missing metrics or bounds');
@@ -202,7 +154,6 @@ export const useDragAndDrop = () => {
           x: fallbackX,
           width: metrics.minWidth
         };
-        console.log('🐛 Using fallback dragUpdate:', dragUpdate);
         dragState.updateHorizontalDrag(dragUpdate);
         return;
       }
@@ -217,7 +168,6 @@ export const useDragAndDrop = () => {
         width: isMilestone ? 16 : metrics.minWidth
       };
       
-      console.log('🐛 Calling updateHorizontalDrag with:', dragUpdate);
       dragState.updateHorizontalDrag(dragUpdate);
     } else if (dragState.dragType === 'resize-left') {
       const originalRight = (dragState.draggedTaskData.x || 0) + (dragState.draggedTaskData.width || 0);

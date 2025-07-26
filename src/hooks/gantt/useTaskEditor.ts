@@ -61,13 +61,11 @@ export const useTaskEditor = ({
   // 任务复制
   const handleTaskCopy = useCallback((taskId: string) => {
     // 复制任务逻辑
-    console.log('复制任务:', taskId);
   }, []);
 
   // 任务移动
   const handleTaskMove = useCallback((taskId: string, newParentId?: string) => {
     // 移动任务逻辑
-    console.log('移动任务:', taskId, '到', newParentId);
   }, []);
 
   return {

@@ -161,7 +161,6 @@ const GanttChart: React.FC<GanttChartProps> = ({
               onMilestoneSelect={stateData.milestoneManager.selectMilestone}
               onMilestoneContextMenu={(e, milestoneId) => {
                 // TODO: 实现里程碑右键菜单
-                console.log('Milestone context menu:', milestoneId, e);
               }}
             />
           )}

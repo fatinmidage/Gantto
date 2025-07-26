@@ -66,14 +66,18 @@ export const useGanttContextMenu = ({
     // 在整个甘特图容器区域都可以右键，但点击位置用于创建任务的坐标需要调整
     const taskAreaY = Math.max(0, chartAreaY - timelineHeight);
     
+    
+    const clickPosition = { 
+      x: chartAreaX, 
+      y: isInTimelineArea ? 0 : taskAreaY // 如果在时间轴区域，任务创建位置设为第一行
+    };
+    
+    
     setContextMenu({
       visible: true,
       x: e.clientX,
       y: e.clientY,
-      clickPosition: { 
-        x: chartAreaX, 
-        y: isInTimelineArea ? 0 : taskAreaY // 如果在时间轴区域，任务创建位置设为第一行
-      }
+      clickPosition: clickPosition
     });
   }, [timelineHeight, taskContextMenuVisible, containerRef]);
 
@@ -128,6 +132,7 @@ export const useGanttContextMenu = ({
   // 创建新节点（里程碑）
   const handleCreateMilestone = useCallback(() => {
     const clickDate = pixelToDate(contextMenu.clickPosition.x);
+    
     
     // 计算点击位置对应的行索引
     const taskRowHeight = taskHeight + 10; // 任务高度 + 间距

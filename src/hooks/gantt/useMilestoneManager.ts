@@ -44,10 +44,6 @@ export const useMilestoneManager = (callbacks: MilestoneManagerCallbacks) => {
     attachedToBar?: string, 
     relativePosition?: number
   ) => {
-    console.log(`[MilestoneManager] 里程碑 ${milestoneId} 附着状态变化:`, {
-      attachedToBar,
-      relativePosition
-    });
   }, []);
 
   // 初始化拖拽功能

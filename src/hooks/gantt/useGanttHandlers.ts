@@ -245,14 +245,6 @@ export const useGanttHandlers = (params: UseGanttHandlersParams): GanttHandlersR
       const isTimeEqual = draggedTaskData.startDate.getTime() === draggedTaskData.endDate.getTime();
       const isMilestone = isTimeEqual;
       
-      console.log(`[GanttHandlers] 拖拽结束处理 - 里程碑判断:`, {
-        taskId: draggedTask,
-        taskTitle: draggedTaskData.title,
-        taskType: draggedTaskData.type,
-        isTimeEqual,
-        isMilestone,
-        dragType
-      });
       
       const newEndDate = dragType === 'move' 
         ? (isMilestone 
@@ -262,13 +254,6 @@ export const useGanttHandlers = (params: UseGanttHandlersParams): GanttHandlersR
         ? draggedTaskData.endDate 
         : pixelToDate(tempDragPosition.x + tempDragPosition.width);
       
-      console.log(`[GanttHandlers] 即将调用 updateTaskDates:`, {
-        taskId: draggedTask,
-        newStartDate: newStartDate.toISOString(),
-        newEndDate: newEndDate.toISOString(),
-        newTimesEqual: newStartDate.getTime() === newEndDate.getTime(),
-        shouldRemainMilestone: isMilestone
-      });
       
       ganttEvents.updateTaskDates(draggedTask, newStartDate, newEndDate);
     }

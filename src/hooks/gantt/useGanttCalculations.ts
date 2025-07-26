@@ -76,10 +76,6 @@ export const useGanttCalculations = (
 
   // 获取排序后的图表任务，添加位置信息
   const sortedChartTasks = useMemo(() => {
-    console.log('🔧 [useGanttCalculations] sortedChartTasks 重新计算, chartTasks数量:', chartTasks.length);
-    chartTasks.forEach(task => {
-      console.log(`  - ${task.id} (${task.title}) type:${task.type} rowId:${task.rowId}`);
-    });
     
     const result = chartTasks.map(task => {
       const x = dateToPixel(task.startDate);
@@ -87,7 +83,6 @@ export const useGanttCalculations = (
       return { ...task, x, width: Math.max(width, 20) };
     });
     
-    console.log('🔧 [useGanttCalculations] sortedChartTasks 计算完成, 结果数量:', result.length);
     return result;
   }, [chartTasks, dateToPixel]);
 
@@ -122,26 +117,18 @@ export const useGanttCalculations = (
 
   // 基于新的数据结构：按rowId分组图表任务
   const chartTaskRows = useMemo(() => {
-    console.log('🔧 [useGanttCalculations] chartTaskRows 重新计算');
-    console.log('  visibleProjectRows数量:', visibleProjectRows.length);
-    console.log('  sortedChartTasks数量:', sortedChartTasks.length);
     
     const rowMap = new Map<string, Task[]>();
     
     // 为每个可见项目行创建一个空的任务数组
     visibleProjectRows.forEach(row => {
       rowMap.set(row.id, []);
-      console.log(`  创建空行: ${row.id}`);
     });
     
     // 将图表任务分组到对应的行
     sortedChartTasks.forEach(task => {
-      console.log(`  处理任务: ${task.id} rowId:${task.rowId} 行存在:${rowMap.has(task.rowId || '')}`);
       if (task.rowId && rowMap.has(task.rowId)) {
         rowMap.get(task.rowId)!.push(task);
-        console.log(`    ✅ 任务 ${task.id} 添加到行 ${task.rowId}`);
-      } else {
-        console.log(`    ❌ 任务 ${task.id} 无法添加，rowId:${task.rowId}`);
       }
     });
     
@@ -151,10 +138,6 @@ export const useGanttCalculations = (
       tasks: rowMap.get(row.id)!.sort((a, b) => a.startDate.getTime() - b.startDate.getTime())
     }));
     
-    console.log('🔧 [useGanttCalculations] chartTaskRows 计算完成:');
-    result.forEach((row, index) => {
-      console.log(`  Row ${index} (${row.rowId}): ${row.tasks.length} 个任务`);
-    });
     
     return result;
   }, [visibleProjectRows, sortedChartTasks]);
