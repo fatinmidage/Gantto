@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import { Task, ProjectRow, MilestoneNode } from '../../types';
+import { getIconConfig } from '../../config/icons';
 
 interface UseTaskCRUDProps {
   tasks: Task[];
@@ -35,16 +36,21 @@ export const useTaskCRUD = ({
   
   // 添加新任务
   const addNewTask = useCallback(() => {
+    // 使用默认图标配置
+    const defaultIconType = 'circle';
+    const iconConfig = getIconConfig(defaultIconType);
+    
     const newTask: Task = {
       id: `task-${Date.now()}`,
       title: '新任务',
       startDate: new Date(),
       endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-      color: '#4CAF50',
+      color: iconConfig.color, // 使用图标配置的颜色
       x: 0,
       width: 0,
       order: tasks.length,
-      type: 'default',
+      type: defaultIconType,
+      iconType: defaultIconType,
       status: 'pending'
     };
     setTasks(prev => [...prev, newTask]);

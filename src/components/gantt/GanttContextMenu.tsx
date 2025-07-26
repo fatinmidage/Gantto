@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { Task, MilestoneNode } from '../../types';
 import { formatDateForDisplay, formatDateToMD } from '../../utils/ganttUtils';
 import { calculateMenuPosition, getEstimatedMenuDimensions } from '../../utils/menuPositioning';
+import { getIconConfig } from '../../config/icons';
 
 interface GanttContextMenuProps {
   visible: boolean;
@@ -35,6 +36,7 @@ const GanttContextMenu: React.FC<GanttContextMenuProps> = ({
   taskHeight = 30
 }) => {
   const menuRef = React.useRef<HTMLDivElement>(null);
+
 
   // 监听点击外部区域关闭菜单
   React.useEffect(() => {
@@ -81,7 +83,6 @@ const GanttContextMenu: React.FC<GanttContextMenuProps> = ({
 
   // 根据点击位置的Y坐标计算目标行ID和类型
   const calculateTargetRowData = () => {
-    
     if (!clickPosition || !visibleRows.length) {
       return { id: defaultRowId, type: undefined };
     }
@@ -93,12 +94,16 @@ const GanttContextMenu: React.FC<GanttContextMenuProps> = ({
     // 确保索引在有效范围内
     if (clickedRowIndex >= 0 && clickedRowIndex < visibleRows.length) {
       const targetRow = visibleRows[clickedRowIndex];
-      return { id: targetRow.id, type: targetRow.type };
+      
+      // 优先使用 iconType，其次使用 type
+      const iconType = targetRow.iconType || targetRow.type;
+      return { id: targetRow.id, type: iconType };
     } else {
       // 如果点击在空白区域，使用最后一个有效行或默认行
       const fallbackRow = visibleRows.length > 0 ? visibleRows[visibleRows.length - 1] : null;
+      const iconType = fallbackRow?.iconType || fallbackRow?.type;
       const result = fallbackRow 
-        ? { id: fallbackRow.id, type: fallbackRow.type }
+        ? { id: fallbackRow.id, type: iconType }
         : { id: defaultRowId, type: undefined };
       return result;
     }
@@ -108,19 +113,29 @@ const GanttContextMenu: React.FC<GanttContextMenuProps> = ({
     // 计算点击位置的日期
     const clickDate = clickPosition && pixelToDate ? pixelToDate(clickPosition.x) : new Date();
     
-    // 计算目标行ID
-    const { id: targetRowId } = calculateTargetRowData();
+    // 计算目标行ID和类型
+    const { id: targetRowId, type: targetRowType } = calculateTargetRowData();
+    
+    // 根据图标类型获取对应颜色（使用图标配置系统）
+    const getIconColor = (iconType: string) => {
+      const iconConfig = getIconConfig(iconType);
+      return iconConfig.color;
+    };
+    
+    const iconType = targetRowType || 'circle'; // 继承行的类型，默认使用 circle 图标
+    const typeColor = getIconColor(iconType); // 使用图标配置的颜色
     
     const newTask: Task = {
       id: `chart-${Date.now()}`,
       title: '新任务',
       startDate: clickDate,
       endDate: new Date(clickDate.getTime() + 7 * 24 * 60 * 60 * 1000),
-      color: '#9C27B0',
+      color: typeColor, // 使用图标配置的颜色
       x: clickPosition?.x || 0,
       width: 0,
       rowId: targetRowId,
-      type: 'default',
+      type: iconType, // 使用继承的图标类型
+      iconType: iconType, // 设置图标类型
       status: 'pending',
       progress: 0
     };
@@ -130,32 +145,20 @@ const GanttContextMenu: React.FC<GanttContextMenuProps> = ({
   };
 
   const handleCreateMilestone = () => {
-    
     // 计算点击位置的日期
     const clickDate = clickPosition && pixelToDate ? pixelToDate(clickPosition.x) : new Date();
     
     // 计算目标行ID和类型
     const { id: targetRowId, type: targetRowType } = calculateTargetRowData();
     
-    // 根据类型获取对应颜色
-    const getTypeColor = (type: string) => {
-      switch (type) {
-        case 'milestone':
-          return '#ff9800'; // 橙色
-        case 'development':
-          return '#2196f3'; // 蓝色
-        case 'testing':
-          return '#4caf50'; // 绿色
-        case 'delivery':
-          return '#9c27b0'; // 紫色
-        default:
-          return '#ff9800'; // 默认橙色
-      }
+    // 根据图标类型获取对应颜色（使用图标配置系统）
+    const getIconColor = (iconType: string) => {
+      const iconConfig = getIconConfig(iconType);
+      return iconConfig.color;
     };
     
-    const iconType = targetRowType || 'default'; // 继承行的类型，用于图标显示
-    const typeColor = getTypeColor(iconType); // 使用图标类型的颜色
-    
+    const iconType = targetRowType || 'circle'; // 继承行的类型，默认使用 circle 图标
+    const typeColor = getIconColor(iconType); // 使用图标配置的颜色
     
     const newMilestone: MilestoneNode = {
       id: `milestone-${Date.now()}`,
@@ -163,7 +166,7 @@ const GanttContextMenu: React.FC<GanttContextMenuProps> = ({
       date: clickDate,
       iconType: iconType,
       label: formatDateToMD(clickDate), // 默认标签为M.D格式日期
-      color: typeColor, // 使用图标类型对应的颜色
+      color: typeColor, // 使用图标配置的颜色
       x: clickPosition?.x || 0,
       y: 0, // Y坐标将在渲染时计算
       rowId: targetRowId,
