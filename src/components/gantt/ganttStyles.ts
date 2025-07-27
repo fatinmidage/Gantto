@@ -10,7 +10,7 @@ export const LAYOUT_CONSTANTS = {
   TIMELINE_HEIGHT: 40,
   EDGE_DETECTION_ZONE: 8,
   MIN_TASK_WIDTH: 20,
-  ROW_SPACING: 28, // 行间距常量
+  ROW_SPACING: 28, // 行间距常量 - 仅用于任务行之间的间距
   TASK_ROW_HEIGHT: 40, // taskHeight + margin (deprecated, use calculateRowHeight instead)
 } as const;
 
@@ -256,14 +256,21 @@ export const layoutUtils = {
     return taskHeight + LAYOUT_CONSTANTS.ROW_SPACING;
   },
   
-  // 计算任务在容器中的Y位置
+  // 计算任务在容器中的Y位置 - 确保垂直居中对齐
   calculateTaskY: (rowIndex: number, taskHeight: number): number => {
     return rowIndex * layoutUtils.calculateRowHeight(taskHeight);
   },
   
-  // 计算里程碑在容器中的Y位置 (行中心)
+  // 计算里程碑在容器中的Y位置 (行中心) - 精确居中
   calculateMilestoneY: (rowIndex: number, taskHeight: number): number => {
-    return layoutUtils.calculateTaskY(rowIndex, taskHeight) + taskHeight / 2;
+    const taskY = layoutUtils.calculateTaskY(rowIndex, taskHeight);
+    return taskY + taskHeight / 2; // 任务条中心位置
+  },
+  
+  // 计算元素在行内的垂直居中位置
+  calculateCenterY: (rowIndex: number, taskHeight: number, elementHeight: number = 0): number => {
+    const taskY = layoutUtils.calculateTaskY(rowIndex, taskHeight);
+    return taskY + (taskHeight - elementHeight) / 2;
   }
 } as const;
 

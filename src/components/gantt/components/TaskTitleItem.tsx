@@ -65,6 +65,7 @@ export const TaskTitleItem: React.FC<TaskTitleItemProps> = ({
   const level = task.level || 0;
   const indentWidth = level * 20;
 
+
   // 编辑模式聚焦
   useEffect(() => {
     if (isEditing && editInputRef.current) {
@@ -151,12 +152,17 @@ export const TaskTitleItem: React.FC<TaskTitleItemProps> = ({
     }
   };
 
+  // 🔧 修复：使用整个行高来确保与TaskBar/Milestone对齐
+  const fullRowHeight = taskHeight + LAYOUT_CONSTANTS.ROW_SPACING;
+  
   const taskTitleStyle: React.CSSProperties = {
-    height: taskHeight,
-    marginBottom: LAYOUT_CONSTANTS.ROW_SPACING,
+    height: fullRowHeight, // 使用完整行高而不是只有taskHeight
+    marginBottom: 0, // 移除marginBottom，避免重复间距
     display: 'flex',
-    alignItems: 'center',
+    alignItems: 'center', // 在整个行高内垂直居中
+    justifyContent: 'flex-start',
     padding: '0 20px',
+    paddingLeft: `${20 + indentWidth}px`,
     fontSize: '14px',
     color: '#555',
     borderBottom: '1px solid #f0f0f0',
@@ -169,8 +175,9 @@ export const TaskTitleItem: React.FC<TaskTitleItemProps> = ({
     transform: isDraggedTask ? 'scale(1.02)' : 'scale(1)',
     boxShadow: isDraggedTask ? '0 4px 8px rgba(0,0,0,0.15)' : 'none',
     zIndex: isDraggedTask ? 10 : 1,
-    paddingLeft: `${20 + indentWidth}px`
+    boxSizing: 'border-box'
   };
+
 
   const dragIndicatorStyle: React.CSSProperties = {
     height: '2px',

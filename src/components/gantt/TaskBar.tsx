@@ -48,6 +48,9 @@ const TaskBar: React.FC<TaskBarProps> = ({
   const safeTaskX = isNaN(taskX) ? 0 : taskX;
   const safeTaskWidth = isNaN(taskWidth) ? 100 : taskWidth;
   
+  // 计算任务Y位置
+  const taskY = layoutUtils.calculateTaskY(rowIndex, taskHeight);
+  
   // 数据验证完成
 
   return (
@@ -56,7 +59,7 @@ const TaskBar: React.FC<TaskBarProps> = ({
       className={`gantt-task-bar custom-color ${isBeingDragged ? 'dragging' : ''} status-${task.status} type-${task.type} ${isHoveringEdge ? `edge-hover-${isHoveringEdge}` : ''}`}
       style={{
         left: safeTaskX,
-        top: layoutUtils.calculateTaskY(rowIndex, taskHeight),
+        top: taskY,
         width: safeTaskWidth,
         height: taskHeight,
         '--custom-task-color': task.color,

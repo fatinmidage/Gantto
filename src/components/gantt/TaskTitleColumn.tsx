@@ -83,7 +83,7 @@ const TaskTitleColumn: React.FC<TaskTitleColumnProps> = ({
   };
 
   const taskTitlesContainerStyle: React.CSSProperties = {
-    paddingTop: LAYOUT_CONSTANTS.ROW_SPACING,
+    paddingTop: 0, // 任务应该紧贴标题头部，不添加额外间距
     height: taskContentHeight,
     overflow: 'auto'
   };

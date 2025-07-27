@@ -48,7 +48,7 @@ const MilestoneNode: React.FC<MilestoneNodeProps> = ({
   // 节点大小固定为16像素
   const nodeSize = 16;
   
-  // 节点位置
+  // 节点位置 - 确保垂直居中
   const calculatedLeft = milestone.x ? milestone.x - nodeSize / 2 : 0;
   const calculatedTop = milestone.y ? milestone.y - nodeSize / 2 : taskHeight / 2 - nodeSize / 2;
   

@@ -68,14 +68,14 @@ const TaskBarsContainer: React.FC<TaskBarsContainerProps> = ({
   return (
     <div className="tasks" style={{
       position: 'absolute',
-      top: timelineHeight + LAYOUT_CONSTANTS.ROW_SPACING,
+      top: timelineHeight, // 任务容器紧贴时间轴底部
       left: 0,
       right: 0,
       bottom: 0,
       border: `1px solid ${COLOR_CONSTANTS.BORDER_COLOR}`,
       borderTop: 'none' // 避免与时间轴重复边框
     }}>
-      {chartTaskRows.map((row, rowIndex) => 
+        {chartTaskRows.map((row, rowIndex) => 
         row.tasks.map((chartTask) => {
           const isBeingDragged = draggedTask === chartTask.id;
           const displayX = isBeingDragged && tempDragPosition ? tempDragPosition.x : chartTask.x;

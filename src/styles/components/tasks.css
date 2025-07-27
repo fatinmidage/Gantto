@@ -40,12 +40,14 @@
 /* 任务条标签样式 */
 .task-tags {
   position: absolute;
-  top: 2px;
+  top: 50%;
   right: 4px;
+  transform: translateY(-50%);
   display: flex;
   gap: 2px;
   flex-wrap: wrap;
   max-width: 60%;
+  align-items: center;
 }
 
 .task-tag {
@@ -100,7 +102,8 @@
   bottom: 0;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
+  padding: 0 8px;
   font-size: 0.75rem;
   font-weight: 600;
   color: rgba(255, 255, 255, 0.9);
@@ -110,6 +113,7 @@
   height: 100%;
   border-radius: 4px;
   overflow: hidden;
+  box-sizing: border-box;
 }
 
 /* 任务状态样式 */
