@@ -258,7 +258,10 @@ export const layoutUtils = {
   
   // 计算任务在容器中的Y位置 - 确保垂直居中对齐
   calculateTaskY: (rowIndex: number, taskHeight: number): number => {
-    return rowIndex * layoutUtils.calculateRowHeight(taskHeight);
+    const rowStartY = rowIndex * layoutUtils.calculateRowHeight(taskHeight);
+    // 计算行内垂直居中位置：行间距的一半作为上边距
+    const verticalPadding = (layoutUtils.calculateRowHeight(taskHeight) - taskHeight) / 2;
+    return rowStartY + verticalPadding;
   },
   
   // 计算里程碑在容器中的Y位置 (行中心) - 精确居中

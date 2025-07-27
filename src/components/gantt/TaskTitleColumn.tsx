@@ -5,7 +5,7 @@
 
 import React from 'react';
 import { Task } from '../../types';
-import { COLOR_CONSTANTS, LAYOUT_CONSTANTS } from './ganttStyles';
+import { COLOR_CONSTANTS } from './ganttStyles';
 import { useTitleColumnResize } from './hooks/useTitleColumnResize';
 import { TaskTitleItem } from './components/TaskTitleItem';
 

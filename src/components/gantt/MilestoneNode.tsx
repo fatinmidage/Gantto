@@ -34,7 +34,7 @@ const getIconColor = (iconType: IconType) => {
 
 const MilestoneNode: React.FC<MilestoneNodeProps> = ({
   milestone,
-  taskHeight,
+  taskHeight: _taskHeight, // 保留参数但标记为未使用
   isSelected = false,
   isDragging = false,
   onMilestoneDragStart,
@@ -50,7 +50,8 @@ const MilestoneNode: React.FC<MilestoneNodeProps> = ({
   
   // 节点位置 - 确保垂直居中
   const calculatedLeft = milestone.x ? milestone.x - nodeSize / 2 : 0;
-  const calculatedTop = milestone.y ? milestone.y - nodeSize / 2 : taskHeight / 2 - nodeSize / 2;
+  // 直接使用传入的 milestone.y，它已经是正确的中心位置，只需减去节点半径
+  const calculatedTop = milestone.y ? milestone.y - nodeSize / 2 : 0;
   
   
   const nodeStyle: React.CSSProperties = {

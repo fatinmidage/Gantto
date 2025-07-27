@@ -7,7 +7,7 @@ import React from 'react';
 import TaskBar from './TaskBar';
 import MilestoneNode from './MilestoneNode';
 import { Task, MilestoneNode as MilestoneNodeType } from '../../types/task';
-import { COLOR_CONSTANTS, LAYOUT_CONSTANTS, layoutUtils } from './ganttStyles';
+import { COLOR_CONSTANTS, layoutUtils } from './ganttStyles';
 
 // 任务行数据接口
 interface TaskRow {
