@@ -234,6 +234,7 @@ const GanttContainer: React.FC<GanttContainerProps> = ({
         onMilestoneSelect={onMilestoneSelect}
         onMilestoneContextMenu={onMilestoneContextMenu}
         onMilestoneDragStart={onMilestoneDragStart}
+        onMilestoneLabelEdit={onMilestoneLabelEdit}
       />
 
       <GanttMenuManager

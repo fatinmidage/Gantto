@@ -40,6 +40,7 @@ interface TaskBarsProps {
   onMilestoneSelect?: (milestoneId: string) => void;
   onMilestoneContextMenu?: (e: React.MouseEvent, milestoneId: string) => void;
   onMilestoneDragStart?: (e: React.MouseEvent, milestone: any) => void;
+  onMilestoneLabelEdit?: (milestoneId: string, label: string) => void;
 }
 
 // 重构后的 TaskBars 组件，现在是 TaskBarsContainer 的包装器
