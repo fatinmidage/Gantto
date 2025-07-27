@@ -7,7 +7,7 @@ import React from 'react';
 import TaskBar from './TaskBar';
 import MilestoneNode from './MilestoneNode';
 import { Task, MilestoneNode as MilestoneNodeType } from '../../types/task';
-import { COLOR_CONSTANTS } from './ganttStyles';
+import { COLOR_CONSTANTS, LAYOUT_CONSTANTS, layoutUtils } from './ganttStyles';
 
 // 任务行数据接口
 interface TaskRow {
@@ -68,7 +68,7 @@ const TaskBarsContainer: React.FC<TaskBarsContainerProps> = ({
   return (
     <div className="tasks" style={{
       position: 'absolute',
-      top: timelineHeight + 10,
+      top: timelineHeight + LAYOUT_CONSTANTS.ROW_SPACING,
       left: 0,
       right: 0,
       bottom: 0,
@@ -143,7 +143,7 @@ const TaskBarsContainer: React.FC<TaskBarsContainerProps> = ({
           
           if (rowIndex !== -1) {
             // 计算正确的Y坐标：行索引 * (任务高度 + 间距) + 任务高度的一半（居中）
-            milestoneY = rowIndex * (taskHeight + 10) + taskHeight / 2;
+            milestoneY = layoutUtils.calculateMilestoneY(rowIndex, taskHeight);
           }
         }
         

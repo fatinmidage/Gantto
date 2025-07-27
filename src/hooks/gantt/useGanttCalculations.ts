@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { Task, ProjectRow } from '../../types';
+import { layoutUtils } from '../../components/gantt/ganttStyles';
 
 // 导入层级帮助函数
 import {
@@ -169,7 +170,7 @@ export const useGanttCalculations = (
 
   // 计算容器高度：根据左侧任务列表的行数动态调整
   const containerHeight = useMemo(() => {
-    const taskRowHeight = taskHeight + 10; // 任务高度 + 间距
+    const taskRowHeight = layoutUtils.calculateRowHeight(taskHeight);
     const calculatedHeight = leftPanelTasks.length * taskRowHeight + 20; // 额外20px留白
     const MIN_CONTAINER_HEIGHT = 300; // 最小容器高度
     return Math.max(MIN_CONTAINER_HEIGHT, calculatedHeight);

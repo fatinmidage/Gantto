@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react';
 import { Task, MilestoneNode } from '../../types';
 import { formatDateToMD } from '../../utils/ganttUtils';
+import { layoutUtils } from '../../components/gantt/ganttStyles';
 
 interface ContextMenuState {
   visible: boolean;
@@ -91,7 +92,7 @@ export const useGanttContextMenu = ({
     const clickDate = pixelToDate(contextMenu.clickPosition.x);
     
     // 计算点击位置对应的行索引
-    const taskRowHeight = taskHeight + 10; // 任务高度 + 间距
+    const taskRowHeight = layoutUtils.calculateRowHeight(taskHeight);
     const clickedRowIndex = Math.floor(contextMenu.clickPosition.y / taskRowHeight);
     
     // 获取目标行ID
@@ -135,7 +136,7 @@ export const useGanttContextMenu = ({
     
     
     // 计算点击位置对应的行索引
-    const taskRowHeight = taskHeight + 10; // 任务高度 + 间距
+    const taskRowHeight = layoutUtils.calculateRowHeight(taskHeight);
     const clickedRowIndex = Math.floor(contextMenu.clickPosition.y / taskRowHeight);
     
     // 获取目标行ID

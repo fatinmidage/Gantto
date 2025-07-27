@@ -6,6 +6,7 @@
 import { useCallback } from 'react';
 import { MilestoneNode, TaskBar, Task } from '../../types/task';
 import { Rectangle } from '../../types/common';
+import { layoutUtils } from '../../components/gantt/ganttStyles';
 
 interface AttachmentResult {
   isAttached: boolean;
@@ -18,7 +19,7 @@ export const useMilestoneAttachment = () => {
   const getTaskBarRect = useCallback((task: TaskBar, taskHeight: number, rowIndex: number): Rectangle => {
     return {
       x: task.x || 0,
-      y: rowIndex * (taskHeight + 10),
+      y: layoutUtils.calculateTaskY(rowIndex, taskHeight),
       width: task.width || 0,
       height: taskHeight
     };
@@ -89,7 +90,7 @@ export const useMilestoneAttachment = () => {
     }
 
     const x = task.x + relativePosition * task.width;
-    const y = rowIndex * (taskHeight + 10) + taskHeight / 2;
+    const y = layoutUtils.calculateMilestoneY(rowIndex, taskHeight);
     
     return { x, y };
   }, []);

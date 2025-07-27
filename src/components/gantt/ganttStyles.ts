@@ -10,7 +10,8 @@ export const LAYOUT_CONSTANTS = {
   TIMELINE_HEIGHT: 40,
   EDGE_DETECTION_ZONE: 8,
   MIN_TASK_WIDTH: 20,
-  TASK_ROW_HEIGHT: 40, // taskHeight + margin
+  ROW_SPACING: 28, // 行间距常量
+  TASK_ROW_HEIGHT: 40, // taskHeight + margin (deprecated, use calculateRowHeight instead)
 } as const;
 
 // === 颜色常量 ===
@@ -248,6 +249,24 @@ export const ANIMATION_CONSTANTS = {
   DRAG_SCALE: 1.05
 } as const;
 
+// === 布局计算函数 ===
+export const layoutUtils = {
+  // 计算行高度 (任务高度 + 间距)
+  calculateRowHeight: (taskHeight: number): number => {
+    return taskHeight + LAYOUT_CONSTANTS.ROW_SPACING;
+  },
+  
+  // 计算任务在容器中的Y位置
+  calculateTaskY: (rowIndex: number, taskHeight: number): number => {
+    return rowIndex * layoutUtils.calculateRowHeight(taskHeight);
+  },
+  
+  // 计算里程碑在容器中的Y位置 (行中心)
+  calculateMilestoneY: (rowIndex: number, taskHeight: number): number => {
+    return layoutUtils.calculateTaskY(rowIndex, taskHeight) + taskHeight / 2;
+  }
+} as const;
+
 // === 工具函数 ===
 export const styleUtils = {
   // 获取任务类型样式
@@ -281,5 +300,6 @@ export default {
   CONTEXT_MENU_STYLES,
   BREAKPOINTS,
   ANIMATION_CONSTANTS,
+  layoutUtils,
   styleUtils
 } as const;

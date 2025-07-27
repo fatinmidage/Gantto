@@ -4,6 +4,7 @@ import { Task, MilestoneNode } from '../../types';
 import { formatDateForDisplay, formatDateToMD } from '../../utils/ganttUtils';
 import { calculateMenuPosition, getEstimatedMenuDimensions } from '../../utils/menuPositioning';
 import { getIconConfig } from '../../config/icons';
+import { layoutUtils } from './ganttStyles';
 
 interface GanttContextMenuProps {
   visible: boolean;
@@ -87,8 +88,8 @@ const GanttContextMenu: React.FC<GanttContextMenuProps> = ({
       return { id: defaultRowId, type: undefined };
     }
     
-    // 每行的高度包括任务高度 + 10px间距
-    const rowHeight = taskHeight + 10;
+    // 每行的高度包括任务高度 + 间距
+    const rowHeight = layoutUtils.calculateRowHeight(taskHeight);
     const clickedRowIndex = Math.floor(clickPosition.y / rowHeight);
     
     // 确保索引在有效范围内

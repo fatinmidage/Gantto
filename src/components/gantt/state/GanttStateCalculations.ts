@@ -1,7 +1,7 @@
 import { useMemo, useCallback } from 'react';
 import { Task } from '../../../types';
 import { getVisibleProjectRows } from '../GanttHelpers';
-import { LAYOUT_CONSTANTS } from '../ganttStyles';
+import { LAYOUT_CONSTANTS, layoutUtils } from '../ganttStyles';
 
 /**
  * 甘特图状态计算Hook
@@ -106,7 +106,7 @@ export const useGanttStateCalculations = ({
 
   // 容器高度
   const containerHeight = useMemo(() => 
-    Math.max(MIN_CONTAINER_HEIGHT, leftPanelTasks.length * (taskHeight + 10) + 20), 
+    Math.max(MIN_CONTAINER_HEIGHT, leftPanelTasks.length * layoutUtils.calculateRowHeight(taskHeight) + 20), 
     [leftPanelTasks.length, taskHeight]
   );
 

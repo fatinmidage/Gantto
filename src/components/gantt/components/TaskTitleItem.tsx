@@ -9,6 +9,7 @@ import { Task } from '../../../types';
 import { IconType } from '../../../types/common';
 import { TaskHierarchyControls } from './TaskHierarchyControls';
 import TaskTitleContextMenu from '../TaskTitleContextMenu';
+import { LAYOUT_CONSTANTS } from '../ganttStyles';
 
 interface TaskTitleItemProps {
   task: Task;
@@ -152,7 +153,7 @@ export const TaskTitleItem: React.FC<TaskTitleItemProps> = ({
 
   const taskTitleStyle: React.CSSProperties = {
     height: taskHeight,
-    marginBottom: 10,
+    marginBottom: LAYOUT_CONSTANTS.ROW_SPACING,
     display: 'flex',
     alignItems: 'center',
     padding: '0 20px',

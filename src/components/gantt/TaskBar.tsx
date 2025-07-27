@@ -6,6 +6,7 @@
 import React from 'react';
 import { Task } from '../../types/task';
 import EditableLabel from './EditableLabel';
+import { layoutUtils } from './ganttStyles';
 
 interface TaskBarProps {
   task: Task;
@@ -55,7 +56,7 @@ const TaskBar: React.FC<TaskBarProps> = ({
       className={`gantt-task-bar custom-color ${isBeingDragged ? 'dragging' : ''} status-${task.status} type-${task.type} ${isHoveringEdge ? `edge-hover-${isHoveringEdge}` : ''}`}
       style={{
         left: safeTaskX,
-        top: rowIndex * (taskHeight + 10),
+        top: layoutUtils.calculateTaskY(rowIndex, taskHeight),
         width: safeTaskWidth,
         height: taskHeight,
         '--custom-task-color': task.color,

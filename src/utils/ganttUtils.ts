@@ -4,6 +4,7 @@
  */
 
 import { ProjectRow, Task } from '../types';
+import { layoutUtils } from '../components/gantt/ganttStyles';
 
 /**
  * 根据Y坐标计算对应的项目行ID
@@ -17,7 +18,7 @@ export const calculateTargetRowId = (
   taskHeight: number,
   projectRows: ProjectRow[]
 ): string => {
-  const taskRowHeight = taskHeight + 10; // 任务高度 + 间距
+  const taskRowHeight = layoutUtils.calculateRowHeight(taskHeight);
   const clickedRowIndex = Math.floor(y / taskRowHeight);
   
   if (clickedRowIndex < projectRows.length) {
