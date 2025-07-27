@@ -139,7 +139,7 @@
   max-width: 320px;
   z-index: 1000;
   backdrop-filter: blur(8px);
-  animation: slideInUp 0.2s ease-out;
+  animation: slideInUp 0.15s ease-out; /* 更快的动画 */
 }
 
 @keyframes slideInUp {
@@ -232,7 +232,13 @@
 .date-input-container {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
+}
+
+.date-input-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .date-input-label {
@@ -241,22 +247,7 @@
   color: var(--text-secondary);
 }
 
-.milestone-date-input {
-  width: 100%;
-  padding: 8px 12px;
-  border: 1px solid var(--border-secondary);
-  border-radius: 6px;
-  font-size: 14px;
-  color: var(--text-primary);
-  background: var(--bg-tertiary);
-  transition: all 0.15s ease;
-}
 
-.milestone-date-input:focus {
-  outline: none;
-  border-color: var(--accent-primary);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
 
 .milestone-date-picker-footer {
   display: flex;
@@ -312,4 +303,102 @@
 .milestone-date-picker-arrow {
   fill: var(--bg-secondary);
   filter: drop-shadow(0 -1px 1px rgba(0, 0, 0, 0.1));
+}
+
+/* 即时模式提示样式 */
+.immediate-mode-hint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.2);
+  color: var(--text-secondary);
+}
+
+.immediate-mode-hint span {
+  font-weight: 500;
+}
+
+/* 日期输入框的增强样式 */
+.milestone-date-input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 2px solid var(--border-secondary);
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  background: var(--bg-tertiary);
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+
+.milestone-date-input:hover {
+  border-color: var(--accent-primary);
+  background: var(--bg-secondary);
+}
+
+.milestone-date-input:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+  transform: scale(1.02);
+  background: var(--bg-secondary);
+}
+
+/* 日期输入框的日历图标样式优化 */
+.milestone-date-input::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  filter: invert(0.5);
+  transition: filter 0.15s ease;
+}
+
+.milestone-date-input:hover::-webkit-calendar-picker-indicator,
+.milestone-date-input:focus::-webkit-calendar-picker-indicator {
+  filter: invert(0.2);
+}
+
+/* 自定义日期选择按钮样式 */
+.date-picker-trigger-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid var(--accent-primary);
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--accent-primary);
+  background: rgba(59, 130, 246, 0.05);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.date-picker-trigger-btn:hover {
+  background: var(--accent-primary);
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.date-picker-trigger-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.3);
+}
+
+/* 在即时模式下隐藏原生日期输入框，突出自定义按钮 */
+.milestone-date-picker-content[data-immediate-mode="true"] .milestone-date-input {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.milestone-date-picker-content[data-immediate-mode="true"] .date-picker-trigger-btn {
+  border-width: 3px;
+  font-size: 15px;
+  padding: 14px 18px;
 }

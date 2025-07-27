@@ -192,6 +192,7 @@ const MilestoneNode: React.FC<MilestoneNodeProps> = ({
         onOpenChange={setIsDatePickerOpen}
         onDateChange={handleDateChange}
         position={getDatePickerPosition()}
+        immediateMode={true} // 启用即时应用模式
       />
     </>
   );
