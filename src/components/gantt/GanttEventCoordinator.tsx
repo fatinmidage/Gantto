@@ -122,7 +122,6 @@ const GanttEventCoordinator: React.FC<GanttEventCoordinatorProps> = ({
         // 解决：使用基于日期重新计算的坐标，确保拖拽起始位置与渲染位置一致
         const currentRenderX = dateToPixel(milestone.date);
         
-        
         // 将里程碑转换为任务对象以便拖拽处理
         task = {
           id: milestone.id,

@@ -76,7 +76,6 @@ export const useTaskBarDrag = () => {
       
       dragState.startHorizontalDrag(taskId, task, newDragType, offset);
       
-    } else {
     }
   }, [dragState, updateContainerBounds]);
 
@@ -85,14 +84,12 @@ export const useTaskBarDrag = () => {
     CHART_WIDTH: number = 800,
     minWidth: number = 20
   ) => {
-    
     if (!dragState.isDragging || !dragState.draggedTask || !dragState.draggedTaskData || !dragState.dragType) {
       return;
     }
 
     const metrics = dragState.getDragMetrics();
     const bounds = containerBounds.current;
-    
     
     if (!metrics || !bounds) {
       return;
@@ -101,10 +98,11 @@ export const useTaskBarDrag = () => {
     const mouseX = clientX - bounds.left;
     
     if (isNaN(mouseX)) {
+      return;
     }
-    const taskData = dragState.draggedTaskData;
-    // 移除了milestone类型判断，所有任务都作为普通任务处理
     
+    const taskData = dragState.draggedTaskData;
+    const isMilestone = taskData.startDate.getTime() === taskData.endDate.getTime();
 
     if (dragState.dragType === 'move') {
       const newX = mouseX - dragState.dragOffset.x;
@@ -123,8 +121,6 @@ export const useTaskBarDrag = () => {
       }
       
       // 🔧 修复：里程碑拖拽移动计算
-      const isMilestone = taskData.startDate.getTime() === taskData.endDate.getTime();
-      
       let finalX = constrainedX;
       if (isMilestone) {
         // 里程碑：constrainedX 是左边缘位置，需要转换回中心点位置
@@ -137,26 +133,29 @@ export const useTaskBarDrag = () => {
         x: finalX,
         width: isMilestone ? 16 : metrics.minWidth
       };
-      
       dragState.updateHorizontalDrag(dragUpdate);
     } else if (dragState.dragType === 'resize-left') {
       const originalRight = (dragState.draggedTaskData.x || 0) + (dragState.draggedTaskData.width || 0);
       const newLeft = Math.max(0, Math.min(mouseX, originalRight - minWidth));
       const newWidth = originalRight - newLeft;
       
-      dragState.updateHorizontalDrag({
+      const dragUpdate = {
         id: dragState.draggedTask,
         x: newLeft,
         width: newWidth
-      });
+      };
+      
+      dragState.updateHorizontalDrag(dragUpdate);
     } else if (dragState.dragType === 'resize-right') {
       const newWidth = Math.max(minWidth, Math.min(mouseX - (dragState.draggedTaskData.x || 0), CHART_WIDTH - (dragState.draggedTaskData.x || 0)));
       
-      dragState.updateHorizontalDrag({
+      const dragUpdate = {
         id: dragState.draggedTask,
         x: dragState.draggedTaskData.x || 0,
         width: newWidth
-      });
+      };
+      
+      dragState.updateHorizontalDrag(dragUpdate);
     }
   }, [dragState]);
 

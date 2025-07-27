@@ -51,6 +51,7 @@ const TaskBar: React.FC<TaskBarProps> = ({
   // 计算任务Y位置
   const taskY = layoutUtils.calculateTaskY(rowIndex, taskHeight);
   
+  
   // 数据验证完成
 
   return (

@@ -187,7 +187,7 @@ export const useDragReducer = () => {
 
   const endHorizontalDrag = useCallback(() => {
     dispatch({ type: 'END_HORIZONTAL_DRAG' });
-  }, []);
+  }, [dragState]);
 
   // === 垂直拖拽操作 ===
   const startVerticalDrag = useCallback((taskId: string, taskIndex: number, startY: number) => {

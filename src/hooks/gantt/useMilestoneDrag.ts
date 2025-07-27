@@ -88,13 +88,6 @@ export const useMilestoneDrag = (callbacks: MilestoneDragCallbacks): MilestoneDr
     const renderedX = milestone.x - nodeSize / 2; // 这是里程碑实际的渲染left位置
     const renderedY = milestone.y - nodeSize / 2; // 这是里程碑实际的渲染top位置
     
-    // 🐛 调试：里程碑拖拽开始时的坐标信息
-    // const dateBasedX = callbacks.pixelToDate ? (() => {
-    //   // 由于callbacks中有pixelToDate但没有dateToPixel，我们需要通过日期转换来估算
-    //   // 这里应该是dateToPixel的逆向操作
-    //   return 'dateToPixel函数不在callbacks中';
-    // })() : '无法获取dateToPixel函数';
-    
     
     const offset = {
       x: clientX - bounds.left - renderedX,

@@ -155,7 +155,6 @@ export const useTaskCRUD = ({
       return;
     }
     
-    
     // 首先检查是否为里程碑
     const milestone = milestones.find(m => m.id === taskId);
     if (milestone) {
@@ -185,10 +184,9 @@ export const useTaskCRUD = ({
               ...task, 
               startDate, 
               endDate,
-              // 保持原有的 type 字段不变，这是关键！
+              // 保持原有的 type 字段不变
               type: task.type
             };
-            
             return updatedTask;
           }
           return task;

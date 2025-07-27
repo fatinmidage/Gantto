@@ -135,8 +135,8 @@ const GanttContextMenu: React.FC<GanttContextMenuProps> = ({
       x: clickPosition?.x || 0,
       width: 0,
       rowId: targetRowId,
-      type: iconType, // 使用继承的图标类型
-      iconType: iconType, // 设置图标类型
+      type: 'default', // 🔧 修复：任务类型固定为 'default'，不要使用图标类型
+      iconType: iconType, // 设置图标类型（仅用于显示）
       status: 'pending',
       progress: 0
     };
