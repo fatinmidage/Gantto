@@ -77,17 +77,26 @@
 
 .gantt-milestone-node .milestone-icon {
   color: var(--accent-warning);
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.5));
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 1);
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 50%;
 }
 
 .gantt-milestone-node:hover .milestone-icon {
   color: var(--accent-warning);
-  transform: scale(1.1);
+  transform: scale(1.15);
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.6));
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 1);
+  background: rgba(255, 255, 255, 1);
 }
 
 
 .gantt-milestone-node.dragging .milestone-icon {
-  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.2));
+  filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.7));
+  box-shadow: 0 0 0 5px rgba(255, 255, 255, 1);
+  background: rgba(255, 255, 255, 1);
+  transform: scale(1.2);
 }
 
 /* 里程碑样式增强（保留原有的里程碑相关样式） */

@@ -89,7 +89,9 @@
 
 .gantt-task-bar.dragging {
   z-index: 100;
-  border-color: rgba(255, 255, 255, 0.4);
+  border-color: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
 }
 
 
@@ -116,44 +118,61 @@
   box-sizing: border-box;
 }
 
-/* 任务状态样式 */
+/* 任务状态样式 - 极其柔和设计，完全不与milestone抢眼 */
 .gantt-task-bar.status-completed {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  border-color: rgba(16, 185, 129, 0.3);
+  background: rgba(16, 185, 129, 0.06);
+  border-color: rgba(16, 185, 129, 0.25);
+  backdrop-filter: blur(2px);
 }
 
 .gantt-task-bar.status-in-progress {
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-  border-color: rgba(59, 130, 246, 0.3);
+  background: rgba(59, 130, 246, 0.06);
+  border-color: rgba(59, 130, 246, 0.25);
+  backdrop-filter: blur(2px);
 }
 
 .gantt-task-bar.status-pending {
-  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-  border-color: rgba(245, 158, 11, 0.3);
+  background: rgba(245, 158, 11, 0.05);
+  border-color: rgba(245, 158, 11, 0.2);
+  backdrop-filter: blur(2px);
 }
 
 .gantt-task-bar.status-overdue {
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-  border-color: rgba(239, 68, 68, 0.3);
+  background: rgba(239, 68, 68, 0.05);
+  border-color: rgba(239, 68, 68, 0.2);
+  backdrop-filter: blur(2px);
 }
 
-/* 任务类型样式 */
+/* 任务类型样式 - 极其柔和设计，完全不与milestone抢眼 */
 
 .gantt-task-bar.type-development {
-  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  background: rgba(139, 92, 246, 0.05);
+  border-color: rgba(139, 92, 246, 0.2);
+  backdrop-filter: blur(2px);
 }
 
 .gantt-task-bar.type-testing {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: rgba(16, 185, 129, 0.06);
+  border-color: rgba(16, 185, 129, 0.25);
+  backdrop-filter: blur(2px);
 }
 
 .gantt-task-bar.type-delivery {
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  background: rgba(59, 130, 246, 0.06);
+  border-color: rgba(59, 130, 246, 0.25);
+  backdrop-filter: blur(2px);
 }
 
-/* 自定义颜色任务条 - 优先级最高 */
+/* 自定义颜色任务条 - 优先级最高，极其柔和设计 */
 .gantt-task-bar.custom-color {
   background: var(--custom-task-color) !important;
+  backdrop-filter: blur(2px);
+  opacity: 0.15; /* 大幅降低不透明度，让milestone完全突出 */
+}
+
+/* 当自定义颜色任务条悬停时适度提高不透明度 */
+.gantt-task-bar.custom-color:hover {
+  opacity: 0.3;
 }
 
 /* 边界拖拽样式 */
