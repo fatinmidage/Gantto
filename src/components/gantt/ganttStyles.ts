@@ -276,10 +276,10 @@ export const layoutUtils = {
     return rowStartY + verticalPadding;
   },
   
-  // 计算里程碑在容器中的Y位置 (行中心) - 精确居中
+  // 计算里程碑在容器中的Y位置 (顶部Y坐标) - 与任务条保持一致
   calculateMilestoneY: (rowIndex: number, taskHeight: number): number => {
-    const taskY = layoutUtils.calculateTaskY(rowIndex, taskHeight);
-    return taskY + taskHeight / 2; // 任务条中心位置
+    // 返回与任务条相同的顶部Y坐标，确保定位一致性
+    return layoutUtils.calculateTaskY(rowIndex, taskHeight);
   },
   
   // 计算元素在行内的垂直居中位置

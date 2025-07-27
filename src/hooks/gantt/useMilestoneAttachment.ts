@@ -99,7 +99,9 @@ export const useMilestoneAttachment = () => {
     const taskWidth = task.width;
     const taskLeftEdge = taskCenterX - taskWidth / 2;
     const x = taskLeftEdge + relativePosition * taskWidth;
-    const y = layoutUtils.calculateMilestoneY(rowIndex, taskHeight);
+    // calculateMilestoneY 现在返回顶部Y坐标，需要转换为中心点坐标
+    const topY = layoutUtils.calculateMilestoneY(rowIndex, taskHeight);
+    const y = topY + taskHeight / 2; // 转换为任务条中心Y坐标
     
     return { x, y };
   }, []);

@@ -61,9 +61,12 @@ export class CoordinateUtils {
    */
   calculateMilestonePosition(milestone: MilestoneNode, rowIndex: number, nodeSize: number = LAYOUT_CONSTANTS.MILESTONE_NODE_SIZE): MilestonePosition {
     const centerX = this.dateToPixel(milestone.date);
-    const centerY = layoutUtils.calculateMilestoneY(rowIndex, this.taskHeight);
+    const topY = layoutUtils.calculateMilestoneY(rowIndex, this.taskHeight); // 现在返回顶部Y坐标
     
-    // 计算节点左上角位置
+    // 计算节点中心Y坐标（用于显示和计算）
+    const centerY = topY + this.taskHeight / 2;
+    
+    // 计算节点左上角位置（用于渲染）
     const x = centerX - nodeSize / 2;
     const y = centerY - nodeSize / 2;
 

@@ -67,14 +67,22 @@ const MilestoneNode: React.FC<MilestoneNodeProps> = ({
   
   // 🔧 优化：统一中心点坐标系统的节点样式计算
   const nodeStyle = useMemo(() => {
+    // 防止 NaN 值导致样式错误
+    const safeCenterX = isNaN(milestone.x || 0) ? 0 : (milestone.x || 0);
+    const safeCenterY = isNaN(milestone.y || 0) ? 0 : (milestone.y || 0);
+    
     // 中心点坐标转换为渲染用的左上角位置
-    const renderLeft = milestone.x ? milestone.x - nodeSize / 2 : 0;
-    const renderTop = milestone.y ? milestone.y - nodeSize / 2 : 0;
+    const renderLeft = safeCenterX - nodeSize / 2;
+    const renderTop = safeCenterY - nodeSize / 2;
+    
+    // 再次检查渲染位置，确保不是NaN
+    const safeRenderLeft = isNaN(renderLeft) ? 0 : renderLeft;
+    const safeRenderTop = isNaN(renderTop) ? 0 : renderTop;
     
     return {
       position: 'absolute' as const,
-      left: renderLeft,
-      top: renderTop,
+      left: safeRenderLeft,
+      top: safeRenderTop,
       width: nodeSize,
       height: nodeSize,
       cursor: isDragging ? 'grabbing' : 'grab',

@@ -13,6 +13,7 @@ import {
 import { useMilestoneAttachment } from './useMilestoneAttachment';
 import { hasDateInLabel, replaceDateInLabel } from '../../utils/ganttUtils';
 import { LAYOUT_CONSTANTS } from '../../components/gantt/ganttStyles';
+import { boundaryHelpers } from '../../utils/boundaryUtils';
 
 interface LocalMilestoneDragState {
   isDragging: boolean;
@@ -48,19 +49,19 @@ export const useMilestoneDrag = (callbacks: MilestoneDragCallbacks): MilestoneDr
   // 引入附着检测逻辑
   const attachment = useMilestoneAttachment();
 
-  // 边界检测函数
+  // 边界检测函数（使用统一边界检测）
   const checkBounds = useCallback((x: number, y: number, containerWidth?: number, containerHeight?: number): boolean => {
-    const margin = 8; // 边界缓冲区
+    if (!containerWidth || !containerHeight) return true;
     
-    // 检查X轴边界
-    const minX = LAYOUT_CONSTANTS.MILESTONE_NODE_SIZE / 2 + margin;
-    const maxX = (containerWidth || 800) - LAYOUT_CONSTANTS.MILESTONE_NODE_SIZE / 2 - margin;
+    const constrainedPosition = boundaryHelpers.constrainMilestone(
+      x, 
+      y, 
+      containerWidth, 
+      containerHeight, 
+      LAYOUT_CONSTANTS.MILESTONE_NODE_SIZE
+    );
     
-    // 检查Y轴边界
-    const minY = LAYOUT_CONSTANTS.MILESTONE_NODE_SIZE / 2 + margin;
-    const maxY = (containerHeight || 600) - LAYOUT_CONSTANTS.MILESTONE_NODE_SIZE / 2 - margin;
-    
-    return x >= minX && x <= maxX && y >= minY && y <= maxY;
+    return constrainedPosition.isWithinBounds;
   }, []);
 
   // 更新容器边界
@@ -130,23 +131,20 @@ export const useMilestoneDrag = (callbacks: MilestoneDragCallbacks): MilestoneDr
     let newX = newRenderLeft + nodeSize / 2;
     let newY = newRenderTop + nodeSize / 2;
 
-    // 边界检测和约束
+    // 使用统一边界检测和约束
     let isWithinBounds = true;
     if (containerWidth && containerHeight) {
-      const margin = 8;
-      const nodeRadius = nodeSize / 2;
-      const minX = nodeRadius + margin;
-      const maxX = containerWidth - nodeRadius - margin;
-      const minY = nodeRadius + margin;
-      const maxY = containerHeight - nodeRadius - margin;
+      const constrainedPosition = boundaryHelpers.constrainMilestone(
+        newX, 
+        newY, 
+        containerWidth, 
+        containerHeight, 
+        nodeSize
+      );
       
-      isWithinBounds = newX >= minX && newX <= maxX && newY >= minY && newY <= maxY;
-      
-      // 如果超出边界，约束到边界内
-      if (!isWithinBounds) {
-        newX = Math.max(minX, Math.min(newX, maxX));
-        newY = Math.max(minY, Math.min(newY, maxY));
-      }
+      newX = constrainedPosition.x;
+      newY = constrainedPosition.y;
+      isWithinBounds = constrainedPosition.isWithinBounds;
     }
 
     // 更新拖拽状态（包含预览位置和边界状态）

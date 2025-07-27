@@ -2,6 +2,7 @@ import { useRef, useCallback } from 'react';
 import { Task } from '../../types';
 import { useDragReducer, DragType } from './useDragReducer';
 import { LAYOUT_CONSTANTS } from '../../components/gantt/ganttStyles';
+import { boundaryHelpers } from '../../utils/boundaryUtils';
 
 // 重新导出类型定义
 export type { DragType, EdgeHover } from './useDragReducer';
@@ -106,20 +107,21 @@ export const useTaskBarDrag = () => {
       // 转换为中心点坐标
       const newCenterX = newRenderLeft + taskWidth / 2;
       
-      // 边界约束（基于中心点位置）
-      const halfWidth = taskWidth / 2;
-      const minCenterX = halfWidth;
-      const maxCenterX = CHART_WIDTH - halfWidth;
-      const constrainedCenterX = Math.max(minCenterX, Math.min(newCenterX, maxCenterX));
+      // 使用统一边界检测进行约束
+      const constrainedPosition = boundaryHelpers.constrainTaskBar(
+        newCenterX, 
+        taskWidth, 
+        CHART_WIDTH
+      );
       
       // NaN值检查
-      if (isNaN(constrainedCenterX)) {
+      if (isNaN(constrainedPosition.x)) {
         return;
       }
       
       const dragUpdate = {
         id: dragState.draggedTask,
-        x: constrainedCenterX,
+        x: constrainedPosition.x,
         width: taskWidth
       };
       dragState.updateHorizontalDrag(dragUpdate);
@@ -133,9 +135,16 @@ export const useTaskBarDrag = () => {
       const newWidth = fixedRightEdge - newLeftEdge;
       const newCenterX = newLeftEdge + newWidth / 2;
       
+      // 使用统一边界检测进行约束
+      const constrainedResize = boundaryHelpers.constrainTaskBar(
+        newCenterX, 
+        newWidth, 
+        CHART_WIDTH
+      );
+      
       dragState.updateHorizontalDrag({
         id: dragState.draggedTask,
-        x: newCenterX,
+        x: constrainedResize.x,
         width: newWidth
       });
     } else if (dragState.dragType === 'resize-right') {
@@ -148,9 +157,16 @@ export const useTaskBarDrag = () => {
       const newWidth = newRightEdge - fixedLeftEdge;
       const newCenterX = fixedLeftEdge + newWidth / 2;
       
+      // 使用统一边界检测进行约束
+      const constrainedResize = boundaryHelpers.constrainTaskBar(
+        newCenterX, 
+        newWidth, 
+        CHART_WIDTH
+      );
+      
       dragState.updateHorizontalDrag({
         id: dragState.draggedTask,
-        x: newCenterX,
+        x: constrainedResize.x,
         width: newWidth
       });
     }
