@@ -87,15 +87,15 @@ const TimelineSettingsPanel: React.FC<TimelineSettingsPanelProps> = ({
         // 检查点击是否在Radix UI Select的Portal内容中
         const isInRadixSelect = (
           // Radix Select相关元素检查
-          target.closest?.('[data-radix-select-content]') ||
-          target.closest?.('[data-radix-select-viewport]') ||
-          target.closest?.('[data-radix-select-item]') ||
-          target.closest?.('[data-radix-popper-content-wrapper]') ||
-          target.closest?.('[data-radix-popper-content]') ||
-          target.closest?.('[data-radix-portal]') ||
+          (target as Element).closest?.('[data-radix-select-content]') ||
+          (target as Element).closest?.('[data-radix-select-viewport]') ||
+          (target as Element).closest?.('[data-radix-select-item]') ||
+          (target as Element).closest?.('[data-radix-popper-content-wrapper]') ||
+          (target as Element).closest?.('[data-radix-popper-content]') ||
+          (target as Element).closest?.('[data-radix-portal]') ||
           // Role属性检查
-          target.closest?.('[role="listbox"]') ||
-          target.closest?.('[role="option"]')
+          (target as Element).closest?.('[role="listbox"]') ||
+          (target as Element).closest?.('[role="option"]')
         );
         
         // 如果不在Select选项中，才关闭面板

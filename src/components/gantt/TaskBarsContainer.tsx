@@ -104,7 +104,13 @@ const TaskBarsContainer: React.FC<TaskBarsContainerProps> = ({
       )}
       
       {/* 渲染独立的里程碑节点 */}
-      {milestones.map((milestone) => {
+      {milestones
+        .filter((milestone) => {
+          // 过滤掉对应行不可见的里程碑
+          if (!milestone.rowId) return true; // 没有rowId的里程碑总是可见
+          return chartTaskRows.some(row => row.rowId === milestone.rowId);
+        })
+        .map((milestone) => {
         // 检查此里程碑是否正在被拖拽
         const isBeingDragged = draggedTask === milestone.id;
         
@@ -132,7 +138,7 @@ const TaskBarsContainer: React.FC<TaskBarsContainerProps> = ({
         let milestoneY = milestone.y || 0; // 默认使用里程碑自带的Y坐标
         
         if (milestone.rowId) {
-          // 查找该 rowId 对应的行索引
+          // 查找该 rowId 对应的行索引（只在可见的chartTaskRows中查找）
           const rowIndex = chartTaskRows.findIndex(row => row.rowId === milestone.rowId);
           
           if (rowIndex !== -1) {

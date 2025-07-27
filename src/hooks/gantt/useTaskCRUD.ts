@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { Task, ProjectRow, MilestoneNode } from '../../types';
+import { Task, ProjectRow, MilestoneNode, TaskType } from '../../types';
 import { getIconConfig } from '../../config/icons';
 
 interface UseTaskCRUDProps {
@@ -38,6 +38,7 @@ export const useTaskCRUD = ({
   const addNewTask = useCallback(() => {
     // 使用默认图标配置
     const defaultIconType = 'circle';
+    const defaultTaskType: TaskType = 'default';
     const iconConfig = getIconConfig(defaultIconType);
     
     const newTask: Task = {
@@ -49,7 +50,7 @@ export const useTaskCRUD = ({
       x: 0,
       width: 0,
       order: tasks.length,
-      type: defaultIconType,
+      type: defaultTaskType,
       iconType: defaultIconType,
       status: 'pending'
     };

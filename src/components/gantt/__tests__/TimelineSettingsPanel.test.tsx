@@ -3,7 +3,6 @@
  * 验证时间轴设置面板的外部点击检测逻辑
  */
 
-import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { vi } from 'vitest';
 import TimelineSettingsPanel from '../TimelineSettingsPanel';

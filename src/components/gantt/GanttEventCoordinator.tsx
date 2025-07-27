@@ -150,7 +150,6 @@ const GanttEventCoordinator: React.FC<GanttEventCoordinatorProps> = ({
     
     // 计算正确的 pixelPerDay
     const totalDays = Math.ceil((dateRange.endDate.getTime() - dateRange.startDate.getTime()) / (24 * 60 * 60 * 1000));
-    const startPixel = 0;
     const endPixel = dateToPixel(dateRange.endDate);
     const calculatedPixelPerDay = totalDays > 0 ? endPixel / totalDays : 1;
     

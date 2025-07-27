@@ -92,7 +92,7 @@ describe('月份分隔线位置准确性测试', () => {
     expect(monthLayer).toBeDefined();
     
     if (monthLayer) {
-      monthLayer.items.forEach((monthItem, index) => {
+      monthLayer.items.forEach((monthItem, _index) => {
         // 验证每个月份项的开始位置都对齐到月份的第一天
         const expectedStartPixel = Math.round(mockDateToPixel(monthItem.startDate));
         expect(Math.abs(monthItem.x - expectedStartPixel)).toBeLessThanOrEqual(1);

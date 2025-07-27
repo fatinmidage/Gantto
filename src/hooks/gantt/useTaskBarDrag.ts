@@ -171,7 +171,7 @@ export const useTaskBarDrag = () => {
 
   const updateVerticalDragPosition = useCallback((
     clientY: number,
-    taskHeight: number = 40,
+    taskHeight: number = 32,
     totalTasks: number
   ) => {
     if (!dragState.verticalDragState.isDragging || dragState.verticalDragState.draggedTaskIndex === null) return;

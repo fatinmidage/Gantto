@@ -56,7 +56,7 @@ export const useVerticalDrag = ({
     // 使用 Hook 方法更新垂直拖拽位置
     updateVerticalDragPosition(
       e.clientY,
-      40,                       // 任务行高度 (taskHeight + margin)
+      32,                       // 任务行高度 (taskHeight + margin)
       leftPanelTasks.length     // 总任务数
     );
   }, [verticalDragState.isDragging, updateVerticalDragPosition, leftPanelTasks.length]);

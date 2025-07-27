@@ -33,7 +33,7 @@ const GanttContextMenu: React.FC<GanttContextMenuProps> = ({
   clickPosition,
   pixelToDate,
   visibleRows = [],
-  taskHeight = 30
+  taskHeight = 22
 }) => {
   const menuRef = React.useRef<HTMLDivElement>(null);
 

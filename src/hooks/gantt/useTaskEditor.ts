@@ -59,12 +59,12 @@ export const useTaskEditor = ({
   }, [deleteTaskCore, onTaskContextMenuClose]);
 
   // 任务复制
-  const handleTaskCopy = useCallback((taskId: string) => {
+  const handleTaskCopy = useCallback((_taskId: string) => {
     // 复制任务逻辑
   }, []);
 
   // 任务移动
-  const handleTaskMove = useCallback((taskId: string, newParentId?: string) => {
+  const handleTaskMove = useCallback((_taskId: string, _newParentId?: string) => {
     // 移动任务逻辑
   }, []);
 

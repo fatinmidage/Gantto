@@ -79,9 +79,25 @@ export const useGanttStateCalculations = ({
 
   // 图表任务行
   const chartTaskRows = useMemo(() => {
+    // 创建可见行ID的集合，用于快速查找
+    const visibleRowIds = new Set(visibleProjectRows.map(row => row.id));
+    
+    // 只保留属于可见行的图表任务
+    const visibleChartTasks = sortedChartTasks.filter(task => 
+      task.rowId && visibleRowIds.has(task.rowId)
+    );
+    
+    // 创建行映射
     const rowMap = new Map<string, Task[]>();
     visibleProjectRows.forEach(row => rowMap.set(row.id, []));
-    sortedChartTasks.forEach(task => task.rowId && rowMap.has(task.rowId) && rowMap.get(task.rowId)!.push(task));
+    
+    // 将可见的图表任务分配到对应的行
+    visibleChartTasks.forEach(task => {
+      if (task.rowId && rowMap.has(task.rowId)) {
+        rowMap.get(task.rowId)!.push(task);
+      }
+    });
+    
     return visibleProjectRows.map(row => ({
       rowId: row.id,
       tasks: rowMap.get(row.id)!.sort((a, b) => a.startDate.getTime() - b.startDate.getTime())
