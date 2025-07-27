@@ -12,6 +12,19 @@ export const LAYOUT_CONSTANTS = {
   MIN_TASK_WIDTH: 20,
   ROW_SPACING: 28, // 行间距常量 - 仅用于任务行之间的间距
   TASK_ROW_HEIGHT: 40, // taskHeight + margin (deprecated, use calculateRowHeight instead)
+  
+  // 里程碑节点相关常量
+  MILESTONE_NODE_SIZE: 16, // 里程碑节点尺寸
+  MILESTONE_LABEL_OFFSET: 4, // 标签相对于节点的偏移
+  MILESTONE_LABEL_MAX_WIDTH: 180, // 标签最大宽度
+  
+  // 日期选择器相关常量
+  DATE_PICKER_OFFSET: 8, // 日期选择器距离元素的偏移
+  
+  // 任务条相关常量
+  DEFAULT_TASK_WIDTH: 100, // 默认任务宽度
+  TAG_MAX_LENGTH: 15, // 标签最大长度
+  TAG_MAX_WIDTH: 60, // 标签最大显示宽度
 } as const;
 
 // === 颜色常量 ===

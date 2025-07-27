@@ -10,6 +10,7 @@ import { getIconConfig } from '../../config/icons';
 import EditableLabel from './EditableLabel';
 import MilestoneDatePicker from './MilestoneDatePicker';
 import { hasDateInLabel, replaceDateInLabel } from '../../utils/ganttUtils';
+import { LAYOUT_CONSTANTS } from './ganttStyles';
 
 interface MilestoneNodeProps {
   milestone: MilestoneNodeData;
@@ -64,8 +65,8 @@ const MilestoneNode: React.FC<MilestoneNodeProps> = ({
     return milestone.label;
   }, [isDragging, previewDate, milestone.label, milestone.id]);
   
-  // 节点大小固定为16像素
-  const nodeSize = 16;
+  // 使用常量定义的节点大小
+  const nodeSize = LAYOUT_CONSTANTS.MILESTONE_NODE_SIZE;
   
   // 节点位置 - 确保垂直居中
   const calculatedLeft = milestone.x ? milestone.x - nodeSize / 2 : 0;
@@ -172,13 +173,13 @@ const MilestoneNode: React.FC<MilestoneNodeProps> = ({
         <div
           style={{
             position: 'absolute',
-            top: nodeSize + 4,
+            top: nodeSize + LAYOUT_CONSTANTS.MILESTONE_LABEL_OFFSET,
             left: '50%',
             transform: 'translateX(-50%)',
             pointerEvents: 'auto',
             zIndex: 1,
-            // 明确设置容器宽度，确保有足够空间
-            width: '180px',
+            // 使用常量定义的标签宽度
+            width: `${LAYOUT_CONSTANTS.MILESTONE_LABEL_MAX_WIDTH}px`,
           }}
         >
           <EditableLabel
@@ -187,7 +188,7 @@ const MilestoneNode: React.FC<MilestoneNodeProps> = ({
             style={{
               fontSize: '10px',
               color: isDragging ? '#007acc' : '#666', // 拖拽时使用蓝色提示预览
-              maxWidth: '180px',
+              maxWidth: `${LAYOUT_CONSTANTS.MILESTONE_LABEL_MAX_WIDTH}px`,
               wordWrap: 'break-word',
               textAlign: 'center',
               lineHeight: '1.2',

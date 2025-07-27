@@ -3,11 +3,11 @@
  * 负责渲染单个任务条的所有视觉元素和交互行为
  */
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Task } from '../../types/task';
 import EditableLabel from './EditableLabel';
 import MilestoneDatePicker from './MilestoneDatePicker';
-import { layoutUtils } from './ganttStyles';
+import { layoutUtils, LAYOUT_CONSTANTS } from './ganttStyles';
 
 interface TaskBarProps {
   task: Task;
@@ -48,12 +48,32 @@ const TaskBar: React.FC<TaskBarProps> = ({
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
   const taskBarRef = useRef<HTMLDivElement>(null);
 
+  // 优化性能：为边缘悬停检测添加节流处理
+  const animationFrameRef = useRef<number>();
+  const throttledEdgeHover = useCallback((e: React.MouseEvent, task: Task) => {
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+    }
+    animationFrameRef.current = requestAnimationFrame(() => {
+      onEdgeHover(e, task);
+    });
+  }, [onEdgeHover]);
+
+  // 组件卸载时清理 requestAnimationFrame
+  useEffect(() => {
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+    };
+  }, []);
+
   const taskX = displayX !== undefined ? displayX : (task.x || 0);
-  const taskWidth = displayWidth !== undefined ? displayWidth : (task.width || 100);
+  const taskWidth = displayWidth !== undefined ? displayWidth : (task.width || LAYOUT_CONSTANTS.DEFAULT_TASK_WIDTH);
   
   // 防止 NaN 值导致样式错误
   const safeTaskX = isNaN(taskX) ? 0 : taskX;
-  const safeTaskWidth = isNaN(taskWidth) ? 100 : taskWidth;
+  const safeTaskWidth = isNaN(taskWidth) ? LAYOUT_CONSTANTS.DEFAULT_TASK_WIDTH : taskWidth;
   
   // 计算任务Y位置
   const taskY = layoutUtils.calculateTaskY(rowIndex, taskHeight);
@@ -95,7 +115,7 @@ const TaskBar: React.FC<TaskBarProps> = ({
     const rect = taskBarRef.current.getBoundingClientRect();
     return {
       x: rect.left + rect.width / 2,
-      y: rect.bottom + 8
+      y: rect.bottom + LAYOUT_CONSTANTS.DATE_PICKER_OFFSET
     };
   };
   
@@ -120,7 +140,7 @@ const TaskBar: React.FC<TaskBarProps> = ({
             onMouseDown(e, task.id);
           }
         }}
-        onMouseMove={(e) => onEdgeHover(e, task)}
+        onMouseMove={(e) => throttledEdgeHover(e, task)}
         onMouseLeave={() => {
           if (!isDragging) {
             onMouseLeave();
@@ -150,9 +170,9 @@ const TaskBar: React.FC<TaskBarProps> = ({
                       fontSize: '11px',
                       color: 'inherit',
                       whiteSpace: 'nowrap',
-                      maxWidth: '60px',
+                      maxWidth: `${LAYOUT_CONSTANTS.TAG_MAX_WIDTH}px`,
                     }}
-                    maxLength={15}
+                    maxLength={LAYOUT_CONSTANTS.TAG_MAX_LENGTH}
                   />
                 ) : (
                   tag

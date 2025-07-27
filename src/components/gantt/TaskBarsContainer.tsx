@@ -3,11 +3,12 @@
  * 负责渲染图表区域的所有任务条、里程碑和拖拽预览
  */
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import TaskBar from './TaskBar';
 import MilestoneNode from './MilestoneNode';
 import { Task, MilestoneNode as MilestoneNodeType } from '../../types/task';
-import { COLOR_CONSTANTS, layoutUtils } from './ganttStyles';
+import { COLOR_CONSTANTS, LAYOUT_CONSTANTS } from './ganttStyles';
+import { createCoordinateUtils } from '../../utils/coordinateUtils';
 
 // 任务行数据接口
 interface TaskRow {
@@ -69,6 +70,12 @@ const TaskBarsContainer: React.FC<TaskBarsContainerProps> = ({
   onMilestoneLabelEdit,
   onMilestoneDateChange
 }) => {
+  // 创建坐标计算工具实例
+  const coordinateUtils = useMemo(() => 
+    createCoordinateUtils(dateToPixel, taskHeight), 
+    [dateToPixel, taskHeight]
+  );
+
   // 现在所有任务都作为普通任务条渲染，不再区分里程碑任务条
 
   return (
@@ -120,37 +127,22 @@ const TaskBarsContainer: React.FC<TaskBarsContainerProps> = ({
         // 检查此里程碑是否正在被拖拽
         const isBeingDragged = draggedTask === milestone.id;
         
-        // 计算里程碑的位置
-        let milestoneX = dateToPixel(milestone.date);
+        // 查找对应的行索引
+        const rowIndex = milestone.rowId 
+          ? chartTaskRows.findIndex(row => row.rowId === milestone.rowId)
+          : 0;
+
+        // 使用统一的坐标计算工具
+        const calculatedPosition = coordinateUtils.calculateMilestonePosition(milestone, rowIndex);
         
-        // 🔧 同步里程碑坐标：确保存储坐标与渲染坐标一致
-        const hasCoordinateDrift = milestone.x && Math.abs(milestoneX - milestone.x) > 0.1;
-        
-        
-        // 如果正在拖拽且有临时位置，使用临时位置的 x 坐标
+        // 如果正在拖拽且有临时位置，使用临时位置
+        let finalPosition = calculatedPosition;
         if (isBeingDragged && tempDragPosition) {
-          milestoneX = tempDragPosition.x;
-        }
-        
-        
-        // 🔧 坐标漂移检测（暂时注释掉同步逻辑，避免崩溃）
-        // 这样可以避免每次渲染都重新计算，提高性能
-        if (hasCoordinateDrift && !isBeingDragged) {
-          // 注意：如果需要自动同步坐标，需要传递 onMilestoneUpdate 回调函数
-          // 当前暂时跳过自动同步，避免程序崩溃
-        }
-        
-        // 根据 rowId 找到对应的行索引来计算正确的Y坐标
-        let milestoneY = milestone.y || 0; // 默认使用里程碑自带的Y坐标
-        
-        if (milestone.rowId) {
-          // 查找该 rowId 对应的行索引（只在可见的chartTaskRows中查找）
-          const rowIndex = chartTaskRows.findIndex(row => row.rowId === milestone.rowId);
-          
-          if (rowIndex !== -1) {
-            // 计算正确的Y坐标：行索引 * (任务高度 + 间距) + 任务高度的一半（居中）
-            milestoneY = layoutUtils.calculateMilestoneY(rowIndex, taskHeight);
-          }
+          finalPosition = {
+            ...calculatedPosition,
+            x: tempDragPosition.x - LAYOUT_CONSTANTS.MILESTONE_NODE_SIZE / 2, // 节点半径偏移
+            centerX: tempDragPosition.x
+          };
         }
         
         // 计算预览日期（如果正在拖拽）
@@ -162,8 +154,8 @@ const TaskBarsContainer: React.FC<TaskBarsContainerProps> = ({
         // 更新里程碑的位置
         const updatedMilestone = {
           ...milestone,
-          x: milestoneX,
-          y: milestoneY
+          x: finalPosition.x,
+          y: finalPosition.y
         };
         
         return (
