@@ -19,7 +19,6 @@ export { default as GanttChartHeader } from './GanttChartHeader';
 export { default as TimelineHeader } from './TimelineHeader';
 
 // === 任务相关组件 ===
-export { default as TaskBars } from './TaskBars';
 export { default as TaskBarsContainer } from './TaskBarsContainer';
 export { default as TaskBar } from './TaskBar';
 export { default as TaskTitleColumn } from './TaskTitleColumn';

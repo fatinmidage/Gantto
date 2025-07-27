@@ -68,37 +68,38 @@ const MilestoneNode: React.FC<MilestoneNodeProps> = ({
   // 使用常量定义的节点大小
   const nodeSize = LAYOUT_CONSTANTS.MILESTONE_NODE_SIZE;
   
-  // 节点位置 - 确保垂直居中
-  const calculatedLeft = milestone.x ? milestone.x - nodeSize / 2 : 0;
-  // 直接使用传入的 milestone.y，它已经是正确的中心位置，只需减去节点半径
-  const calculatedTop = milestone.y ? milestone.y - nodeSize / 2 : 0;
-  
-  
-  const nodeStyle: React.CSSProperties = {
-    position: 'absolute',
-    left: calculatedLeft,
-    top: calculatedTop,
-    width: nodeSize,
-    height: nodeSize,
-    cursor: isDragging ? 'grabbing' : 'grab',
-    zIndex: isSelected ? 1000 : isDragging ? 999 : 10,
-    transform: isDragging ? 'scale(1.1)' : 'scale(1)',
-    transition: isDragging ? 'none' : 'transform 0.15s ease',
-    opacity: isDragging ? 0.8 : 1,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-  };
+  // 🔧 性能优化：缓存节点样式计算
+  const nodeStyle = useMemo(() => {
+    // 节点位置 - 确保垂直居中
+    const calculatedLeft = milestone.x ? milestone.x - nodeSize / 2 : 0;
+    // 直接使用传入的 milestone.y，它已经是正确的中心位置，只需减去节点半径
+    const calculatedTop = milestone.y ? milestone.y - nodeSize / 2 : 0;
+    
+    return {
+      position: 'absolute' as const,
+      left: calculatedLeft,
+      top: calculatedTop,
+      width: nodeSize,
+      height: nodeSize,
+      cursor: isDragging ? 'grabbing' : 'grab',
+      zIndex: isSelected ? 1000 : isDragging ? 999 : 10,
+      transform: isDragging ? 'scale(1.1)' : 'scale(1)',
+      transition: isDragging ? 'none' : 'transform 0.15s ease',
+      opacity: isDragging ? 0.8 : 1,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+    };
+  }, [milestone.x, milestone.y, nodeSize, isDragging, isSelected]);
 
-
-  // 图标样式
-  const iconStyle: React.CSSProperties = {
+  // 🔧 性能优化：缓存图标样式计算
+  const iconStyle = useMemo(() => ({
     color: milestone.color || iconColor,
     width: nodeSize,
     height: nodeSize,
     filter: isSelected ? 'drop-shadow(0 0 4px rgba(25,118,210,0.6))' : 'drop-shadow(0 1px 2px rgba(0,0,0,0.2))',
     transition: isDragging ? 'none' : 'filter 0.15s ease',
-  };
+  }), [milestone.color, iconColor, nodeSize, isSelected, isDragging]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();

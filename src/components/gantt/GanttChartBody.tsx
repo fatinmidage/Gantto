@@ -1,6 +1,6 @@
 import React, { useRef } from 'react';
 import TaskTitleColumn from './TaskTitleColumn';
-import TaskBars from './TaskBars';
+import TaskBarsContainer from './TaskBarsContainer';
 import TimelineHeader from './TimelineHeader';
 import { Task, MilestoneNode } from '../../types';
 import { COMPONENT_STYLES } from './ganttStyles';
@@ -181,7 +181,7 @@ const GanttChartBody: React.FC<GanttChartBodyProps> = ({
         />
 
         {/* 任务条 */}
-        <TaskBars
+        <TaskBarsContainer
           chartTaskRows={chartTaskRows}
           taskHeight={taskHeight}
           timelineHeight={timelineHeight}

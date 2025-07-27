@@ -12,6 +12,7 @@ import {
 } from '../../types/drag';
 import { useMilestoneAttachment } from './useMilestoneAttachment';
 import { hasDateInLabel, replaceDateInLabel } from '../../utils/ganttUtils';
+import { LAYOUT_CONSTANTS } from '../../components/gantt/ganttStyles';
 
 interface LocalMilestoneDragState {
   isDragging: boolean;
@@ -49,16 +50,15 @@ export const useMilestoneDrag = (callbacks: MilestoneDragCallbacks): MilestoneDr
 
   // 边界检测函数
   const checkBounds = useCallback((x: number, y: number, containerWidth?: number, containerHeight?: number): boolean => {
-    const nodeSize = 16;
     const margin = 8; // 边界缓冲区
     
     // 检查X轴边界
-    const minX = nodeSize / 2 + margin;
-    const maxX = (containerWidth || 800) - nodeSize / 2 - margin;
+    const minX = LAYOUT_CONSTANTS.MILESTONE_NODE_SIZE / 2 + margin;
+    const maxX = (containerWidth || 800) - LAYOUT_CONSTANTS.MILESTONE_NODE_SIZE / 2 - margin;
     
     // 检查Y轴边界
-    const minY = nodeSize / 2 + margin;
-    const maxY = (containerHeight || 600) - nodeSize / 2 - margin;
+    const minY = LAYOUT_CONSTANTS.MILESTONE_NODE_SIZE / 2 + margin;
+    const maxY = (containerHeight || 600) - LAYOUT_CONSTANTS.MILESTONE_NODE_SIZE / 2 - margin;
     
     return x >= minX && x <= maxX && y >= minY && y <= maxY;
   }, []);
@@ -86,9 +86,8 @@ export const useMilestoneDrag = (callbacks: MilestoneDragCallbacks): MilestoneDr
 
     // 🔧 修复：计算正确的拖拽偏移量
     // 里程碑的渲染位置是 milestone.x - nodeSize/2，所以需要基于渲染位置计算偏移
-    const nodeSize = 16;
-    const renderedX = milestone.x - nodeSize / 2; // 这是里程碑实际的渲染left位置
-    const renderedY = milestone.y - nodeSize / 2; // 这是里程碑实际的渲染top位置
+    const renderedX = milestone.x - LAYOUT_CONSTANTS.MILESTONE_NODE_SIZE / 2; // 这是里程碑实际的渲染left位置
+    const renderedY = milestone.y - LAYOUT_CONSTANTS.MILESTONE_NODE_SIZE / 2; // 这是里程碑实际的渲染top位置
     
     
     const offset = {
@@ -125,13 +124,12 @@ export const useMilestoneDrag = (callbacks: MilestoneDragCallbacks): MilestoneDr
 
     // 🔧 修复：计算新位置时需要还原到中心点坐标
     // 因为offset是基于渲染位置计算的，所以需要还原到里程碑的中心点坐标
-    const nodeSize = 16;
     const renderedX = clientX - bounds.left - dragState.dragOffset.x;
     const renderedY = clientY - bounds.top - dragState.dragOffset.y;
     
     // 将渲染位置转换回里程碑的中心点坐标
-    let newX = renderedX + nodeSize / 2;
-    let newY = renderedY + nodeSize / 2;
+    let newX = renderedX + LAYOUT_CONSTANTS.MILESTONE_NODE_SIZE / 2;
+    let newY = renderedY + LAYOUT_CONSTANTS.MILESTONE_NODE_SIZE / 2;
 
     // 边界检测和约束
     const isWithinBounds = checkBounds(newX, newY, containerWidth, containerHeight);
@@ -139,10 +137,10 @@ export const useMilestoneDrag = (callbacks: MilestoneDragCallbacks): MilestoneDr
     // 如果超出边界，约束到边界内
     if (!isWithinBounds && containerWidth && containerHeight) {
       const margin = 8;
-      const minX = nodeSize / 2 + margin;
-      const maxX = containerWidth - nodeSize / 2 - margin;
-      const minY = nodeSize / 2 + margin;
-      const maxY = containerHeight - nodeSize / 2 - margin;
+      const minX = LAYOUT_CONSTANTS.MILESTONE_NODE_SIZE / 2 + margin;
+      const maxX = containerWidth - LAYOUT_CONSTANTS.MILESTONE_NODE_SIZE / 2 - margin;
+      const minY = LAYOUT_CONSTANTS.MILESTONE_NODE_SIZE / 2 + margin;
+      const maxY = containerHeight - LAYOUT_CONSTANTS.MILESTONE_NODE_SIZE / 2 - margin;
       
       newX = Math.max(minX, Math.min(newX, maxX));
       newY = Math.max(minY, Math.min(newY, maxY));
@@ -273,7 +271,7 @@ export const useMilestoneDrag = (callbacks: MilestoneDragCallbacks): MilestoneDr
   // 处理里程碑重叠错开
   const handleMilestoneOverlap = useCallback((
     milestones: MilestoneNode[],
-    nodeSize: number = 16
+    nodeSize: number = LAYOUT_CONSTANTS.MILESTONE_NODE_SIZE
   ): MilestoneNode[] => {
     return attachment.handleMilestoneOverlap(milestones, nodeSize);
   }, [attachment]);

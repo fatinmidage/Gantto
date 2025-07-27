@@ -6,7 +6,7 @@
 import { useCallback } from 'react';
 import { MilestoneNode, TaskBar, Task } from '../../types/task';
 import { Rectangle } from '../../types/common';
-import { layoutUtils } from '../../components/gantt/ganttStyles';
+import { layoutUtils, LAYOUT_CONSTANTS } from '../../components/gantt/ganttStyles';
 
 interface AttachmentResult {
   isAttached: boolean;
@@ -17,15 +17,18 @@ interface AttachmentResult {
 export const useMilestoneAttachment = () => {
   // 获取矩形区域（考虑任务条和里程碑节点的边界）
   const getTaskBarRect = useCallback((task: TaskBar, taskHeight: number, rowIndex: number): Rectangle => {
+    // 🔧 修复：基于中心点坐标计算任务条矩形
+    const centerX = task.x || 0;
+    const width = task.width || 0;
     return {
-      x: task.x || 0,
+      x: centerX - width / 2, // 转换为左边缘位置
       y: layoutUtils.calculateTaskY(rowIndex, taskHeight),
-      width: task.width || 0,
+      width: width,
       height: taskHeight
     };
   }, []);
 
-  const getMilestoneRect = useCallback((milestone: MilestoneNode, nodeSize: number = 16): Rectangle => {
+  const getMilestoneRect = useCallback((milestone: MilestoneNode, nodeSize: number = LAYOUT_CONSTANTS.MILESTONE_NODE_SIZE): Rectangle => {
     return {
       x: (milestone.x || 0) - nodeSize / 2,
       y: (milestone.y || 0) - nodeSize / 2,
@@ -48,7 +51,7 @@ export const useMilestoneAttachment = () => {
     task: TaskBar,
     taskHeight: number,
     rowIndex: number,
-    nodeSize: number = 16
+    nodeSize: number = LAYOUT_CONSTANTS.MILESTONE_NODE_SIZE
   ): boolean => {
     if (!milestone.x || !milestone.y || !task.x || !task.width) {
       return false;
@@ -69,12 +72,14 @@ export const useMilestoneAttachment = () => {
       return 0;
     }
 
+    // 🔧 修复：基于中心点坐标计算相对位置
     const milestoneX = milestone.x;
-    const taskStartX = task.x;
+    const taskCenterX = task.x;
     const taskWidth = task.width;
+    const taskLeftEdge = taskCenterX - taskWidth / 2;
     
     // 计算相对位置，确保在 0-1 范围内
-    const relativePosition = (milestoneX - taskStartX) / taskWidth;
+    const relativePosition = (milestoneX - taskLeftEdge) / taskWidth;
     return Math.max(0, Math.min(1, relativePosition));
   }, []);
 
@@ -89,7 +94,11 @@ export const useMilestoneAttachment = () => {
       return { x: 0, y: 0 };
     }
 
-    const x = task.x + relativePosition * task.width;
+    // 🔧 修复：基于中心点坐标计算绝对位置
+    const taskCenterX = task.x;
+    const taskWidth = task.width;
+    const taskLeftEdge = taskCenterX - taskWidth / 2;
+    const x = taskLeftEdge + relativePosition * taskWidth;
     const y = layoutUtils.calculateMilestoneY(rowIndex, taskHeight);
     
     return { x, y };
@@ -101,7 +110,7 @@ export const useMilestoneAttachment = () => {
     allTasks: Task[],
     taskHeight: number,
     getTaskRowIndex: (taskId: string) => number,
-    nodeSize: number = 16
+    nodeSize: number = LAYOUT_CONSTANTS.MILESTONE_NODE_SIZE
   ): AttachmentResult => {
     // 如果里程碑没有位置信息，无法检测附着
     if (!milestone.x || !milestone.y) {
@@ -168,7 +177,7 @@ export const useMilestoneAttachment = () => {
   // 处理重叠的里程碑节点错开显示
   const handleMilestoneOverlap = useCallback((
     milestones: MilestoneNode[],
-    nodeSize: number = 16,
+    nodeSize: number = LAYOUT_CONSTANTS.MILESTONE_NODE_SIZE,
     horizontalSpacing: number = 0,
     verticalSpacing: number = 20,
     maxHorizontalCount: number = 5

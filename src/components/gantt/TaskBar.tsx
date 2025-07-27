@@ -3,7 +3,7 @@
  * 负责渲染单个任务条的所有视觉元素和交互行为
  */
 
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { Task } from '../../types/task';
 import EditableLabel from './EditableLabel';
 import MilestoneDatePicker from './MilestoneDatePicker';
@@ -48,7 +48,7 @@ const TaskBar: React.FC<TaskBarProps> = ({
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
   const taskBarRef = useRef<HTMLDivElement>(null);
 
-  // 优化性能：为边缘悬停检测添加节流处理
+  // 🔧 性能优化：为边缘悬停检测添加节流处理，缓存函数引用
   const animationFrameRef = useRef<number>();
   const throttledEdgeHover = useCallback((e: React.MouseEvent, task: Task) => {
     if (animationFrameRef.current) {
@@ -68,15 +68,30 @@ const TaskBar: React.FC<TaskBarProps> = ({
     };
   }, []);
 
-  const taskX = displayX !== undefined ? displayX : (task.x || 0);
-  const taskWidth = displayWidth !== undefined ? displayWidth : (task.width || LAYOUT_CONSTANTS.DEFAULT_TASK_WIDTH);
-  
-  // 防止 NaN 值导致样式错误
-  const safeTaskX = isNaN(taskX) ? 0 : taskX;
-  const safeTaskWidth = isNaN(taskWidth) ? LAYOUT_CONSTANTS.DEFAULT_TASK_WIDTH : taskWidth;
-  
-  // 计算任务Y位置
-  const taskY = layoutUtils.calculateTaskY(rowIndex, taskHeight);
+  // 🔧 性能优化：缓存位置和尺寸计算
+  const taskStyle = useMemo(() => {
+    const taskCenterX = displayX !== undefined ? displayX : (task.x || 0);
+    const taskWidth = displayWidth !== undefined ? displayWidth : (task.width || LAYOUT_CONSTANTS.DEFAULT_TASK_WIDTH);
+    
+    // 防止 NaN 值导致样式错误
+    const safeCenterX = isNaN(taskCenterX) ? 0 : taskCenterX;
+    const safeTaskWidth = isNaN(taskWidth) ? LAYOUT_CONSTANTS.DEFAULT_TASK_WIDTH : taskWidth;
+    
+    // 🔧 修复：统一坐标系统 - 将中心点坐标转换为左边缘位置用于渲染
+    const safeTaskX = safeCenterX - safeTaskWidth / 2;
+    
+    // 计算任务Y位置
+    const taskY = layoutUtils.calculateTaskY(rowIndex, taskHeight);
+
+    return {
+      left: safeTaskX,
+      top: taskY,
+      width: safeTaskWidth,
+      height: taskHeight,
+      '--custom-task-color': task.color,
+      cursor: isHoveringEdge === 'left' ? 'w-resize' : isHoveringEdge === 'right' ? 'e-resize' : 'grab'
+    } as React.CSSProperties;
+  }, [displayX, displayWidth, task.x, task.width, task.color, rowIndex, taskHeight, isHoveringEdge]);
 
   // 双击事件处理 - 打开日期编辑器
   const handleDoubleClick = (e: React.MouseEvent) => {
@@ -127,14 +142,7 @@ const TaskBar: React.FC<TaskBarProps> = ({
         ref={taskBarRef}
         key={task.id}
         className={`gantt-task-bar custom-color ${isBeingDragged ? 'dragging' : ''} status-${task.status} type-${task.type} ${isHoveringEdge ? `edge-hover-${isHoveringEdge}` : ''}`}
-        style={{
-          left: safeTaskX,
-          top: taskY,
-          width: safeTaskWidth,
-          height: taskHeight,
-          '--custom-task-color': task.color,
-          cursor: isHoveringEdge === 'left' ? 'w-resize' : isHoveringEdge === 'right' ? 'e-resize' : 'grab'
-        } as React.CSSProperties}
+        style={taskStyle}
         onMouseDown={(e) => {
           if (e.button === 0) { // 只处理左键
             onMouseDown(e, task.id);
