@@ -74,6 +74,7 @@ interface GanttContainerProps {
   onLabelEdit?: (taskId: string, label: string) => void; // 里程碑标签编辑
   onMilestoneIconChange?: (milestoneId: string, iconType: any, color?: string) => void;
   onMilestoneLabelEdit?: (milestoneId: string, label: string) => void;
+  onMilestoneDateChange?: (milestoneId: string, newDate: Date) => void;
   onMilestoneDelete?: (milestoneId: string) => void;
   pixelToDate: (pixel: number) => Date;
   
@@ -159,6 +160,7 @@ const GanttContainer: React.FC<GanttContainerProps> = ({
   onLabelEdit,
   onMilestoneIconChange,
   onMilestoneLabelEdit,
+  onMilestoneDateChange,
   onMilestoneDelete,
   pixelToDate,
   containerRef,
@@ -235,6 +237,7 @@ const GanttContainer: React.FC<GanttContainerProps> = ({
         onMilestoneContextMenu={onMilestoneContextMenu}
         onMilestoneDragStart={onMilestoneDragStart}
         onMilestoneLabelEdit={onMilestoneLabelEdit}
+        onMilestoneDateChange={onMilestoneDateChange}
       />
 
       <GanttMenuManager

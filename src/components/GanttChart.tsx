@@ -162,6 +162,7 @@ const GanttChart: React.FC<GanttChartProps> = ({
                 stateData.milestoneManager.updateMilestone(updates);
               }}
               onMilestoneLabelEdit={(milestoneId: string, label: string) => stateData.milestoneManager.updateMilestone({ id: milestoneId, label })}
+              onMilestoneDateChange={(milestoneId: string, newDate: Date) => stateData.milestoneManager.updateMilestoneDate(milestoneId, newDate)}
               onMilestoneDelete={(milestoneId: string) => stateData.milestoneManager.deleteMilestone(milestoneId)}
               pixelToDate={stateData.pixelToDate}
               containerRef={stateData.containerRef}

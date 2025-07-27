@@ -96,4 +96,15 @@ export const initialProjectRows: ProjectRow[] = [
 export const initialChartTasks: Task[] = [];
 
 // 初始里程碑节点数据
-export const initialMilestones: MilestoneNode[] = [];
+export const initialMilestones: MilestoneNode[] = [
+  {
+    id: 'milestone-1',
+    label: '这是一个比较长的里程碑标签用于测试换行功能',
+    title: '测试里程碑',
+    date: new Date('2024-02-15'),
+    x: 200,
+    y: 50,
+    iconType: 'flag' as const,
+    color: '#1976d2'
+  }
+];

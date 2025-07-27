@@ -42,6 +42,7 @@ interface TaskBarsContainerProps {
   onMilestoneContextMenu?: (e: React.MouseEvent, milestoneId: string) => void;
   onMilestoneDragStart?: (e: React.MouseEvent, milestone: MilestoneNodeType) => void;
   onMilestoneLabelEdit?: (milestoneId: string, label: string) => void;
+  onMilestoneDateChange?: (milestoneId: string, newDate: Date) => void;
 }
 
 const TaskBarsContainer: React.FC<TaskBarsContainerProps> = ({
@@ -63,7 +64,8 @@ const TaskBarsContainer: React.FC<TaskBarsContainerProps> = ({
   onMilestoneSelect,
   onMilestoneContextMenu,
   onMilestoneDragStart,
-  onMilestoneLabelEdit
+  onMilestoneLabelEdit,
+  onMilestoneDateChange
 }) => {
   // 现在所有任务都作为普通任务条渲染，不再区分里程碑任务条
 
@@ -176,6 +178,7 @@ const TaskBarsContainer: React.FC<TaskBarsContainerProps> = ({
               }
             }}
             onLabelEdit={onMilestoneLabelEdit}
+            onDateChange={onMilestoneDateChange}
           />
         );
       })}

@@ -103,6 +103,28 @@ export const useMilestoneManager = (callbacks: MilestoneManagerCallbacks) => {
     }));
   }, [callbacks]);
 
+  // 通过日历选择器更新里程碑日期
+  const updateMilestoneDate = useCallback((milestoneId: string, newDate: Date) => {
+    setMilestones(prev => prev.map(milestone => {
+      if (milestone.id === milestoneId) {
+        const updated = { 
+          ...milestone, 
+          date: newDate,
+          x: callbacks.dateToPixel(newDate),
+          updatedAt: new Date()
+        };
+        
+        // 如果标签是日期格式，自动更新为新日期的M.D格式
+        if (milestone.label && isDateLabel(milestone.label)) {
+          updated.label = formatDateToMD(newDate);
+        }
+        
+        return updated;
+      }
+      return milestone;
+    }));
+  }, [callbacks]);
+
   // 删除里程碑
   const deleteMilestone = useCallback((milestoneId: string) => {
     setMilestones(prev => prev.filter(milestone => milestone.id !== milestoneId));
@@ -214,6 +236,7 @@ export const useMilestoneManager = (callbacks: MilestoneManagerCallbacks) => {
     // CRUD 操作
     createMilestone,
     updateMilestone,
+    updateMilestoneDate,
     deleteMilestone,
     deleteMilestones,
     

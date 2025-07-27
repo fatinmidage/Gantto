@@ -3,11 +3,12 @@
  * 渲染纯净图标的里程碑节点，支持拖拽和右键菜单
  */
 
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import { MilestoneNode as MilestoneNodeData } from '../../types/task';
 import { IconType } from '../../types/common';
 import { getIconConfig } from '../../config/icons';
 import EditableLabel from './EditableLabel';
+import MilestoneDatePicker from './MilestoneDatePicker';
 
 interface MilestoneNodeProps {
   milestone: MilestoneNodeData;
@@ -18,6 +19,7 @@ interface MilestoneNodeProps {
   onContextMenu?: (e: React.MouseEvent, milestoneId: string) => void;
   onClick?: (milestoneId: string) => void;
   onLabelEdit?: (milestoneId: string, newLabel: string) => void;
+  onDateChange?: (milestoneId: string, newDate: Date) => void;
 }
 
 // 根据类型获取图标组件
@@ -40,10 +42,15 @@ const MilestoneNode: React.FC<MilestoneNodeProps> = ({
   onMilestoneDragStart,
   onContextMenu,
   onClick,
-  onLabelEdit
+  onLabelEdit,
+  onDateChange
 }) => {
   const IconComponent = getIconComponent(milestone.iconType);
   const iconColor = getIconColor(milestone.iconType);
+  
+  // 日历选择器状态
+  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+  const nodeRef = useRef<HTMLDivElement>(null);
   
   // 节点大小固定为16像素
   const nodeSize = 16;
@@ -104,15 +111,48 @@ const MilestoneNode: React.FC<MilestoneNodeProps> = ({
     }
   };
 
+  // 双击事件处理 - 打开日历选择器
+  const handleDoubleClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // 防止在拖拽状态下打开日历
+    if (isDragging) return;
+    
+    setIsDatePickerOpen(true);
+  };
+
+  // 日期变更处理
+  const handleDateChange = (newDate: Date) => {
+    if (onDateChange) {
+      onDateChange(milestone.id, newDate);
+    }
+    setIsDatePickerOpen(false);
+  };
+
+  // 获取日历选择器的定位
+  const getDatePickerPosition = () => {
+    if (!nodeRef.current) return undefined;
+    
+    const rect = nodeRef.current.getBoundingClientRect();
+    return {
+      x: rect.left + nodeSize / 2,
+      y: rect.bottom + 8
+    };
+  };
+
   return (
-    <div
-      style={nodeStyle}
-      onMouseDown={handleMouseDown}
-      onContextMenu={handleContextMenu}
-      onClick={handleClick}
-      data-milestone-id={milestone.id}
-      title={milestone.label || milestone.title}
-    >
+    <>
+      <div
+        ref={nodeRef}
+        style={nodeStyle}
+        onMouseDown={handleMouseDown}
+        onContextMenu={handleContextMenu}
+        onClick={handleClick}
+        onDoubleClick={handleDoubleClick}
+        data-milestone-id={milestone.id}
+        title={milestone.label || milestone.title}
+      >
       <IconComponent style={iconStyle} />
       
       {/* 标签文本（如果有） */}
@@ -125,6 +165,8 @@ const MilestoneNode: React.FC<MilestoneNodeProps> = ({
             transform: 'translateX(-50%)',
             pointerEvents: 'auto',
             zIndex: 1,
+            // 明确设置容器宽度，确保有足够空间
+            width: '180px',
           }}
         >
           <EditableLabel
@@ -133,15 +175,25 @@ const MilestoneNode: React.FC<MilestoneNodeProps> = ({
             style={{
               fontSize: '10px',
               color: '#666',
-              whiteSpace: 'nowrap',
-              maxWidth: '80px',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
+              maxWidth: '180px',
+              wordWrap: 'break-word',
+              textAlign: 'center',
+              lineHeight: '1.2',
             }}
           />
         </div>
       )}
-    </div>
+      </div>
+
+      {/* 日历选择器 */}
+      <MilestoneDatePicker
+        date={milestone.date}
+        isOpen={isDatePickerOpen}
+        onOpenChange={setIsDatePickerOpen}
+        onDateChange={handleDateChange}
+        position={getDatePickerPosition()}
+      />
+    </>
   );
 };
 
