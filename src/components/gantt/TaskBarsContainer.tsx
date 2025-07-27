@@ -30,6 +30,7 @@ interface TaskBarsContainerProps {
   tempDragPosition: DragPosition | null;
   isHoveringEdge: 'left' | 'right' | null;
   dateToPixel: (date: Date) => number;
+  pixelToDate: (pixel: number) => Date;
   isDragging: boolean;
   milestones?: MilestoneNodeType[];
   selectedMilestone?: string | null;
@@ -53,6 +54,7 @@ const TaskBarsContainer: React.FC<TaskBarsContainerProps> = ({
   tempDragPosition,
   isHoveringEdge,
   dateToPixel,
+  pixelToDate,
   isDragging,
   milestones = [],
   selectedMilestone,
@@ -151,6 +153,12 @@ const TaskBarsContainer: React.FC<TaskBarsContainerProps> = ({
           }
         }
         
+        // 计算预览日期（如果正在拖拽）
+        let previewDate: Date | undefined;
+        if (isBeingDragged && tempDragPosition && pixelToDate) {
+          previewDate = pixelToDate(tempDragPosition.x);
+        }
+        
         // 更新里程碑的位置
         const updatedMilestone = {
           ...milestone,
@@ -165,6 +173,7 @@ const TaskBarsContainer: React.FC<TaskBarsContainerProps> = ({
             taskHeight={taskHeight}
             isSelected={selectedMilestone === milestone.id}
             isDragging={draggedTask === milestone.id}
+            previewDate={previewDate}
             onMilestoneDragStart={onMilestoneDragStart}
             onContextMenu={(e, milestoneId) => {
               if (onMilestoneContextMenu) {

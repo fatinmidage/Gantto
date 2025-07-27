@@ -127,6 +127,7 @@ export interface MilestoneDragCallbacks {
   dateToPixel: (date: Date) => number;
   pixelToDate: (pixel: number) => Date;
   getTaskRowIndex: (taskId: string) => number;
+  getMilestone: (milestoneId: string) => MilestoneNode | undefined;
 }
 
 // 里程碑边界检测配置

@@ -3,18 +3,20 @@
  * 渲染纯净图标的里程碑节点，支持拖拽和右键菜单
  */
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import { MilestoneNode as MilestoneNodeData } from '../../types/task';
 import { IconType } from '../../types/common';
 import { getIconConfig } from '../../config/icons';
 import EditableLabel from './EditableLabel';
 import MilestoneDatePicker from './MilestoneDatePicker';
+import { hasDateInLabel, replaceDateInLabel } from '../../utils/ganttUtils';
 
 interface MilestoneNodeProps {
   milestone: MilestoneNodeData;
   taskHeight: number;
   isSelected?: boolean;
   isDragging?: boolean;
+  previewDate?: Date; // 拖拽时的预览日期
   onMilestoneDragStart?: (e: React.MouseEvent, milestone: MilestoneNodeData) => void;
   onContextMenu?: (e: React.MouseEvent, milestoneId: string) => void;
   onClick?: (milestoneId: string) => void;
@@ -39,6 +41,7 @@ const MilestoneNode: React.FC<MilestoneNodeProps> = ({
   taskHeight: _taskHeight, // 保留参数但标记为未使用
   isSelected = false,
   isDragging = false,
+  previewDate,
   onMilestoneDragStart,
   onContextMenu,
   onClick,
@@ -51,6 +54,15 @@ const MilestoneNode: React.FC<MilestoneNodeProps> = ({
   // 日历选择器状态
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
   const nodeRef = useRef<HTMLDivElement>(null);
+  
+  // 计算要显示的标签：优先使用预览标签，否则使用原始标签
+  const displayLabel = useMemo(() => {
+    if (isDragging && previewDate && milestone.label && hasDateInLabel(milestone.label)) {
+      const previewLabel = replaceDateInLabel(milestone.label, previewDate);
+      return previewLabel;
+    }
+    return milestone.label;
+  }, [isDragging, previewDate, milestone.label, milestone.id]);
   
   // 节点大小固定为16像素
   const nodeSize = 16;
@@ -156,7 +168,7 @@ const MilestoneNode: React.FC<MilestoneNodeProps> = ({
       <IconComponent style={iconStyle} />
       
       {/* 标签文本（如果有） */}
-      {milestone.label && onLabelEdit && (
+      {displayLabel && onLabelEdit && (
         <div
           style={{
             position: 'absolute',
@@ -170,15 +182,16 @@ const MilestoneNode: React.FC<MilestoneNodeProps> = ({
           }}
         >
           <EditableLabel
-            value={milestone.label}
+            value={displayLabel}
             onSave={(newLabel) => onLabelEdit(milestone.id, newLabel)}
             style={{
               fontSize: '10px',
-              color: '#666',
+              color: isDragging ? '#007acc' : '#666', // 拖拽时使用蓝色提示预览
               maxWidth: '180px',
               wordWrap: 'break-word',
               textAlign: 'center',
               lineHeight: '1.2',
+              transition: isDragging ? 'none' : 'color 0.15s ease',
             }}
           />
         </div>

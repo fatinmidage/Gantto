@@ -13,6 +13,9 @@ interface UseGanttEventsProps {
   setChartTasks: React.Dispatch<React.SetStateAction<Task[]>>;
   setProjectRows: React.Dispatch<React.SetStateAction<ProjectRow[]>>;
   setMilestones?: React.Dispatch<React.SetStateAction<MilestoneNode[]>>;
+  milestoneManager?: {
+    updateMilestone: (updates: { id: string; date: Date; [key: string]: any }) => void;
+  };
 }
 
 export const useGanttEvents = ({
@@ -23,7 +26,8 @@ export const useGanttEvents = ({
   setTasks,
   setChartTasks,
   setProjectRows,
-  setMilestones = () => {}
+  setMilestones = () => {},
+  milestoneManager
 }: UseGanttEventsProps) => {
   
   // 使用统一的全局标签管理（供后续扩展使用）
@@ -38,7 +42,8 @@ export const useGanttEvents = ({
     setTasks,
     setChartTasks,
     setProjectRows,
-    setMilestones
+    setMilestones,
+    milestoneManager
   });
   
   const taskAttributes = useTaskAttributes({

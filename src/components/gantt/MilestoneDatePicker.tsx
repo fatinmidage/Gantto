@@ -50,7 +50,7 @@ const MilestoneDatePicker: React.FC<MilestoneDatePickerProps> = ({
               try {
                 inputElement.showPicker();
               } catch (error) {
-                console.log('showPicker not supported or failed');
+                // showPicker not supported or failed
               }
             }
             
@@ -113,7 +113,7 @@ const MilestoneDatePicker: React.FC<MilestoneDatePickerProps> = ({
         inputElement.showPicker();
         return true;
       } catch (error) {
-        console.log('showPicker failed, trying alternative methods');
+        // showPicker failed, trying alternative methods
       }
     }
     

@@ -225,6 +225,7 @@ const GanttContainer: React.FC<GanttContainerProps> = ({
         onMouseLeave={onMouseLeave}
         onContextMenu={onContextMenu}
         dateToPixel={dateToPixel}
+        pixelToDate={pixelToDate}
         onMouseMove={onMouseMove}
         onMouseUp={onMouseUp}
         onTitleMouseMove={onTitleMouseMove}

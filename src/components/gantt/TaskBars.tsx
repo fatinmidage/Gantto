@@ -29,6 +29,7 @@ interface TaskBarsProps {
   tempDragPosition: DragPosition | null;
   isHoveringEdge: 'left' | 'right' | null;
   dateToPixel: (date: Date) => number;
+  pixelToDate: (pixel: number) => Date; // 添加 pixelToDate 参数
   isDragging: boolean;
   milestones?: MilestoneNode[];
   selectedMilestone?: string | null;

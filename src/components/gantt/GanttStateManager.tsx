@@ -137,7 +137,10 @@ const GanttStateManager: React.FC<GanttStateManagerProps> = ({
     setTasks,
     setChartTasks,
     setProjectRows,
-    setMilestones: milestoneManager.setMilestones
+    setMilestones: milestoneManager.setMilestones,
+    milestoneManager: {
+      updateMilestone: milestoneManager.updateMilestone
+    }
   });
 
   const ganttInteractions = useGanttInteractions({

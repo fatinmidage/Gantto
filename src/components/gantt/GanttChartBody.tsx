@@ -58,6 +58,7 @@ interface GanttChartBodyProps {
   layerConfig: TimelineLayerConfig;
   dateRange: DateRange;
   dateToPixel: (date: Date) => number;
+  pixelToDate: (pixel: number) => Date;
   
   // 事件处理
   onTaskSelect: (taskId: string | null) => void;
@@ -118,6 +119,7 @@ const GanttChartBody: React.FC<GanttChartBodyProps> = ({
   onMilestoneLabelEdit,
   onMilestoneDateChange,
   dateToPixel,
+  pixelToDate,
   onMouseMove: _onMouseMove,
   onMouseUp: _onMouseUp,
   onTitleMouseMove: _onTitleMouseMove,
@@ -187,6 +189,7 @@ const GanttChartBody: React.FC<GanttChartBodyProps> = ({
           tempDragPosition={tempDragPosition}
           isHoveringEdge={isHoveringEdge}
           dateToPixel={dateToPixel}
+          pixelToDate={pixelToDate}
           isDragging={isDragging}
           milestones={milestones}
           selectedMilestone={selectedMilestone}

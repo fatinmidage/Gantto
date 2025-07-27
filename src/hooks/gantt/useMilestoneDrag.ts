@@ -11,6 +11,7 @@ import {
   MilestoneDragState as DragTypeMilestoneState
 } from '../../types/drag';
 import { useMilestoneAttachment } from './useMilestoneAttachment';
+import { hasDateInLabel, replaceDateInLabel } from '../../utils/ganttUtils';
 
 interface LocalMilestoneDragState {
   isDragging: boolean;
@@ -26,7 +27,8 @@ export const useMilestoneDrag = (callbacks: MilestoneDragCallbacks): MilestoneDr
     onMilestoneUpdate,
     onAttachmentChange,
     pixelToDate,
-    getTaskRowIndex
+    getTaskRowIndex,
+    getMilestone
   } = callbacks;
 
   // 拖拽状态
@@ -172,6 +174,9 @@ export const useMilestoneDrag = (callbacks: MilestoneDragCallbacks): MilestoneDr
       getTaskRowIndex
     );
 
+    // 获取当前里程碑数据，用于智能标签更新
+    const currentMilestone = getMilestone(dragState.draggedMilestone);
+    
     // 更新里程碑位置和附着信息
     const updates: Partial<MilestoneNode> = {
       x: newX,
@@ -181,6 +186,15 @@ export const useMilestoneDrag = (callbacks: MilestoneDragCallbacks): MilestoneDr
       relativePosition: attachmentResult.relativePosition
     };
 
+    // 智能更新标签中的日期
+    if (currentMilestone?.label) {
+      const hasDate = hasDateInLabel(currentMilestone.label);
+      
+      if (hasDate) {
+        const newLabel = replaceDateInLabel(currentMilestone.label, tempMilestone.date);
+        updates.label = newLabel;
+      }
+    }
     onMilestoneUpdate(dragState.draggedMilestone, updates);
 
     // 触发附着变化回调

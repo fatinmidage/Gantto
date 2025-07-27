@@ -183,9 +183,9 @@ const GanttChart: React.FC<GanttChartProps> = ({
                 });
               }}
               onMilestoneDragStart={(e, milestone) => {
-                // 调用 GanttEventCoordinator 的拖拽处理逻辑
-                if (handlers?.handleMouseDown) {
-                  handlers.handleMouseDown(e, milestone.id);
+                // 调用专门的里程碑拖拽处理逻辑
+                if (handlers?.handleMilestoneDragStart) {
+                  handlers.handleMilestoneDragStart(e, milestone);
                 }
               }}
             />

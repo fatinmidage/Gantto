@@ -11,6 +11,9 @@ interface UseTaskCRUDProps {
   setChartTasks: React.Dispatch<React.SetStateAction<Task[]>>;
   setProjectRows: React.Dispatch<React.SetStateAction<ProjectRow[]>>;
   setMilestones: React.Dispatch<React.SetStateAction<MilestoneNode[]>>;
+  milestoneManager?: {
+    updateMilestone: (updates: { id: string; date: Date; [key: string]: any }) => void;
+  };
 }
 
 export interface UseTaskCRUDResult {
@@ -31,7 +34,8 @@ export const useTaskCRUD = ({
   setTasks,
   setChartTasks,
   setProjectRows,
-  setMilestones
+  setMilestones,
+  milestoneManager
 }: UseTaskCRUDProps): UseTaskCRUDResult => {
   
   // 添加新任务
@@ -158,19 +162,28 @@ export const useTaskCRUD = ({
     // 首先检查是否为里程碑
     const milestone = milestones.find(m => m.id === taskId);
     if (milestone) {
-      setMilestones(prev => {
-        const updatedMilestones = prev.map(m => {
-          if (m.id === taskId) {
-            const updatedMilestone = { 
-              ...m, 
-              date: startDate  // 里程碑只有一个日期
-            };
-            return updatedMilestone;
-          }
-          return m;
+      // 🔧 使用 milestoneManager 的智能更新方法，支持自动标签日期更新
+      if (milestoneManager) {
+        milestoneManager.updateMilestone({
+          id: taskId,
+          date: startDate
         });
-        return updatedMilestones;
-      });
+      } else {
+        // 降级处理：直接更新状态（不含智能标签更新）
+        setMilestones(prev => {
+          const updatedMilestones = prev.map(m => {
+            if (m.id === taskId) {
+              const updatedMilestone = { 
+                ...m, 
+                date: startDate  // 里程碑只有一个日期
+              };
+              return updatedMilestone;
+            }
+            return m;
+          });
+          return updatedMilestones;
+        });
+      }
       return;
     }
     
@@ -206,7 +219,7 @@ export const useTaskCRUD = ({
         } : task
       ));
     }
-  }, [milestones, chartTasks, setMilestones, setChartTasks, setTasks]);
+  }, [milestones, chartTasks, setMilestones, setChartTasks, setTasks, milestoneManager]);
 
   // 创建新任务
   const createTask = useCallback((task: Task) => {

@@ -7,7 +7,7 @@ import { useState, useCallback } from 'react';
 import { MilestoneNode, MilestoneCreateInput, MilestoneUpdateInput, Task } from '../../types/task';
 import { useMilestoneDrag } from './useMilestoneDrag';
 import { useMilestoneAttachment } from './useMilestoneAttachment';
-import { formatDateToMD } from '../../utils/ganttUtils';
+import { formatDateToMD, hasDateInLabel, replaceDateInLabel } from '../../utils/ganttUtils';
 
 interface MilestoneManagerCallbacks {
   dateToPixel: (date: Date) => number;
@@ -16,14 +16,6 @@ interface MilestoneManagerCallbacks {
   taskHeight: number;
 }
 
-// 检查标签是否为日期格式
-const isDateLabel = (label: string): boolean => {
-  // 检查是否为中文日期格式 (YYYY/M/D 或 YYYY/MM/DD 或 YYYY-M-D 或 YYYY-MM-DD)
-  const dateRegex = /^\d{4}[\/\-]\d{1,2}[\/\-]\d{1,2}$/;
-  // 检查是否为M.D格式 (1.15, 12.3等)
-  const mdFormatRegex = /^\d{1,2}\.\d{1,2}$/;
-  return dateRegex.test(label) || mdFormatRegex.test(label);
-};
 
 export const useMilestoneManager = (callbacks: MilestoneManagerCallbacks) => {
   const [milestones, setMilestones] = useState<MilestoneNode[]>([]);
@@ -31,11 +23,17 @@ export const useMilestoneManager = (callbacks: MilestoneManagerCallbacks) => {
 
   // 里程碑更新回调
   const handleMilestoneUpdate = useCallback((milestoneId: string, updates: Partial<MilestoneNode>) => {
-    setMilestones(prev => prev.map(milestone => 
-      milestone.id === milestoneId 
-        ? { ...milestone, ...updates, updatedAt: new Date() }
-        : milestone
-    ));
+    setMilestones(prev => {
+      const updated = prev.map(milestone => {
+        if (milestone.id === milestoneId) {
+          const updatedMilestone = { ...milestone, ...updates, updatedAt: new Date() };
+          return updatedMilestone;
+        }
+        return milestone;
+      });
+      
+      return updated;
+    });
   }, []);
 
   // 附着关系变化回调
@@ -47,10 +45,16 @@ export const useMilestoneManager = (callbacks: MilestoneManagerCallbacks) => {
     // 可以在这里添加附着变化的处理逻辑
   }, []);
 
+  // 获取里程碑数据的回调
+  const getMilestone = useCallback((milestoneId: string) => {
+    return milestones.find(m => m.id === milestoneId);
+  }, [milestones]);
+
   // 初始化拖拽功能
   const milestoneDrag = useMilestoneDrag({
     onMilestoneUpdate: handleMilestoneUpdate,
     onAttachmentChange: handleAttachmentChange,
+    getMilestone,
     ...callbacks
   });
 
@@ -91,9 +95,9 @@ export const useMilestoneManager = (callbacks: MilestoneManagerCallbacks) => {
         if (updates.date && updates.date !== milestone.date) {
           updated.x = callbacks.dateToPixel(updates.date);
           
-          // 如果标签是日期格式，自动更新为新日期的M.D格式
-          if (milestone.label && isDateLabel(milestone.label)) {
-            updated.label = formatDateToMD(updates.date);
+          // 如果标签包含日期，智能替换为新日期
+          if (milestone.label && hasDateInLabel(milestone.label)) {
+            updated.label = replaceDateInLabel(milestone.label, updates.date);
           }
         }
         
@@ -114,9 +118,9 @@ export const useMilestoneManager = (callbacks: MilestoneManagerCallbacks) => {
           updatedAt: new Date()
         };
         
-        // 如果标签是日期格式，自动更新为新日期的M.D格式
-        if (milestone.label && isDateLabel(milestone.label)) {
-          updated.label = formatDateToMD(newDate);
+        // 如果标签包含日期，智能替换为新日期
+        if (milestone.label && hasDateInLabel(milestone.label)) {
+          updated.label = replaceDateInLabel(milestone.label, newDate);
         }
         
         return updated;
