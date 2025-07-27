@@ -9,6 +9,7 @@ interface GanttEventCoordinatorProps {
   sortedChartTasks: any[];
   leftPanelTasks: any[];
   milestones?: MilestoneNode[];
+  taskHeight: number;
   
   // 拖拽状态
   isDragging: boolean;
@@ -63,6 +64,7 @@ const GanttEventCoordinator: React.FC<GanttEventCoordinatorProps> = ({
   sortedChartTasks,
   leftPanelTasks,
   milestones = [],
+  taskHeight,
   isDragging,
   verticalDragState,
   tempDragPosition,
@@ -175,9 +177,9 @@ const GanttEventCoordinator: React.FC<GanttEventCoordinatorProps> = ({
 
   const handleTitleMouseMove = useCallback((e: MouseEvent) => {
     if (verticalDragState.isDragging) {
-      updateVerticalDragPosition(e.clientY, LAYOUT_CONSTANTS.TASK_ROW_HEIGHT, leftPanelTasks.length);
+      updateVerticalDragPosition(e.clientY, taskHeight, leftPanelTasks.length);
     }
-  }, [verticalDragState.isDragging, updateVerticalDragPosition, leftPanelTasks.length]);
+  }, [verticalDragState.isDragging, updateVerticalDragPosition, taskHeight, leftPanelTasks.length]);
 
   const handleTitleMouseUp = useCallback(() => {
     if (verticalDragState.isDragging && 

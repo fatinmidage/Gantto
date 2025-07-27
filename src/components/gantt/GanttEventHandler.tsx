@@ -17,6 +17,7 @@ interface GanttEventHandlerProps {
   leftPanelTasks: Task[];
   taskMapMemo: Map<string, Task>;
   setProjectRows: (rows: any) => void;
+  taskHeight: number;
   
   // 拖拽状态
   isDragging: boolean;
@@ -78,6 +79,7 @@ export const GanttEventHandler: React.FC<GanttEventHandlerProps> = ({
   leftPanelTasks,
   taskMapMemo,
   setProjectRows,
+  taskHeight,
   isDragging,
   draggedTask,
   draggedTaskData,
@@ -207,9 +209,9 @@ export const GanttEventHandler: React.FC<GanttEventHandlerProps> = ({
 
   const handleTitleMouseMove = useCallback((e: MouseEvent) => {
     if (verticalDragState.isDragging) {
-      updateVerticalDragPosition(e.clientY, LAYOUT_CONSTANTS.TASK_ROW_HEIGHT, leftPanelTasks.length);
+      updateVerticalDragPosition(e.clientY, taskHeight, leftPanelTasks.length);
     }
-  }, [verticalDragState.isDragging, updateVerticalDragPosition, leftPanelTasks.length]);
+  }, [verticalDragState.isDragging, updateVerticalDragPosition, taskHeight, leftPanelTasks.length]);
 
   const handleTitleMouseUp = useCallback(() => {
     if (verticalDragState.isDragging && 

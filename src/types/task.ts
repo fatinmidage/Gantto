@@ -38,9 +38,9 @@ export interface Task {
   // UI状态（从Task中分离，但保持兼容）
   isExpanded?: boolean;
   
-  // 计算属性（用于图表绘制）
-  x?: number;
-  width?: number;
+  // 计算属性（用于图表绘制）- 中心点坐标系统
+  x?: number; // 任务条中心点的X坐标（水平位置）
+  width?: number; // 任务条的宽度
   
   // 元数据（改为可选，兼容现有代码）
   createdAt?: Date;
@@ -66,9 +66,9 @@ export interface MilestoneNode {
   attachedToBar?: string; // 附着的任务条ID
   relativePosition?: number; // 在任务条上的相对位置 (0-1)
   
-  // 位置计算属性
-  x?: number;
-  y?: number;
+  // 位置计算属性 - 中心点坐标系统
+  x?: number; // 里程碑节点中心点的X坐标（水平位置）
+  y?: number; // 里程碑节点中心点的Y坐标（垂直位置）
   
   // 层级关系
   parentId?: string;

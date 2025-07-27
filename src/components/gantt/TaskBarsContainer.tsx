@@ -162,7 +162,6 @@ const TaskBarsContainer: React.FC<TaskBarsContainerProps> = ({
           <MilestoneNode
             key={milestone.id}
             milestone={updatedMilestone}
-            taskHeight={taskHeight}
             isSelected={selectedMilestone === milestone.id}
             isDragging={draggedTask === milestone.id}
             previewDate={previewDate}

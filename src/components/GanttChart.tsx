@@ -64,6 +64,7 @@ const GanttChart: React.FC<GanttChartProps> = ({
           sortedChartTasks={stateData.sortedChartTasks}
           leftPanelTasks={stateData.leftPanelTasks}
           milestones={stateData.milestones}
+          taskHeight={taskHeight}
           isDragging={stateData.isDragging}
           verticalDragState={stateData.verticalDragState}
           tempDragPosition={stateData.tempDragPosition}

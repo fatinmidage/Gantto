@@ -60,25 +60,19 @@ export const useTaskBarDrag = () => {
     const bounds = containerBounds.current;
     
     if (bounds) {
-      // 🔧 修复：统一坐标系统 - 所有 x 都是中心点，需要转换为渲染位置
-      const isMilestone = task.startDate.getTime() === task.endDate.getTime();
+      // 🔧 优化：基于中心点坐标的拖拽偏移计算
       const taskCenterX = task.x || 0;
+      const taskWidth = task.width || LAYOUT_CONSTANTS.DEFAULT_TASK_WIDTH;
       
-      // 计算渲染位置（左边缘）
-      let taskX: number;
-      if (isMilestone) {
-        taskX = taskCenterX - LAYOUT_CONSTANTS.MILESTONE_NODE_SIZE / 2;
-      } else {
-        taskX = taskCenterX - (task.width || 0) / 2;
-      }
+      // 中心点坐标转换为渲染位置（左边缘）
+      const renderLeft = taskCenterX - taskWidth / 2;
       
       const offset = {
-        x: clientX - bounds.left - taskX,
+        x: clientX - bounds.left - renderLeft,
         y: clientY - bounds.top
       };
       
       dragState.startHorizontalDrag(taskId, task, newDragType, offset);
-      
     }
   }, [dragState, updateContainerBounds]);
 
@@ -104,80 +98,61 @@ export const useTaskBarDrag = () => {
       return;
     }
     
-    const taskData = dragState.draggedTaskData;
-    const isMilestone = taskData.startDate.getTime() === taskData.endDate.getTime();
-
     if (dragState.dragType === 'move') {
-      const newLeftEdge = mouseX - dragState.dragOffset.x;
+      // 计算新的渲染左边缘位置
+      const newRenderLeft = mouseX - dragState.dragOffset.x;
+      const taskWidth = metrics.minWidth;
       
-      // 🔧 修复：统一坐标系统 - 计算新的中心点位置
-      let newCenterX: number;
-      let newWidth: number;
-      if (isMilestone) {
-        newCenterX = newLeftEdge + LAYOUT_CONSTANTS.MILESTONE_NODE_SIZE / 2;
-        newWidth = LAYOUT_CONSTANTS.MILESTONE_NODE_SIZE;
-      } else {
-        newCenterX = newLeftEdge + metrics.minWidth / 2;
-        newWidth = metrics.minWidth;
-      }
+      // 转换为中心点坐标
+      const newCenterX = newRenderLeft + taskWidth / 2;
       
       // 边界约束（基于中心点位置）
-      const halfWidth = newWidth / 2;
+      const halfWidth = taskWidth / 2;
       const minCenterX = halfWidth;
       const maxCenterX = CHART_WIDTH - halfWidth;
       const constrainedCenterX = Math.max(minCenterX, Math.min(newCenterX, maxCenterX));
       
+      // NaN值检查
       if (isNaN(constrainedCenterX)) {
-        const fallbackCenterX = halfWidth;
-        const dragUpdate = {
-          id: dragState.draggedTask,
-          x: fallbackCenterX,
-          width: newWidth
-        };
-        dragState.updateHorizontalDrag(dragUpdate);
         return;
       }
       
       const dragUpdate = {
         id: dragState.draggedTask,
         x: constrainedCenterX,
-        width: newWidth
+        width: taskWidth
       };
       dragState.updateHorizontalDrag(dragUpdate);
     } else if (dragState.dragType === 'resize-left') {
-      // 🔧 修复：基于中心点坐标的 resize-left 逻辑
+      // 左边缘调整：保持右边缘不变，调整左边缘和宽度
       const originalCenterX = dragState.draggedTaskData.x || 0;
       const originalWidth = dragState.draggedTaskData.width || 0;
-      const originalRightEdge = originalCenterX + originalWidth / 2;
+      const fixedRightEdge = originalCenterX + originalWidth / 2;
       
-      const newLeftEdge = Math.max(0, Math.min(mouseX, originalRightEdge - minWidth));
-      const newWidth = originalRightEdge - newLeftEdge;
+      const newLeftEdge = Math.max(0, Math.min(mouseX, fixedRightEdge - minWidth));
+      const newWidth = fixedRightEdge - newLeftEdge;
       const newCenterX = newLeftEdge + newWidth / 2;
       
-      const dragUpdate = {
+      dragState.updateHorizontalDrag({
         id: dragState.draggedTask,
         x: newCenterX,
         width: newWidth
-      };
-      
-      dragState.updateHorizontalDrag(dragUpdate);
+      });
     } else if (dragState.dragType === 'resize-right') {
-      // 🔧 修复：基于中心点坐标的 resize-right 逻辑
+      // 右边缘调整：保持左边缘不变，调整右边缘和宽度
       const originalCenterX = dragState.draggedTaskData.x || 0;
       const originalWidth = dragState.draggedTaskData.width || 0;
-      const originalLeftEdge = originalCenterX - originalWidth / 2;
+      const fixedLeftEdge = originalCenterX - originalWidth / 2;
       
-      const newRightEdge = Math.max(originalLeftEdge + minWidth, Math.min(mouseX, CHART_WIDTH));
-      const newWidth = newRightEdge - originalLeftEdge;
-      const newCenterX = originalLeftEdge + newWidth / 2;
+      const newRightEdge = Math.max(fixedLeftEdge + minWidth, Math.min(mouseX, CHART_WIDTH));
+      const newWidth = newRightEdge - fixedLeftEdge;
+      const newCenterX = fixedLeftEdge + newWidth / 2;
       
-      const dragUpdate = {
+      dragState.updateHorizontalDrag({
         id: dragState.draggedTask,
         x: newCenterX,
         width: newWidth
-      };
-      
-      dragState.updateHorizontalDrag(dragUpdate);
+      });
     }
   }, [dragState]);
 
@@ -210,13 +185,13 @@ export const useTaskBarDrag = () => {
 
   // === 边缘悬停检测 ===
   const checkEdgeHover = useCallback((mouseX: number, taskCenterX: number, taskWidth: number, threshold: number = 8) => {
-    // 🔧 修复：基于中心点坐标的边缘检测
+    // 基于中心点坐标的边缘检测
     const taskLeftEdge = taskCenterX - taskWidth / 2;
-    const relativeX = mouseX - taskLeftEdge;
+    const taskRightEdge = taskCenterX + taskWidth / 2;
     
-    if (relativeX <= threshold) {
+    if (mouseX >= taskLeftEdge && mouseX <= taskLeftEdge + threshold) {
       dragState.setEdgeHover('left');
-    } else if (relativeX >= taskWidth - threshold) {
+    } else if (mouseX >= taskRightEdge - threshold && mouseX <= taskRightEdge) {
       dragState.setEdgeHover('right');
     } else {
       dragState.setEdgeHover(null);

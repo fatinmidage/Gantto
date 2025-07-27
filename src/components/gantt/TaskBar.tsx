@@ -3,7 +3,7 @@
  * 负责渲染单个任务条的所有视觉元素和交互行为
  */
 
-import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
+import React, { useState, useRef, useCallback, useMemo } from 'react';
 import { Task } from '../../types/task';
 import EditableLabel from './EditableLabel';
 import MilestoneDatePicker from './MilestoneDatePicker';
@@ -48,28 +48,14 @@ const TaskBar: React.FC<TaskBarProps> = ({
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
   const taskBarRef = useRef<HTMLDivElement>(null);
 
-  // 🔧 性能优化：为边缘悬停检测添加节流处理，缓存函数引用
-  const animationFrameRef = useRef<number>();
-  const throttledEdgeHover = useCallback((e: React.MouseEvent, task: Task) => {
-    if (animationFrameRef.current) {
-      cancelAnimationFrame(animationFrameRef.current);
-    }
-    animationFrameRef.current = requestAnimationFrame(() => {
-      onEdgeHover(e, task);
-    });
+  // 边缘悬停处理：直接处理，无需requestAnimationFrame
+  const handleEdgeHover = useCallback((e: React.MouseEvent, task: Task) => {
+    onEdgeHover(e, task);
   }, [onEdgeHover]);
 
-  // 组件卸载时清理 requestAnimationFrame
-  useEffect(() => {
-    return () => {
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
-    };
-  }, []);
-
-  // 🔧 性能优化：缓存位置和尺寸计算
+  // 🔧 优化：统一中心点坐标系统的位置和尺寸计算
   const taskStyle = useMemo(() => {
+    // 获取任务条中心点坐标和宽度
     const taskCenterX = displayX !== undefined ? displayX : (task.x || 0);
     const taskWidth = displayWidth !== undefined ? displayWidth : (task.width || LAYOUT_CONSTANTS.DEFAULT_TASK_WIDTH);
     
@@ -77,14 +63,15 @@ const TaskBar: React.FC<TaskBarProps> = ({
     const safeCenterX = isNaN(taskCenterX) ? 0 : taskCenterX;
     const safeTaskWidth = isNaN(taskWidth) ? LAYOUT_CONSTANTS.DEFAULT_TASK_WIDTH : taskWidth;
     
-    // 🔧 修复：统一坐标系统 - 将中心点坐标转换为左边缘位置用于渲染
-    const safeTaskX = safeCenterX - safeTaskWidth / 2;
+    // 中心点坐标转换为渲染用的左边缘位置
+    const renderLeft = safeCenterX - safeTaskWidth / 2;
+    const safeRenderLeft = isNaN(renderLeft) ? 0 : renderLeft;
     
     // 计算任务Y位置
     const taskY = layoutUtils.calculateTaskY(rowIndex, taskHeight);
 
     return {
-      left: safeTaskX,
+      left: safeRenderLeft,
       top: taskY,
       width: safeTaskWidth,
       height: taskHeight,
@@ -148,7 +135,7 @@ const TaskBar: React.FC<TaskBarProps> = ({
             onMouseDown(e, task.id);
           }
         }}
-        onMouseMove={(e) => throttledEdgeHover(e, task)}
+        onMouseMove={(e) => handleEdgeHover(e, task)}
         onMouseLeave={() => {
           if (!isDragging) {
             onMouseLeave();

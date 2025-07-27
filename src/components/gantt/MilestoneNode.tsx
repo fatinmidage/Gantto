@@ -14,7 +14,6 @@ import { LAYOUT_CONSTANTS } from './ganttStyles';
 
 interface MilestoneNodeProps {
   milestone: MilestoneNodeData;
-  taskHeight: number;
   isSelected?: boolean;
   isDragging?: boolean;
   previewDate?: Date; // 拖拽时的预览日期
@@ -39,7 +38,6 @@ const getIconColor = (iconType: IconType) => {
 
 const MilestoneNode: React.FC<MilestoneNodeProps> = ({
   milestone,
-  taskHeight: _taskHeight, // 保留参数但标记为未使用
   isSelected = false,
   isDragging = false,
   previewDate,
@@ -59,26 +57,24 @@ const MilestoneNode: React.FC<MilestoneNodeProps> = ({
   // 计算要显示的标签：优先使用预览标签，否则使用原始标签
   const displayLabel = useMemo(() => {
     if (isDragging && previewDate && milestone.label && hasDateInLabel(milestone.label)) {
-      const previewLabel = replaceDateInLabel(milestone.label, previewDate);
-      return previewLabel;
+      return replaceDateInLabel(milestone.label, previewDate);
     }
     return milestone.label;
-  }, [isDragging, previewDate, milestone.label, milestone.id]);
+  }, [isDragging, previewDate, milestone.label]);
   
   // 使用常量定义的节点大小
   const nodeSize = LAYOUT_CONSTANTS.MILESTONE_NODE_SIZE;
   
-  // 🔧 性能优化：缓存节点样式计算
+  // 🔧 优化：统一中心点坐标系统的节点样式计算
   const nodeStyle = useMemo(() => {
-    // 节点位置 - 确保垂直居中
-    const calculatedLeft = milestone.x ? milestone.x - nodeSize / 2 : 0;
-    // 直接使用传入的 milestone.y，它已经是正确的中心位置，只需减去节点半径
-    const calculatedTop = milestone.y ? milestone.y - nodeSize / 2 : 0;
+    // 中心点坐标转换为渲染用的左上角位置
+    const renderLeft = milestone.x ? milestone.x - nodeSize / 2 : 0;
+    const renderTop = milestone.y ? milestone.y - nodeSize / 2 : 0;
     
     return {
       position: 'absolute' as const,
-      left: calculatedLeft,
-      top: calculatedTop,
+      left: renderLeft,
+      top: renderTop,
       width: nodeSize,
       height: nodeSize,
       cursor: isDragging ? 'grabbing' : 'grab',

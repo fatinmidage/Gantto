@@ -11,7 +11,6 @@ export const LAYOUT_CONSTANTS = {
   EDGE_DETECTION_ZONE: 8,
   MIN_TASK_WIDTH: 20,
   ROW_SPACING: 28, // 行间距常量 - 仅用于任务行之间的间距
-  TASK_ROW_HEIGHT: 40, // taskHeight + margin (deprecated, use calculateRowHeight instead)
   
   // 里程碑节点相关常量
   MILESTONE_NODE_SIZE: 16, // 里程碑节点尺寸

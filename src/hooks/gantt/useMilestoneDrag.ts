@@ -84,15 +84,14 @@ export const useMilestoneDrag = (callbacks: MilestoneDragCallbacks): MilestoneDr
       return;
     }
 
-    // 🔧 修复：计算正确的拖拽偏移量
-    // 里程碑的渲染位置是 milestone.x - nodeSize/2，所以需要基于渲染位置计算偏移
-    const renderedX = milestone.x - LAYOUT_CONSTANTS.MILESTONE_NODE_SIZE / 2; // 这是里程碑实际的渲染left位置
-    const renderedY = milestone.y - LAYOUT_CONSTANTS.MILESTONE_NODE_SIZE / 2; // 这是里程碑实际的渲染top位置
-    
+    // 基于中心点坐标的拖拽偏移计算
+    const nodeSize = LAYOUT_CONSTANTS.MILESTONE_NODE_SIZE;
+    const renderLeft = milestone.x - nodeSize / 2;
+    const renderTop = milestone.y - nodeSize / 2;
     
     const offset = {
-      x: clientX - bounds.left - renderedX,
-      y: clientY - bounds.top - renderedY
+      x: clientX - bounds.left - renderLeft,
+      y: clientY - bounds.top - renderTop
     };
 
 
@@ -122,28 +121,32 @@ export const useMilestoneDrag = (callbacks: MilestoneDragCallbacks): MilestoneDr
     const bounds = containerBoundsRef.current;
     if (!bounds) return;
 
-    // 🔧 修复：计算新位置时需要还原到中心点坐标
-    // 因为offset是基于渲染位置计算的，所以需要还原到里程碑的中心点坐标
-    const renderedX = clientX - bounds.left - dragState.dragOffset.x;
-    const renderedY = clientY - bounds.top - dragState.dragOffset.y;
+    // 计算新的渲染位置，然后转换为中心点坐标
+    const newRenderLeft = clientX - bounds.left - dragState.dragOffset.x;
+    const newRenderTop = clientY - bounds.top - dragState.dragOffset.y;
     
-    // 将渲染位置转换回里程碑的中心点坐标
-    let newX = renderedX + LAYOUT_CONSTANTS.MILESTONE_NODE_SIZE / 2;
-    let newY = renderedY + LAYOUT_CONSTANTS.MILESTONE_NODE_SIZE / 2;
+    // 转换为中心点坐标
+    const nodeSize = LAYOUT_CONSTANTS.MILESTONE_NODE_SIZE;
+    let newX = newRenderLeft + nodeSize / 2;
+    let newY = newRenderTop + nodeSize / 2;
 
     // 边界检测和约束
-    const isWithinBounds = checkBounds(newX, newY, containerWidth, containerHeight);
-    
-    // 如果超出边界，约束到边界内
-    if (!isWithinBounds && containerWidth && containerHeight) {
+    let isWithinBounds = true;
+    if (containerWidth && containerHeight) {
       const margin = 8;
-      const minX = LAYOUT_CONSTANTS.MILESTONE_NODE_SIZE / 2 + margin;
-      const maxX = containerWidth - LAYOUT_CONSTANTS.MILESTONE_NODE_SIZE / 2 - margin;
-      const minY = LAYOUT_CONSTANTS.MILESTONE_NODE_SIZE / 2 + margin;
-      const maxY = containerHeight - LAYOUT_CONSTANTS.MILESTONE_NODE_SIZE / 2 - margin;
+      const nodeRadius = nodeSize / 2;
+      const minX = nodeRadius + margin;
+      const maxX = containerWidth - nodeRadius - margin;
+      const minY = nodeRadius + margin;
+      const maxY = containerHeight - nodeRadius - margin;
       
-      newX = Math.max(minX, Math.min(newX, maxX));
-      newY = Math.max(minY, Math.min(newY, maxY));
+      isWithinBounds = newX >= minX && newX <= maxX && newY >= minY && newY <= maxY;
+      
+      // 如果超出边界，约束到边界内
+      if (!isWithinBounds) {
+        newX = Math.max(minX, Math.min(newX, maxX));
+        newY = Math.max(minY, Math.min(newY, maxY));
+      }
     }
 
     // 更新拖拽状态（包含预览位置和边界状态）
