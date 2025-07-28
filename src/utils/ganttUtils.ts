@@ -226,18 +226,14 @@ const formatDateByOriginalMatch = (date: Date, originalMatch: string): string =>
   const month = date.getMonth() + 1;
   const day = date.getDate();
 
-  // 检测原始匹配的格式特征
-  if (originalMatch.includes('/') || originalMatch.includes('-')) {
-    // YYYY/M/D 或 YYYY-M-D 格式
-    const separator = originalMatch.includes('/') ? '/' : '-';
-    return `${year}${separator}${month}${separator}${day}`;
-  } else if (originalMatch.includes('.')) {
+  // 🔧 修复：优先检测M.D格式，确保里程碑标签正确更新
+  if (originalMatch.includes('.')) {
     // M.D 格式，保持原始的零填充风格
     const parts = originalMatch.split('.');
     const originalMonth = parts[0];
     const originalDay = parts[1];
     
-    // 如果原始格式有零填充，保持零填充
+    // 如果原始格式有零填充，保持零填充；否则使用简洁格式
     const monthStr = originalMonth.length === 2 && originalMonth.startsWith('0') 
       ? month.toString().padStart(2, '0')
       : month.toString();
@@ -246,6 +242,10 @@ const formatDateByOriginalMatch = (date: Date, originalMatch: string): string =>
       : day.toString();
     
     return `${monthStr}.${dayStr}`;
+  } else if (originalMatch.includes('/') || originalMatch.includes('-')) {
+    // YYYY/M/D 或 YYYY-M-D 格式
+    const separator = originalMatch.includes('/') ? '/' : '-';
+    return `${year}${separator}${month}${separator}${day}`;
   }
   
   // 默认返回 M.D 格式

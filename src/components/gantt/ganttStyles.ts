@@ -270,9 +270,10 @@ export const layoutUtils = {
   
   // 计算任务在容器中的Y位置 - 确保垂直居中对齐
   calculateTaskY: (rowIndex: number, taskHeight: number): number => {
-    const rowStartY = rowIndex * layoutUtils.calculateRowHeight(taskHeight);
+    const rowHeight = layoutUtils.calculateRowHeight(taskHeight);
+    const rowStartY = rowIndex * rowHeight;
     // 计算行内垂直居中位置：行间距的一半作为上边距
-    const verticalPadding = (layoutUtils.calculateRowHeight(taskHeight) - taskHeight) / 2;
+    const verticalPadding = (rowHeight - taskHeight) / 2;
     return rowStartY + verticalPadding;
   },
   
@@ -280,6 +281,12 @@ export const layoutUtils = {
   calculateMilestoneY: (rowIndex: number, taskHeight: number): number => {
     // 返回与任务条相同的顶部Y坐标，确保定位一致性
     return layoutUtils.calculateTaskY(rowIndex, taskHeight);
+  },
+  
+  // 计算任务行的垂直中心位置（用于里程碑节点对齐）
+  calculateRowCenterY: (rowIndex: number, taskHeight: number): number => {
+    const taskY = layoutUtils.calculateTaskY(rowIndex, taskHeight);
+    return taskY + taskHeight / 2;
   },
   
   // 计算元素在行内的垂直居中位置

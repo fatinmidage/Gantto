@@ -56,28 +56,27 @@ const MilestoneNode: React.FC<MilestoneNodeProps> = ({
   
   // 计算要显示的标签：优先使用预览标签，否则使用原始标签
   const displayLabel = useMemo(() => {
-    if (isDragging && previewDate && milestone.label && hasDateInLabel(milestone.label)) {
-      return replaceDateInLabel(milestone.label, previewDate);
+    const hasDate = milestone.label ? hasDateInLabel(milestone.label) : false;
+    const shouldShowPreview = isDragging && previewDate && milestone.label && hasDate;
+    
+    
+    if (shouldShowPreview) {
+      const newLabel = replaceDateInLabel(milestone.label!, previewDate!);
+      return newLabel;
     }
+    
     return milestone.label;
-  }, [isDragging, previewDate, milestone.label]);
+  }, [isDragging, previewDate, milestone.label, milestone.id]);
   
   // 使用常量定义的节点大小
   const nodeSize = LAYOUT_CONSTANTS.MILESTONE_NODE_SIZE;
   
-  // 🔧 优化：统一中心点坐标系统的节点样式计算
+  // 🔧 修复：milestone.x 和 milestone.y 已经是渲染位置（左上角），不需要再次转换
   const nodeStyle = useMemo(() => {
     // 防止 NaN 值导致样式错误
-    const safeCenterX = isNaN(milestone.x || 0) ? 0 : (milestone.x || 0);
-    const safeCenterY = isNaN(milestone.y || 0) ? 0 : (milestone.y || 0);
+    const safeRenderLeft = isNaN(milestone.x || 0) ? 0 : (milestone.x || 0);
+    const safeRenderTop = isNaN(milestone.y || 0) ? 0 : (milestone.y || 0);
     
-    // 中心点坐标转换为渲染用的左上角位置
-    const renderLeft = safeCenterX - nodeSize / 2;
-    const renderTop = safeCenterY - nodeSize / 2;
-    
-    // 再次检查渲染位置，确保不是NaN
-    const safeRenderLeft = isNaN(renderLeft) ? 0 : renderLeft;
-    const safeRenderTop = isNaN(renderTop) ? 0 : renderTop;
     
     return {
       position: 'absolute' as const,

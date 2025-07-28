@@ -80,6 +80,15 @@ const GanttChart: React.FC<GanttChartProps> = ({
           updateDragMetrics={stateData.updateDragMetrics}
           resetHorizontalDrag={stateData.resetHorizontalDrag}
           resetVerticalDrag={stateData.resetVerticalDrag}
+          milestoneOperations={{
+            startMilestoneDrag: stateData.milestoneManager.startMilestoneDrag,
+            updateMilestoneDragPosition: stateData.milestoneManager.updateMilestoneDragPosition,
+            endMilestoneDrag: stateData.milestoneManager.endMilestoneDrag,
+            getTaskRowIndex: (taskId: string) => {
+              const task = stateData.chartTasks.find(t => t.id === taskId);
+              return task ? stateData.chartTasks.indexOf(task) : 0;
+            }
+          }}
           pixelToDate={stateData.pixelToDate}
           dateToPixel={stateData.dateToPixel}
           dateRange={stateData.dateRange}

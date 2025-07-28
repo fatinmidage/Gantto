@@ -117,6 +117,8 @@ export const useMilestoneDrag = (callbacks: MilestoneDragCallbacks): MilestoneDr
     containerHeight?: number
   ) => {
     const dragState = dragStateRef.current;
+    
+    
     if (!dragState.isDragging || !dragState.draggedMilestone) return;
 
     const bounds = containerBoundsRef.current;
@@ -186,14 +188,11 @@ export const useMilestoneDrag = (callbacks: MilestoneDragCallbacks): MilestoneDr
     };
 
     // 智能更新标签中的日期
-    if (currentMilestone?.label) {
-      const hasDate = hasDateInLabel(currentMilestone.label);
-      
-      if (hasDate) {
-        const newLabel = replaceDateInLabel(currentMilestone.label, tempMilestone.date);
-        updates.label = newLabel;
-      }
+    if (currentMilestone?.label && hasDateInLabel(currentMilestone.label)) {
+      const newLabel = replaceDateInLabel(currentMilestone.label, tempMilestone.date);
+      updates.label = newLabel;
     }
+    
     onMilestoneUpdate(dragState.draggedMilestone, updates);
 
     // 触发附着变化回调

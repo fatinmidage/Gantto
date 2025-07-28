@@ -61,14 +61,14 @@ export class CoordinateUtils {
    */
   calculateMilestonePosition(milestone: MilestoneNode, rowIndex: number, nodeSize: number = LAYOUT_CONSTANTS.MILESTONE_NODE_SIZE): MilestonePosition {
     const centerX = this.dateToPixel(milestone.date);
-    const topY = layoutUtils.calculateMilestoneY(rowIndex, this.taskHeight); // 现在返回顶部Y坐标
     
-    // 计算节点中心Y坐标（用于显示和计算）
-    const centerY = topY + this.taskHeight / 2;
+    // 使用新的行中心计算函数，确保里程碑节点中心与任务条中心完全对齐
+    const centerY = layoutUtils.calculateRowCenterY(rowIndex, this.taskHeight);
     
     // 计算节点左上角位置（用于渲染）
     const x = centerX - nodeSize / 2;
     const y = centerY - nodeSize / 2;
+
 
     return {
       x,

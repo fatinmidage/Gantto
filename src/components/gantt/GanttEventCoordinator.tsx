@@ -30,6 +30,14 @@ interface GanttEventCoordinatorProps {
   resetHorizontalDrag: () => void;
   resetVerticalDrag: () => void;
   
+  // 里程碑拖拽方法 - 新增
+  milestoneOperations?: {
+    startMilestoneDrag: (milestone: MilestoneNode, clientX: number, clientY: number, containerElement: HTMLElement | null) => void;
+    updateMilestoneDragPosition: (clientX: number, clientY: number, allTasks: Task[], taskHeight: number, containerWidth?: number, containerHeight?: number) => void;
+    endMilestoneDrag: () => void;
+    getTaskRowIndex: (taskId: string) => number;
+  };
+  
   // 其他方法
   pixelToDate: (pixel: number) => Date;
   dateToPixel: (date: Date) => number;
@@ -80,6 +88,7 @@ const GanttEventCoordinator: React.FC<GanttEventCoordinatorProps> = ({
   updateDragMetrics,
   resetHorizontalDrag,
   resetVerticalDrag,
+  milestoneOperations,
   pixelToDate,
   dateToPixel,
   dateRange,
@@ -258,9 +267,22 @@ const GanttEventCoordinator: React.FC<GanttEventCoordinatorProps> = ({
   const handleMouseMoveCore = useCallback((e: MouseEvent) => {
     if (isDragging && containerRef.current) {
       const chartWidth = containerRef.current.clientWidth;
+      const containerHeight = containerRef.current.clientHeight;
       updateHorizontalDragPosition(e.clientX, chartWidth, LAYOUT_CONSTANTS.MIN_TASK_WIDTH);
+      
+      // 🔧 新增：里程碑拖拽时的实时更新
+      if (draggedTaskData?.type === 'milestone' && milestoneOperations) {
+        milestoneOperations.updateMilestoneDragPosition(
+          e.clientX, 
+          e.clientY, 
+          sortedChartTasks, 
+          taskHeight, 
+          chartWidth, 
+          containerHeight
+        );
+      }
     }
-  }, [isDragging, updateHorizontalDragPosition]);
+  }, [isDragging, updateHorizontalDragPosition, draggedTaskData, milestoneOperations, sortedChartTasks, taskHeight]);
 
   const handleMouseMove = useThrottledMouseMove(handleMouseMoveCore, [isDragging]);
 
@@ -290,8 +312,14 @@ const GanttEventCoordinator: React.FC<GanttEventCoordinatorProps> = ({
       
       ganttEvents.updateTaskDates(draggedTask, newStartDate, newEndDate);
     }
+    
+    // 🔧 新增：结束里程碑专用拖拽
+    if (draggedTaskData?.type === 'milestone' && milestoneOperations) {
+      milestoneOperations.endMilestoneDrag();
+    }
+    
     resetHorizontalDrag();
-  }, [tempDragPosition, draggedTask, draggedTaskData, dragType, pixelToDate, ganttEvents, resetHorizontalDrag]);
+  }, [tempDragPosition, draggedTask, draggedTaskData, dragType, pixelToDate, ganttEvents, resetHorizontalDrag, milestoneOperations]);
 
   // 添加水平拖拽事件监听器
   useEffect(() => {
@@ -337,11 +365,16 @@ const GanttEventCoordinator: React.FC<GanttEventCoordinatorProps> = ({
       return;
     }
 
+
     // 🔧 修复：里程碑坐标不一致问题
     // 问题：milestone.x 是存储的旧坐标，而渲染时使用 dateToPixel(milestone.date) 计算新坐标
     // 解决：使用基于日期重新计算的坐标，确保拖拽起始位置与渲染位置一致
     const currentRenderX = dateToPixel(milestone.date);
     
+    // 🔧 新增：启动里程碑专用拖拽系统
+    if (milestoneOperations) {
+      milestoneOperations.startMilestoneDrag(milestone, e.clientX, e.clientY, containerRef.current);
+    }
     
     // 计算正确的 pixelPerDay
     const totalDays = Math.ceil((dateRange.endDate.getTime() - dateRange.startDate.getTime()) / (24 * 60 * 60 * 1000));
@@ -368,7 +401,7 @@ const GanttEventCoordinator: React.FC<GanttEventCoordinatorProps> = ({
     
     updateDragMetrics(milestoneAsTask, safePixelPerDay);
     startHorizontalDrag(milestone.id, milestoneAsTask, e.clientX, e.clientY, 'move', containerRef.current);
-  }, [dateToPixel, dateRange, updateDragMetrics, startHorizontalDrag, containerRef]);
+  }, [dateToPixel, dateRange, updateDragMetrics, startHorizontalDrag, containerRef, milestoneOperations]);
 
   const handlers: EventHandlers = {
     handleCreateTask,

@@ -147,8 +147,14 @@ const TaskBarsContainer: React.FC<TaskBarsContainerProps> = ({
         
         // 计算预览日期（如果正在拖拽）
         let previewDate: Date | undefined;
+        
         if (isBeingDragged && tempDragPosition && pixelToDate) {
           previewDate = pixelToDate(tempDragPosition.x);
+        } else if (isBeingDragged && pixelToDate) {
+          // 🔧 修复：里程碑拖拽时，如果没有tempDragPosition，尝试从里程碑当前位置计算previewDate
+          if (milestone.x !== undefined) {
+            previewDate = pixelToDate(milestone.x);
+          }
         }
         
         // 更新里程碑的位置
