@@ -14,7 +14,7 @@ export interface DragState {
   currentPosition: Position;
   targetPosition?: Position;
   
-  // 临时拖拽位置（用于预览）
+  // 拖拽过程中的预览位置
   tempPosition?: {
     id: string;
     x: number;

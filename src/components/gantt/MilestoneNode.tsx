@@ -59,7 +59,6 @@ const MilestoneNode: React.FC<MilestoneNodeProps> = ({
     const hasDate = milestone.label ? hasDateInLabel(milestone.label) : false;
     const shouldShowPreview = isDragging && previewDate && milestone.label && hasDate;
     
-    
     if (shouldShowPreview) {
       const newLabel = replaceDateInLabel(milestone.label!, previewDate!);
       return newLabel;

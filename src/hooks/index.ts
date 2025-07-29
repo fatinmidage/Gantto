@@ -27,7 +27,6 @@ export { useTaskAttributes } from './gantt/useTaskAttributes';
 export { useTaskSelection } from './gantt/useTaskSelection';
 
 // 里程碑相关Hooks
-export { useMilestoneAttachment } from './gantt/useMilestoneAttachment';
 export { useMilestoneDrag } from './gantt/useMilestoneDrag';
 export { useMilestoneManager } from './gantt/useMilestoneManager';
 

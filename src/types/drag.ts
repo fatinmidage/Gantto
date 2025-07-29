@@ -15,7 +15,7 @@ export interface DragOffset {
   y: number;
 }
 
-// 临时拖拽位置
+// 拖拽过程中的临时位置状态
 export interface TempDragPosition {
   id: string;
   x: number;
@@ -48,7 +48,6 @@ export interface MilestoneDragState {
   tempDragPosition: TempMilestoneDragPosition | null;
   previewPosition: { x: number; y: number } | null;
   originalPosition: { x: number; y: number } | null;
-  potentialAttachmentBar: string | null; // 潜在的附着任务条ID
   startOffset: DragOffset;
   isWithinBounds: boolean;
 }
@@ -106,7 +105,6 @@ export interface MilestoneDragOperations {
   updateMilestoneDragPosition: (clientX: number, clientY: number, allTasks: Task[], taskHeight: number, containerWidth?: number, containerHeight?: number) => void;
   endMilestoneDrag: () => void;
   cancelMilestoneDrag: () => void;
-  syncAttachedMilestones: (task: Task, milestones: MilestoneNode[], taskHeight: number) => MilestoneNode[];
   handleMilestoneOverlap: (milestones: MilestoneNode[], nodeSize?: number) => MilestoneNode[];
   getDragState: () => MilestoneDragState;
   getPreviewPosition: () => { x: number; y: number } | null;
@@ -126,7 +124,6 @@ export interface MilestoneDragCallbacks {
   onAttachmentChange: (milestoneId: string, attachedToBar?: string, relativePosition?: number) => void;
   dateToPixel: (date: Date) => number;
   pixelToDate: (pixel: number) => Date;
-  getTaskRowIndex: (taskId: string) => number;
   getMilestone: (milestoneId: string) => MilestoneNode | undefined;
 }
 

@@ -10,7 +10,6 @@ import {
   MilestoneDragOperations,
   MilestoneDragState as DragTypeMilestoneState
 } from '../../types/drag';
-import { useMilestoneAttachment } from './useMilestoneAttachment';
 import { hasDateInLabel, replaceDateInLabel } from '../../utils/ganttUtils';
 import { LAYOUT_CONSTANTS } from '../../components/gantt/ganttStyles';
 import { boundaryHelpers } from '../../utils/boundaryUtils';
@@ -27,9 +26,7 @@ interface LocalMilestoneDragState {
 export const useMilestoneDrag = (callbacks: MilestoneDragCallbacks): MilestoneDragOperations => {
   const {
     onMilestoneUpdate,
-    onAttachmentChange,
     pixelToDate,
-    getTaskRowIndex,
     getMilestone
   } = callbacks;
 
@@ -46,8 +43,6 @@ export const useMilestoneDrag = (callbacks: MilestoneDragCallbacks): MilestoneDr
   // 容器边界缓存
   const containerBoundsRef = useRef<DOMRect | null>(null);
 
-  // 引入附着检测逻辑
-  const attachment = useMilestoneAttachment();
 
   // 边界检测函数（使用统一边界检测）
   const checkBounds = useCallback((x: number, y: number, containerWidth?: number, containerHeight?: number): boolean => {
@@ -107,17 +102,27 @@ export const useMilestoneDrag = (callbacks: MilestoneDragCallbacks): MilestoneDr
     };
   }, [updateContainerBounds]);
 
+  // 智能标签更新辅助函数
+  const updateMilestoneLabelIfNeeded = useCallback((
+    milestone: MilestoneNode | null,
+    newDate: Date
+  ): string | undefined => {
+    if (!milestone?.label || !hasDateInLabel(milestone.label)) {
+      return undefined;
+    }
+    return replaceDateInLabel(milestone.label, newDate);
+  }, []);
+
   // 更新拖拽位置
   const updateMilestoneDragPosition = useCallback((
     clientX: number,
     clientY: number,
-    allTasks: Task[],
-    taskHeight: number,
+    _allTasks: Task[],
+    _taskHeight: number,
     containerWidth?: number,
     containerHeight?: number
   ) => {
     const dragState = dragStateRef.current;
-    
     
     if (!dragState.isDragging || !dragState.draggedMilestone) return;
 
@@ -156,58 +161,30 @@ export const useMilestoneDrag = (callbacks: MilestoneDragCallbacks): MilestoneDr
       isWithinBounds
     };
 
-    // 创建临时的里程碑对象用于检测附着
-    const tempMilestone: MilestoneNode = {
-      id: dragState.draggedMilestone,
-      title: '',
-      date: pixelToDate(newX), // 根据新X位置更新日期
-      iconType: 'default',
-      color: '#666666',
-      x: newX,
-      y: newY
-    };
-
-    // 检测附着关系
-    const attachmentResult = attachment.detectAttachment(
-      tempMilestone,
-      allTasks,
-      taskHeight,
-      getTaskRowIndex
-    );
-
-    // 获取当前里程碑数据，用于智能标签更新
+    // 获取当前里程碑数据并准备更新
     const currentMilestone = getMilestone(dragState.draggedMilestone);
+    const newDate = pixelToDate(newX);
     
-    // 更新里程碑位置和附着信息
+    // 合并所有更新：位置、日期和智能标签
     const updates: Partial<MilestoneNode> = {
       x: newX,
       y: newY,
-      date: tempMilestone.date,
-      attachedToBar: attachmentResult.attachedToBar,
-      relativePosition: attachmentResult.relativePosition
+      date: newDate
     };
 
-    // 智能更新标签中的日期
-    if (currentMilestone?.label && hasDateInLabel(currentMilestone.label)) {
-      const newLabel = replaceDateInLabel(currentMilestone.label, tempMilestone.date);
+    // 智能更新标签（如果需要）
+    const newLabel = updateMilestoneLabelIfNeeded(currentMilestone || null, newDate);
+    if (newLabel) {
       updates.label = newLabel;
     }
-    
+    // 一次性更新所有变更
     onMilestoneUpdate(dragState.draggedMilestone, updates);
-
-    // 触发附着变化回调
-    onAttachmentChange(
-      dragState.draggedMilestone,
-      attachmentResult.attachedToBar,
-      attachmentResult.relativePosition
-    );
   }, [
-    attachment,
     onMilestoneUpdate,
-    onAttachmentChange,
     pixelToDate,
-    getTaskRowIndex,
-    checkBounds
+    getMilestone,
+    checkBounds,
+    updateMilestoneLabelIfNeeded
   ]);
 
   // 结束拖拽
@@ -240,9 +217,7 @@ export const useMilestoneDrag = (callbacks: MilestoneDragCallbacks): MilestoneDr
     const updates: Partial<MilestoneNode> = {
       x: dragState.originalPosition.x,
       y: dragState.originalPosition.y,
-      date: pixelToDate(dragState.originalPosition.x),
-      attachedToBar: undefined,
-      relativePosition: undefined
+      date: pixelToDate(dragState.originalPosition.x)
     };
 
     onMilestoneUpdate(dragState.draggedMilestone, updates);
@@ -251,30 +226,56 @@ export const useMilestoneDrag = (callbacks: MilestoneDragCallbacks): MilestoneDr
     endMilestoneDrag();
   }, [onMilestoneUpdate, pixelToDate, endMilestoneDrag]);
 
-  // 同步移动附着的里程碑（当任务条移动时）
-  const syncAttachedMilestones = useCallback((
-    task: Task,
-    milestones: MilestoneNode[],
-    taskHeight: number
-  ): MilestoneNode[] => {
-    const rowIndex = getTaskRowIndex(task.id);
-    if (rowIndex === -1) return milestones;
-
-    return attachment.updateAttachedMilestones(
-      task as any, // TaskBar 类型兼容性
-      milestones,
-      taskHeight,
-      rowIndex
-    );
-  }, [attachment, getTaskRowIndex]);
-
-  // 处理里程碑重叠错开
+  // 处理里程碑重叠错开（简化版，不涉及任务条）
   const handleMilestoneOverlap = useCallback((
     milestones: MilestoneNode[],
-    nodeSize: number = LAYOUT_CONSTANTS.MILESTONE_NODE_SIZE
+    nodeSize: number = LAYOUT_CONSTANTS.MILESTONE_NODE_SIZE,
+    horizontalSpacing: number = 0,
+    verticalSpacing: number = 20,
+    maxHorizontalCount: number = 5
   ): MilestoneNode[] => {
-    return attachment.handleMilestoneOverlap(milestones, nodeSize);
-  }, [attachment]);
+    // 按 x 坐标分组，找出重叠的节点
+    const groups: Map<number, MilestoneNode[]> = new Map();
+    
+    milestones.forEach(milestone => {
+      if (!milestone.x) return;
+      
+      // 找到相近的 x 坐标组（容差范围内）
+      let groupKey = milestone.x;
+      for (const [key] of groups) {
+        if (Math.abs(key - milestone.x) <= nodeSize + horizontalSpacing) {
+          groupKey = key;
+          break;
+        }
+      }
+      
+      if (!groups.has(groupKey)) {
+        groups.set(groupKey, []);
+      }
+      groups.get(groupKey)!.push(milestone);
+    });
+
+    // 对每组重叠的节点进行错开处理
+    const result: MilestoneNode[] = [];
+    
+    groups.forEach((groupMilestones, baseX) => {
+      groupMilestones.forEach((milestone, index) => {
+        const horizontalIndex = index % maxHorizontalCount;
+        const verticalIndex = Math.floor(index / maxHorizontalCount);
+        
+        const offsetX = horizontalIndex * (nodeSize + horizontalSpacing);
+        const offsetY = verticalIndex * verticalSpacing;
+        
+        result.push({
+          ...milestone,
+          x: baseX + offsetX,
+          y: (milestone.y || 0) + offsetY
+        });
+      });
+    });
+
+    return result;
+  }, []);
 
   // 获取当前拖拽状态  
   const getDragState = useCallback((): DragTypeMilestoneState => {
@@ -290,7 +291,6 @@ export const useMilestoneDrag = (callbacks: MilestoneDragCallbacks): MilestoneDr
       } : null,
       previewPosition: state.previewPosition,
       originalPosition: state.originalPosition,
-      potentialAttachmentBar: null, // 需要从上下文获取
       startOffset: state.dragOffset,
       isWithinBounds: state.isWithinBounds
     };
@@ -313,8 +313,7 @@ export const useMilestoneDrag = (callbacks: MilestoneDragCallbacks): MilestoneDr
     endMilestoneDrag,
     cancelMilestoneDrag,
     
-    // 同步操作
-    syncAttachedMilestones,
+    // 工具方法
     handleMilestoneOverlap,
     
     // 状态查询

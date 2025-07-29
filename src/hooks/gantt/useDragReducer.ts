@@ -12,7 +12,7 @@ interface DragMetrics {
   minWidth: number;
 }
 
-// 临时拖拽位置
+// 拖拽过程中的临时位置状态
 interface TempDragPosition {
   id: string;
   x: number;

@@ -13,15 +13,15 @@ function App() {
   }, []);
 
   const handleNewProject = () => {
-    // TODO: 实现新建项目功能
+    // 新建项目功能待实现
   };
 
   const handleOpenProject = () => {
-    // TODO: 实现打开项目功能
+    // 打开项目功能待实现
   };
 
   const handleSaveProject = () => {
-    // TODO: 实现保存项目功能
+    // 保存项目功能待实现
   };
 
   const handleAppError = (error: Error, errorInfo: React.ErrorInfo) => {

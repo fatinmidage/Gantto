@@ -2,6 +2,37 @@ import React from 'react';
 import { Task, MilestoneNode } from '../../../types';
 import { TimeGranularity, LayeredTimeScale, TimelineLayerConfig } from '../../../utils/timelineLayerUtils';
 
+// 里程碑管理器类型接口
+export interface MilestoneManager {
+  // 状态
+  milestones: MilestoneNode[];
+  selectedMilestone: string | null;
+  
+  // CRUD 操作
+  createMilestone: (input: any) => void;
+  updateMilestone: (updates: any) => void;
+  updateMilestoneDate: (milestoneId: string, newDate: Date) => void;
+  deleteMilestone: (milestoneId: string) => void;
+  deleteMilestones: (milestoneIds: string[]) => void;
+  
+  // 查询操作
+  getAllMilestones: () => MilestoneNode[];
+  getMilestonesByDateRange: (startDate: Date, endDate: Date) => MilestoneNode[];
+  
+  // 选择管理
+  selectMilestone: (milestoneId: string | null) => void;
+  
+  // 拖拽功能
+  startMilestoneDrag: (milestone: MilestoneNode, clientX: number, clientY: number, containerElement: HTMLElement | null) => void;
+  updateMilestoneDragPosition: (clientX: number, clientY: number, allTasks: Task[], taskHeight: number, containerWidth?: number, containerHeight?: number) => void; 
+  endMilestoneDrag: () => void;
+  cancelMilestoneDrag: () => void;
+  isDraggingMilestone: boolean;
+  
+  // 其他设置方法
+  setMilestones: React.Dispatch<React.SetStateAction<MilestoneNode[]>>;
+}
+
 // 甘特图状态管理器属性接口
 export interface GanttStateManagerProps {
   startDate: Date;
@@ -88,7 +119,7 @@ export interface GanttStateData {
   // 里程碑状态
   milestones: MilestoneNode[];
   selectedMilestone: string | null;
-  milestoneManager: any; // TODO: 定义更具体的类型
+  milestoneManager: MilestoneManager;
   
   // 里程碑上下文菜单状态
   milestoneContextMenuState: {

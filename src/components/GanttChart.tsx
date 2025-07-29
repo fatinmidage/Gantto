@@ -102,7 +102,7 @@ const GanttChart: React.FC<GanttChartProps> = ({
               // Header props
               onAddTask={stateData.ganttEvents.addNewTask}
               onDeleteTask={() => stateData.ganttInteractions.selectedTitleTaskId && stateData.ganttEvents.deleteTaskCore(stateData.ganttInteractions.selectedTitleTaskId)}
-              onEditTask={() => {/* TODO: 实现编辑功能 */}}
+              onEditTask={() => {}}
               onAddSubtask={() => stateData.ganttInteractions.selectedTitleTaskId && stateData.ganttInteractions.handleCreateSubtask(stateData.ganttInteractions.selectedTitleTaskId)}
               canAddSubtask={!!stateData.ganttInteractions.selectedTitleTaskId}
               // 日期范围相关

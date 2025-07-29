@@ -108,8 +108,6 @@ export const useGanttKeyboard = ({
         if (currentSelectedId) {
           if (shiftKey && onTaskMove) {
             onTaskMove(currentSelectedId, 'up');
-          } else if (onTaskSelect) {
-            // TODO: 实现选择上一个任务的逻辑
           }
         }
         break;
@@ -119,8 +117,6 @@ export const useGanttKeyboard = ({
         if (currentSelectedId) {
           if (shiftKey && onTaskMove) {
             onTaskMove(currentSelectedId, 'down');
-          } else if (onTaskSelect) {
-            // TODO: 实现选择下一个任务的逻辑
           }
         }
         break;

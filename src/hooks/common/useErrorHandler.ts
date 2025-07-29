@@ -80,10 +80,10 @@ export const useErrorHandler = (config: ErrorHandlerConfig = {}): ErrorHandlerRe
     }
   }, [mergedConfig.enableLogging]);
 
-  const notifyUser = useCallback((errorInfo: ErrorInfo) => {
+  const notifyUser = useCallback((_errorInfo: ErrorInfo) => {
     if (mergedConfig.enableUserNotification) {
       // 这里可以集成 toast 通知系统
-      console.warn('用户通知:', errorInfo.message);
+      // 用户通知逻辑待实现
     }
   }, [mergedConfig.enableUserNotification]);
 
@@ -186,12 +186,12 @@ export const useGlobalErrorHandler = (): ErrorHandlerResult => {
   const errorHandler = useErrorHandler({
     enableLogging: true,
     enableUserNotification: true,
-    onError: (errorInfo) => {
+    onError: (_errorInfo) => {
       // 可以在这里添加全局错误报告逻辑
       // 比如发送到错误监控服务
       if (import.meta.env.PROD) {
         // 生产环境可以集成 Sentry 等错误监控
-        console.info('生产环境错误上报:', errorInfo);
+        // 错误上报逻辑待实现
       }
     }
   });

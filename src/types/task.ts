@@ -62,9 +62,6 @@ export interface MilestoneNode {
   label?: string;
   color: string;
   
-  // 附着信息
-  attachedToBar?: string; // 附着的任务条ID
-  relativePosition?: number; // 在任务条上的相对位置 (0-1)
   
   // 位置计算属性 - 中心点坐标系统
   x?: number; // 里程碑节点中心点的X坐标（水平位置）
@@ -86,7 +83,7 @@ export interface MilestoneNode {
 
 // 扩展任务条接口（基于Task但明确用于任务条）
 export interface TaskBar extends Task {
-  attachedMilestones?: string[]; // 附着的里程碑节点ID列表
+  // 任务条特有属性可以在这里添加
 }
 
 // 任务创建输入类型
@@ -109,8 +106,6 @@ export interface MilestoneCreateInput {
   iconType?: IconType;
   label?: string;
   color?: string;
-  attachedToBar?: string;
-  relativePosition?: number;
 }
 
 // 任务更新输入类型
@@ -136,8 +131,6 @@ export interface MilestoneUpdateInput {
   iconType?: IconType;
   label?: string;
   color?: string;
-  attachedToBar?: string;
-  relativePosition?: number;
   order?: number;
 }
 

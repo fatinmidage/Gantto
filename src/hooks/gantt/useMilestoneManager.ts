@@ -4,9 +4,8 @@
  */
 
 import { useState, useCallback } from 'react';
-import { MilestoneNode, MilestoneCreateInput, MilestoneUpdateInput, Task } from '../../types/task';
+import { MilestoneNode, MilestoneCreateInput, MilestoneUpdateInput } from '../../types/task';
 import { useMilestoneDrag } from './useMilestoneDrag';
-import { useMilestoneAttachment } from './useMilestoneAttachment';
 import { formatDateToMD, hasDateInLabel, replaceDateInLabel } from '../../utils/ganttUtils';
 
 interface MilestoneManagerCallbacks {
@@ -36,14 +35,6 @@ export const useMilestoneManager = (callbacks: MilestoneManagerCallbacks) => {
     });
   }, []);
 
-  // 附着关系变化回调
-  const handleAttachmentChange = useCallback((
-    _milestoneId: string, 
-    _attachedToBar?: string, 
-    _relativePosition?: number
-  ) => {
-    // 可以在这里添加附着变化的处理逻辑
-  }, []);
 
   // 获取里程碑数据的回调
   const getMilestone = useCallback((milestoneId: string) => {
@@ -53,13 +44,10 @@ export const useMilestoneManager = (callbacks: MilestoneManagerCallbacks) => {
   // 初始化拖拽功能
   const milestoneDrag = useMilestoneDrag({
     onMilestoneUpdate: handleMilestoneUpdate,
-    onAttachmentChange: handleAttachmentChange,
+    onAttachmentChange: () => {}, // 空回调，保持接口兼容
     getMilestone,
     ...callbacks
   });
-
-  // 初始化附着检测功能
-  const attachment = useMilestoneAttachment();
 
   // === CRUD 操作 ===
 
@@ -72,8 +60,6 @@ export const useMilestoneManager = (callbacks: MilestoneManagerCallbacks) => {
       iconType: input.iconType || 'default',
       label: input.label || formatDateToMD(input.date), // 如果没有提供标签，自动生成M.D格式标签
       color: input.color || '#ff9800',
-      attachedToBar: input.attachedToBar,
-      relativePosition: input.relativePosition,
       x: callbacks.dateToPixel(input.date),
       y: 0, // 将在渲染时计算正确的 Y 位置
       createdAt: new Date(),
@@ -145,78 +131,12 @@ export const useMilestoneManager = (callbacks: MilestoneManagerCallbacks) => {
     }
   }, [selectedMilestone]);
 
-  // === 附着管理 ===
-
-  // 将里程碑附着到任务条
-  const attachMilestoneToTask = useCallback((milestoneId: string, taskId: string, task: Task) => {
-    const milestone = milestones.find(m => m.id === milestoneId);
-    if (!milestone || !milestone.x) return;
-
-    const relativePosition = attachment.calculateRelativePosition(milestone, task as any);
-    updateMilestone({
-      id: milestoneId,
-      attachedToBar: taskId,
-      relativePosition
-    });
-  }, [milestones, attachment, updateMilestone]);
-
-  // 脱离里程碑与任务条的附着
-  const detachMilestoneFromTask = useCallback((milestoneId: string) => {
-    updateMilestone({
-      id: milestoneId,
-      attachedToBar: undefined,
-      relativePosition: undefined
-    });
-  }, [updateMilestone]);
-
-  // 同步更新附着的里程碑位置（当任务条移动时）
-  const syncAttachedMilestones = useCallback((task: Task) => {
-    const attachedMilestones = milestones.filter(
-      milestone => milestone.attachedToBar === task.id
-    );
-
-    if (attachedMilestones.length === 0) return;
-
-    const rowIndex = callbacks.getTaskRowIndex(task.id);
-    if (rowIndex === -1) return;
-
-    const updatedMilestones = attachment.updateAttachedMilestones(
-      task as any,
-      attachedMilestones,
-      callbacks.taskHeight,
-      rowIndex
-    );
-
-    // 批量更新里程碑位置
-    setMilestones(prev => prev.map(milestone => {
-      const updated = updatedMilestones.find(u => u.id === milestone.id);
-      return updated || milestone;
-    }));
-  }, [milestones, callbacks, attachment]);
-
-  // === 级联操作 ===
-
-  // 任务删除时的级联删除
-  const handleTaskDeleted = useCallback((taskId: string) => {
-    const attachedMilestones = milestones.filter(
-      milestone => milestone.attachedToBar === taskId
-    );
-    
-    if (attachedMilestones.length > 0) {
-      deleteMilestones(attachedMilestones.map(m => m.id));
-    }
-  }, [milestones, deleteMilestones]);
 
   // === 查询和过滤 ===
 
-  // 获取特定任务的附着里程碑
-  const getMilestonesForTask = useCallback((taskId: string): MilestoneNode[] => {
-    return milestones.filter(milestone => milestone.attachedToBar === taskId);
-  }, [milestones]);
-
-  // 获取独立的里程碑（未附着到任何任务）
-  const getIndependentMilestones = useCallback((): MilestoneNode[] => {
-    return milestones.filter(milestone => !milestone.attachedToBar);
+  // 获取所有里程碑（现在都是独立的）
+  const getAllMilestones = useCallback((): MilestoneNode[] => {
+    return milestones;
   }, [milestones]);
 
   // 根据日期范围过滤里程碑
@@ -244,17 +164,8 @@ export const useMilestoneManager = (callbacks: MilestoneManagerCallbacks) => {
     deleteMilestone,
     deleteMilestones,
     
-    // 附着管理
-    attachMilestoneToTask,
-    detachMilestoneFromTask,
-    syncAttachedMilestones,
-    
-    // 级联操作
-    handleTaskDeleted,
-    
     // 查询操作
-    getMilestonesForTask,
-    getIndependentMilestones,
+    getAllMilestones,
     getMilestonesByDateRange,
     
     // 选择管理
