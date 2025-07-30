@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo } from 'react';
 import { getAllDescendantRows, getVisibleProjectRows } from './GanttHelpers';
-import { LAYOUT_CONSTANTS } from './ganttStyles';
+// import { LAYOUT_CONSTANTS } from './ganttStyles'; // 暂时不需要
 import { useThrottledMouseMove } from '../../hooks';
 import { useHorizontalDrag } from '../../hooks/gantt/useHorizontalDrag';
 import { Task, MilestoneNode } from '../../types';
@@ -87,7 +87,7 @@ const GanttEventCoordinator: React.FC<GanttEventCoordinatorProps> = ({
   onMilestoneUpdate,
   pixelToDate,
   dateToPixel,
-  dateRange,
+  // dateRange, // 暂时不需要
   setProjectRows,
   ganttEvents,
   handleTaskUpdate,
@@ -132,7 +132,7 @@ const GanttEventCoordinator: React.FC<GanttEventCoordinatorProps> = ({
 
   // 使用统一系统的处理器函数
   const { 
-    detectEdgeHover, 
+    // detectEdgeHover, // 暂时不需要
     handleEdgeHover, 
     handleMouseDown,
     handleMouseMove,

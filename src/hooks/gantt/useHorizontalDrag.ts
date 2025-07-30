@@ -269,10 +269,11 @@ export const useHorizontalDrag = ({
             updates.y = tempDragPosition.y;
           }
           
-          // 智能标签更新
-          if (milestone.label && hasDateInLabel(milestone.label)) {
-            updates.label = replaceDateInLabel(milestone.label, newDate);
-          }
+          // 🔧 修复：拖拽过程中不更新标签，让 MilestoneNode 通过 previewDate 处理预览
+          // 标签更新将在拖拽结束时进行
+          // if (milestone.label && hasDateInLabel(milestone.label)) {
+          //   updates.label = replaceDateInLabel(milestone.label, newDate);
+          // }
           
           onMilestoneUpdate(draggedTask, updates);
         }

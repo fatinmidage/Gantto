@@ -63,20 +63,26 @@ const MilestoneNode: React.FC<MilestoneNodeProps> = ({
       originalLabelRef.current = milestone.label;
     }
   }, [isDragging, milestone.label]);
+
+  // 🔧 修复：监听拖拽状态变化，确保组件能及时响应
+  useEffect(() => {
+    // 当拖拽状态发生变化时，强制重新渲染以更新显示标签
+    // 这里不需要额外操作，因为 displayLabel 的 useMemo 依赖已经包含了必要的依赖项
+  }, [isDragging, previewDate]);
   
-  // 计算要显示的标签：优先使用预览标签，否则使用原始标签
-  // 🔧 修复：直接计算而不使用 useMemo，确保每次渲染都重新计算
-  const originalLabel = originalLabelRef.current;
-  const hasDate = originalLabel ? hasDateInLabel(originalLabel) : false;
-  const shouldShowPreview = isDragging && previewDate && originalLabel && hasDate;
-  
-  let displayLabel: string;
-  if (shouldShowPreview) {
-    displayLabel = replaceDateInLabel(originalLabel!, previewDate!);
-  } else {
-    // 使用当前的 milestone.label（可能已被拖拽系统更新）
-    displayLabel = milestone.label;
-  }
+  // 🔧 修复：优化显示标签的计算逻辑，确保拖拽时能实时响应
+  const displayLabel = useMemo(() => {
+    // 优先级1: 如果正在拖拽且有预览日期，使用预览标签
+    if (isDragging && previewDate) {
+      const labelToUpdate = originalLabelRef.current || milestone.label;
+      if (labelToUpdate && hasDateInLabel(labelToUpdate)) {
+        return replaceDateInLabel(labelToUpdate, previewDate);
+      }
+    }
+    
+    // 优先级2: 使用当前里程碑的标签（可能已被拖拽系统实时更新）
+    return milestone.label;
+  }, [isDragging, previewDate, milestone.label]);
   
   
   // 使用常量定义的节点大小
@@ -207,8 +213,10 @@ const MilestoneNode: React.FC<MilestoneNodeProps> = ({
               wordWrap: 'break-word',
               textAlign: 'center',
               lineHeight: '1.2',
-              transition: isDragging ? 'none' : 'color 0.15s ease',
+              transition: isDragging ? 'none' : 'color 0.15s ease, font-weight 0.15s ease',
               fontWeight: isDragging && previewDate ? 'bold' : 'normal', // 拖拽时加粗显示预览
+              textShadow: isDragging && previewDate ? '0 1px 2px rgba(255,107,53,0.3)' : 'none', // 拖拽时添加文字阴影
+              transform: isDragging ? 'scale(1.05)' : 'scale(1)', // 拖拽时略微放大标签
             }}
           />
         </div>

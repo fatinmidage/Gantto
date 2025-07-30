@@ -87,6 +87,8 @@ export const useGanttMouseEvents = ({
     sortedChartTasks,
     taskMapMemo,
     containerRef,
+    milestones: [], // 临时添加空数组，实际里程碑数据从外部传入
+    onMilestoneUpdate: () => {}, // 临时添加空函数
     startHorizontalDrag,
     updateHorizontalDragPosition,
     resetHorizontalDrag,
