@@ -147,3 +147,7 @@ Desktop.ini
 *.swo
 *~
 .husky/_
+
+# Serena
+.serena/
+serena.log
