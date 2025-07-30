@@ -41,9 +41,9 @@ const Toolbar: React.FC<ToolbarProps> = ({
   onLayerModeToggle,
   isLayeredModeEnabled = true
 }) => {
-  // 默认日期范围：今日前1个月到今日后5个月
-  const defaultStart = dateRangeStart || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-  const defaultEnd = dateRangeEnd || new Date(Date.now() + 150 * 24 * 60 * 60 * 1000);
+  // 默认日期范围：2025年7月20日至2025年8月20日
+  const defaultStart = dateRangeStart || new Date(2025, 6, 20); // 月份从0开始，6表示7月
+  const defaultEnd = dateRangeEnd || new Date(2025, 7, 20); // 7表示8月
   return (
     <div className="gantt-toolbar">
       <div className="toolbar-section">

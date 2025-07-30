@@ -22,12 +22,9 @@ export interface MilestoneManager {
   // 选择管理
   selectMilestone: (milestoneId: string | null) => void;
   
-  // 拖拽功能
-  startMilestoneDrag: (milestone: MilestoneNode, clientX: number, clientY: number, containerElement: HTMLElement | null) => void;
-  updateMilestoneDragPosition: (clientX: number, clientY: number, allTasks: Task[], taskHeight: number, containerWidth?: number, containerHeight?: number) => void; 
-  endMilestoneDrag: () => void;
-  cancelMilestoneDrag: () => void;
-  isDraggingMilestone: boolean;
+  // 数据回调（供统一拖拽系统使用）
+  handleMilestoneUpdate: (milestoneId: string, updates: Partial<MilestoneNode>) => void;
+  getMilestone: (milestoneId: string) => MilestoneNode | undefined;
   
   // 其他设置方法
   setMilestones: React.Dispatch<React.SetStateAction<MilestoneNode[]>>;

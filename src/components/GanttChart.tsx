@@ -19,9 +19,9 @@ const GanttChart: React.FC<GanttChartProps> = ({
   timelineHeight = 55,
   taskHeight = 22
 }) => {
-  // 设置默认日期范围：今日前1个月到今日后5个月（总计6个月）
-  const defaultStart = initialStartDate || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-  const defaultEnd = initialEndDate || new Date(Date.now() + 150 * 24 * 60 * 60 * 1000);
+  // 设置默认日期范围：2025年7月20日至2025年8月20日
+  const defaultStart = initialStartDate || new Date(2025, 6, 20); // 月份从0开始，6表示7月
+  const defaultEnd = initialEndDate || new Date(2025, 7, 20); // 7表示8月
   
   // 日期范围状态管理
   const [dateRangeStart, setDateRangeStart] = useState<Date>(defaultStart);
@@ -80,15 +80,7 @@ const GanttChart: React.FC<GanttChartProps> = ({
           updateDragMetrics={stateData.updateDragMetrics}
           resetHorizontalDrag={stateData.resetHorizontalDrag}
           resetVerticalDrag={stateData.resetVerticalDrag}
-          milestoneOperations={{
-            startMilestoneDrag: stateData.milestoneManager.startMilestoneDrag,
-            updateMilestoneDragPosition: stateData.milestoneManager.updateMilestoneDragPosition,
-            endMilestoneDrag: stateData.milestoneManager.endMilestoneDrag,
-            getTaskRowIndex: (taskId: string) => {
-              const task = stateData.chartTasks.find(t => t.id === taskId);
-              return task ? stateData.chartTasks.indexOf(task) : 0;
-            }
-          }}
+          onMilestoneUpdate={stateData.milestoneManager.handleMilestoneUpdate}
           pixelToDate={stateData.pixelToDate}
           dateToPixel={stateData.dateToPixel}
           dateRange={stateData.dateRange}

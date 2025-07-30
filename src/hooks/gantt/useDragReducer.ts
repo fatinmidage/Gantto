@@ -2,7 +2,7 @@ import { useReducer, useRef, useCallback } from 'react';
 import { Task, VerticalDragState } from '../../types';
 
 // 拖拽类型定义
-export type DragType = 'move' | 'resize-left' | 'resize-right' | null;
+export type DragType = 'move' | 'resize-left' | 'resize-right' | 'milestone-move' | null;
 export type EdgeHover = 'left' | 'right' | null;
 
 // 拖拽缓存接口

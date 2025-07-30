@@ -3,7 +3,7 @@
  * 渲染纯净图标的里程碑节点，支持拖拽和右键菜单
  */
 
-import React, { useState, useRef, useMemo } from 'react';
+import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { MilestoneNode as MilestoneNodeData } from '../../types/task';
 import { IconType } from '../../types/common';
 import { getIconConfig } from '../../config/icons';
@@ -54,18 +54,30 @@ const MilestoneNode: React.FC<MilestoneNodeProps> = ({
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
   const nodeRef = useRef<HTMLDivElement>(null);
   
-  // 计算要显示的标签：优先使用预览标签，否则使用原始标签
-  const displayLabel = useMemo(() => {
-    const hasDate = milestone.label ? hasDateInLabel(milestone.label) : false;
-    const shouldShowPreview = isDragging && previewDate && milestone.label && hasDate;
-    
-    if (shouldShowPreview) {
-      const newLabel = replaceDateInLabel(milestone.label!, previewDate!);
-      return newLabel;
+  // 🔧 修复：保存里程碑的原始标签，避免拖拽时被修改
+  const originalLabelRef = useRef<string | undefined>(milestone.label);
+  
+  // 当不在拖拽状态时，更新原始标签引用
+  useEffect(() => {
+    if (!isDragging) {
+      originalLabelRef.current = milestone.label;
     }
-    
-    return milestone.label;
-  }, [isDragging, previewDate, milestone.label, milestone.id]);
+  }, [isDragging, milestone.label]);
+  
+  // 计算要显示的标签：优先使用预览标签，否则使用原始标签
+  // 🔧 修复：直接计算而不使用 useMemo，确保每次渲染都重新计算
+  const originalLabel = originalLabelRef.current;
+  const hasDate = originalLabel ? hasDateInLabel(originalLabel) : false;
+  const shouldShowPreview = isDragging && previewDate && originalLabel && hasDate;
+  
+  let displayLabel: string;
+  if (shouldShowPreview) {
+    displayLabel = replaceDateInLabel(originalLabel!, previewDate!);
+  } else {
+    // 使用当前的 milestone.label（可能已被拖拽系统更新）
+    displayLabel = milestone.label;
+  }
+  
   
   // 使用常量定义的节点大小
   const nodeSize = LAYOUT_CONSTANTS.MILESTONE_NODE_SIZE;
@@ -186,16 +198,17 @@ const MilestoneNode: React.FC<MilestoneNodeProps> = ({
           }}
         >
           <EditableLabel
-            value={displayLabel}
+            value={displayLabel || ''}
             onSave={(newLabel) => onLabelEdit(milestone.id, newLabel)}
             style={{
               fontSize: '10px',
-              color: isDragging ? '#007acc' : '#666', // 拖拽时使用蓝色提示预览
+              color: isDragging && previewDate ? '#ff6b35' : '#666', // 拖拽时使用橙色醒目预览
               maxWidth: `${LAYOUT_CONSTANTS.MILESTONE_LABEL_MAX_WIDTH}px`,
               wordWrap: 'break-word',
               textAlign: 'center',
               lineHeight: '1.2',
               transition: isDragging ? 'none' : 'color 0.15s ease',
+              fontWeight: isDragging && previewDate ? 'bold' : 'normal', // 拖拽时加粗显示预览
             }}
           />
         </div>

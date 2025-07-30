@@ -25,6 +25,13 @@ const EditableLabel: React.FC<EditableLabelProps> = ({
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(value);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  
+  // 🔧 修复：监听 value prop 变化，同步更新内部状态
+  useEffect(() => {
+    if (!isEditing) {
+      setEditValue(value);
+    }
+  }, [value, isEditing]);
 
   // 进入编辑模式
   const handleDoubleClick = (e: React.MouseEvent) => {

@@ -55,7 +55,6 @@ export const useTaskBarDrag = () => {
     newDragType: DragType,
     containerElement: HTMLElement | null
   ) => {
-    
     updateContainerBounds(containerElement);
     
     const bounds = containerBounds.current;
@@ -99,7 +98,7 @@ export const useTaskBarDrag = () => {
       return;
     }
     
-    if (dragState.dragType === 'move') {
+    if (dragState.dragType === 'move' || dragState.dragType === 'milestone-move') {
       // 计算新的渲染左边缘位置
       const newRenderLeft = mouseX - dragState.dragOffset.x;
       const taskWidth = metrics.minWidth;

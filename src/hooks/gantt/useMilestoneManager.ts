@@ -1,11 +1,11 @@
 /**
  * 里程碑管理器 Hook
- * 整合里程碑的 CRUD 操作、拖拽、附着检测等所有功能
+ * 负责里程碑的 CRUD 操作和状态管理
+ * 拖拽功能现在由统一的 useHorizontalDrag 系统处理
  */
 
 import { useState, useCallback } from 'react';
 import { MilestoneNode, MilestoneCreateInput, MilestoneUpdateInput } from '../../types/task';
-import { useMilestoneDrag } from './useMilestoneDrag';
 import { formatDateToMD, hasDateInLabel, replaceDateInLabel } from '../../utils/ganttUtils';
 
 interface MilestoneManagerCallbacks {
@@ -40,14 +40,6 @@ export const useMilestoneManager = (callbacks: MilestoneManagerCallbacks) => {
   const getMilestone = useCallback((milestoneId: string) => {
     return milestones.find(m => m.id === milestoneId);
   }, [milestones]);
-
-  // 初始化拖拽功能
-  const milestoneDrag = useMilestoneDrag({
-    onMilestoneUpdate: handleMilestoneUpdate,
-    onAttachmentChange: () => {}, // 空回调，保持接口兼容
-    getMilestone,
-    ...callbacks
-  });
 
   // === CRUD 操作 ===
 
@@ -171,16 +163,9 @@ export const useMilestoneManager = (callbacks: MilestoneManagerCallbacks) => {
     // 选择管理
     selectMilestone,
     
-    // 拖拽功能
-    startMilestoneDrag: milestoneDrag.startMilestoneDrag,
-    updateMilestoneDragPosition: milestoneDrag.updateMilestoneDragPosition,
-    endMilestoneDrag: milestoneDrag.endMilestoneDrag,
-    cancelMilestoneDrag: milestoneDrag.cancelMilestoneDrag,
-    isDraggingMilestone: milestoneDrag.getDragState().isDragging,
-    draggedMilestone: milestoneDrag.getDragState().draggedMilestoneId,
-    
-    // 重叠处理
-    handleMilestoneOverlap: milestoneDrag.handleMilestoneOverlap,
+    // 里程碑数据更新回调（供统一拖拽系统使用）
+    handleMilestoneUpdate,
+    getMilestone,
     
     // 工具方法
     setMilestones

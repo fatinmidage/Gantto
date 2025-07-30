@@ -38,9 +38,9 @@ export const useTimeline = (
   
   // === 计算日期范围保持不变 ===
   const dateRange = useMemo((): DateRange => {
-    // 直接使用传入的日期参数，如果没有传入则使用默认值
-    const startDate = initialStartDate || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-    const endDate = initialEndDate || new Date(Date.now() + 150 * 24 * 60 * 60 * 1000);
+    // 直接使用传入的日期参数，如果没有传入则使用默认值：2025年7月20日至2025年8月20日
+    const startDate = initialStartDate || new Date(2025, 6, 20); // 月份从0开始，6表示7月
+    const endDate = initialEndDate || new Date(2025, 7, 20); // 7表示8月
     
     return {
       startDate,
