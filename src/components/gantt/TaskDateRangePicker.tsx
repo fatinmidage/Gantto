@@ -139,21 +139,6 @@ const TaskDateRangePicker: React.FC<TaskDateRangePickerProps> = ({
     }
   }, [handleConfirm, handleCancel]);
 
-  // 格式化显示的日期范围
-  const formatDisplayRange = (): string => {
-    const startStr = startDate.toLocaleDateString('zh-CN', { 
-      year: 'numeric', 
-      month: 'short', 
-      day: 'numeric' 
-    });
-    const endStr = endDate.toLocaleDateString('zh-CN', { 
-      year: 'numeric', 
-      month: 'short', 
-      day: 'numeric' 
-    });
-    return `${startStr} - ${endStr}`;
-  };
-
   // 计算持续天数
   const calculateDuration = (): number => {
     return Math.ceil((tempEndDate.getTime() - tempStartDate.getTime()) / (24 * 60 * 60 * 1000));
@@ -195,18 +180,21 @@ const TaskDateRangePicker: React.FC<TaskDateRangePickerProps> = ({
           </div>
 
           <div className="task-date-range-picker-body">
-            {/* 当前日期范围显示 */}
-            <div className="current-range-display">
-              <span className="current-range-label">当前范围：</span>
-              <span className="current-range-value">{formatDisplayRange()}</span>
-            </div>
-
             {/* 日期输入表单 */}
             <div className="date-range-form">
-              <div className="date-input-group">
+              {/* 日期标签行 */}
+              <div className="date-labels-row">
                 <label htmlFor="task-start-date" className="date-input-label">
                   开始日期
                 </label>
+                <span className="label-separator"></span>
+                <label htmlFor="task-end-date" className="date-input-label">
+                  结束日期
+                </label>
+              </div>
+              
+              {/* 日期输入行 */}
+              <div className="date-inputs-row">
                 <input
                   ref={startDateInputRef}
                   id="task-start-date"
@@ -216,16 +204,11 @@ const TaskDateRangePicker: React.FC<TaskDateRangePickerProps> = ({
                   className="task-date-input"
                   placeholder="选择开始日期"
                 />
-              </div>
-
-              <div className="date-range-separator">
-                <span>至</span>
-              </div>
-
-              <div className="date-input-group">
-                <label htmlFor="task-end-date" className="date-input-label">
-                  结束日期
-                </label>
+                
+                <div className="date-range-separator">
+                  <span>至</span>
+                </div>
+                
                 <input
                   ref={endDateInputRef}
                   id="task-end-date"
@@ -242,9 +225,6 @@ const TaskDateRangePicker: React.FC<TaskDateRangePickerProps> = ({
             <div className="date-range-info">
               <p className="date-range-duration">
                 持续时间：{calculateDuration()} 天
-              </p>
-              <p className="date-range-note">
-                任务最小持续时间为1天
               </p>
             </div>
 

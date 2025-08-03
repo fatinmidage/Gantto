@@ -241,11 +241,6 @@
   gap: 8px;
 }
 
-.date-input-label {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--text-secondary);
-}
 
 
 
@@ -421,7 +416,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 16px;
+  padding: 10px 12px;
   border-bottom: 1px solid var(--border-secondary);
   background: var(--bg-tertiary);
   border-radius: 8px 8px 0 0;
@@ -457,43 +452,47 @@
 }
 
 .task-date-range-picker-body {
-  padding: 16px;
+  padding: 12px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-}
-
-.current-range-display {
-  display: flex;
-  align-items: center;
   gap: 8px;
-  padding: 8px 12px;
-  border-radius: 6px;
-  font-size: 13px;
-  background: var(--bg-tertiary);
-  border: 1px solid var(--border-secondary);
 }
 
-.current-range-label {
-  color: var(--text-secondary);
-  font-weight: 500;
-}
-
-.current-range-value {
-  color: var(--text-primary);
-  font-weight: 600;
-}
 
 .date-range-form {
   display: flex;
   flex-direction: column;
+  gap: 6px;
+}
+
+/* 日期标签行 */
+.date-labels-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.label-separator {
+  width: 40px; /* 与分隔符宽度对应 */
+  text-align: center;
+}
+
+.date-input-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  flex: 1;
+}
+
+/* 日期输入行 */
+.date-inputs-row {
+  display: flex;
+  align-items: center;
   gap: 12px;
 }
 
-.date-input-group {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+.date-inputs-row .task-date-input {
+  flex: 1;
 }
 
 .date-range-separator {
@@ -503,11 +502,11 @@
   font-size: 13px;
   color: var(--text-secondary);
   font-weight: 500;
-  margin: 4px 0;
+  min-width: 40px;
+  padding: 0 8px;
 }
 
 .task-date-input {
-  width: 100%;
   padding: 8px 12px;
   border: 1px solid var(--border-secondary);
   border-radius: 6px;
@@ -515,6 +514,7 @@
   background: var(--bg-secondary);
   color: var(--text-primary);
   transition: all 0.15s ease;
+  min-width: 0; /* 允许flexbox收缩 */
 }
 
 .task-date-input:focus {
@@ -531,7 +531,7 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
-  padding: 8px 12px;
+  padding: 6px 10px;
   border-radius: 6px;
   background: rgba(59, 130, 246, 0.05);
   border: 1px solid rgba(59, 130, 246, 0.1);
@@ -544,18 +544,13 @@
   margin: 0;
 }
 
-.date-range-note {
-  font-size: 12px;
-  color: var(--text-secondary);
-  margin: 0;
-}
 
 .date-range-actions {
   display: flex;
   align-items: center;
   justify-content: flex-end;
   gap: 8px;
-  padding-top: 8px;
+  padding-top: 4px;
   border-top: 1px solid var(--border-secondary);
 }
 
