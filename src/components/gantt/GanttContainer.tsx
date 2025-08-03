@@ -86,6 +86,7 @@ interface GanttContainerProps {
   onMilestoneLabelEdit?: (milestoneId: string, label: string) => void;
   onMilestoneDateChange?: (milestoneId: string, newDate: Date) => void;
   onMilestoneDelete?: (milestoneId: string) => void;
+  onTaskDateEdit?: (taskId: string, newStartDate: Date, newEndDate: Date) => void;
   pixelToDate: (pixel: number) => Date;
   
   // 容器引用
@@ -172,6 +173,7 @@ const GanttContainer: React.FC<GanttContainerProps> = ({
   onMilestoneLabelEdit,
   onMilestoneDateChange,
   onMilestoneDelete,
+  onTaskDateEdit,
   pixelToDate,
   containerRef,
   isCurrentDateInRange = true,
@@ -249,6 +251,7 @@ const GanttContainer: React.FC<GanttContainerProps> = ({
         onMilestoneDragStart={onMilestoneDragStart}
         onMilestoneLabelEdit={onMilestoneLabelEdit}
         onMilestoneDateChange={onMilestoneDateChange}
+        onTaskDateEdit={onTaskDateEdit}
       />
 
       <GanttMenuManager

@@ -3,7 +3,7 @@ import { getAllDescendantRows, getVisibleProjectRows } from './GanttHelpers';
 // import { LAYOUT_CONSTANTS } from './ganttStyles'; // 暂时不需要
 import { useThrottledMouseMove } from '../../hooks';
 import { useHorizontalDrag } from '../../hooks/gantt/useHorizontalDrag';
-import { Task, MilestoneNode, ProjectRowData, VerticalDragState, DateRange } from '../../types';
+import { Task, MilestoneNode, ProjectRowData, VerticalDragState, DateRange, TempDragPosition } from '../../types';
 
 interface GanttEventCoordinatorProps {
   // 状态数据
@@ -15,7 +15,7 @@ interface GanttEventCoordinatorProps {
   // 拖拽状态
   isDragging: boolean;
   verticalDragState: VerticalDragState;
-  tempDragPosition: { id: string; x: number; width: number } | null | undefined;
+  tempDragPosition: TempDragPosition | null;
   draggedTask: string | null;
   draggedTaskData: Task | null;
   dragType: 'move' | 'resize-left' | 'resize-right' | 'milestone-move' | null;

@@ -6,7 +6,7 @@
 import React, { useState, useRef, useCallback, useMemo } from 'react';
 import { Task } from '../../types/task';
 import EditableLabel from './EditableLabel';
-import MilestoneDatePicker from './MilestoneDatePicker';
+import TaskDateRangePicker from './TaskDateRangePicker';
 import { layoutUtils, LAYOUT_CONSTANTS } from './ganttStyles';
 
 interface TaskBarProps {
@@ -24,7 +24,7 @@ interface TaskBarProps {
   onEdgeHover: (e: React.MouseEvent, task: Task) => void;
   onMouseLeave: () => void;
   onTagEdit?: (taskId: string, oldTag: string, newTag: string) => void;
-  onTaskDateEdit?: (taskId: string, newStartDate: Date, newEndDate?: Date) => void;
+  onTaskDateEdit?: (taskId: string, newStartDate: Date, newEndDate: Date) => void;
 }
 
 const TaskBar: React.FC<TaskBarProps> = ({
@@ -46,6 +46,7 @@ const TaskBar: React.FC<TaskBarProps> = ({
 }) => {
   // 日期编辑器状态
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+  
   const taskBarRef = useRef<HTMLDivElement>(null);
 
   // 边缘悬停处理：直接处理，无需requestAnimationFrame
@@ -80,7 +81,7 @@ const TaskBar: React.FC<TaskBarProps> = ({
     } as React.CSSProperties;
   }, [displayX, displayWidth, task.x, task.width, task.color, rowIndex, taskHeight, isHoveringEdge]);
 
-  // 双击事件处理 - 打开日期编辑器
+  // 双击事件处理 - 打开日期范围编辑器
   const handleDoubleClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -88,24 +89,15 @@ const TaskBar: React.FC<TaskBarProps> = ({
     // 防止在拖拽状态下打开日期编辑器
     if (isDragging || isBeingDragged) return;
     
-    if (onTaskDateEdit && task.startDate) {
+    if (onTaskDateEdit && task.startDate && task.endDate) {
       setIsDatePickerOpen(true);
     }
   };
 
-  // 任务日期变更处理
-  const handleTaskDateChange = (newDate: Date) => {
-    if (onTaskDateEdit && task.startDate) {
-      // 计算持续时间（天数）
-      const originalDuration = task.endDate 
-        ? Math.ceil((task.endDate.getTime() - task.startDate.getTime()) / (1000 * 60 * 60 * 24))
-        : 1;
-      
-      // 计算新的结束日期
-      const newEndDate = new Date(newDate);
-      newEndDate.setDate(newEndDate.getDate() + originalDuration);
-      
-      onTaskDateEdit(task.id, newDate, newEndDate);
+  // 任务日期范围变更处理
+  const handleTaskDateRangeChange = (newStartDate: Date, newEndDate: Date) => {
+    if (onTaskDateEdit) {
+      onTaskDateEdit(task.id, newStartDate, newEndDate);
     }
     setIsDatePickerOpen(false);
   };
@@ -148,7 +140,7 @@ const TaskBar: React.FC<TaskBarProps> = ({
         }}
         onDoubleClick={handleDoubleClick}
         onContextMenu={(e) => onTaskContextMenu(e, task.id)}
-        title={onTaskDateEdit && task.startDate ? "双击编辑日期" : undefined}
+        title={onTaskDateEdit && task.startDate && task.endDate ? "双击编辑任务日期范围" : undefined}
       >
       {/* 任务内容 */}
       <div className="gantt-task-content">
@@ -179,15 +171,15 @@ const TaskBar: React.FC<TaskBarProps> = ({
       </div>
       </div>
 
-      {/* 任务日期选择器 */}
-      {onTaskDateEdit && task.startDate && (
-        <MilestoneDatePicker
-          date={task.startDate}
+      {/* 任务日期范围选择器 */}
+      {onTaskDateEdit && task.startDate && task.endDate && (
+        <TaskDateRangePicker
+          startDate={task.startDate}
+          endDate={task.endDate}
           isOpen={isDatePickerOpen}
           onOpenChange={setIsDatePickerOpen}
-          onDateChange={handleTaskDateChange}
+          onDateRangeChange={handleTaskDateRangeChange}
           position={getDatePickerPosition()}
-          immediateMode={true}
         />
       )}
     </>

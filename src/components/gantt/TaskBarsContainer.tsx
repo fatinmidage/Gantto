@@ -45,6 +45,7 @@ interface TaskBarsContainerProps {
   onMilestoneDragStart?: (e: React.MouseEvent, milestone: MilestoneNodeType) => void;
   onMilestoneLabelEdit?: (milestoneId: string, label: string) => void;
   onMilestoneDateChange?: (milestoneId: string, newDate: Date) => void;
+  onTaskDateEdit?: (taskId: string, newStartDate: Date, newEndDate: Date) => void;
 }
 
 const TaskBarsContainer: React.FC<TaskBarsContainerProps> = ({
@@ -68,7 +69,8 @@ const TaskBarsContainer: React.FC<TaskBarsContainerProps> = ({
   onMilestoneContextMenu,
   onMilestoneDragStart,
   onMilestoneLabelEdit,
-  onMilestoneDateChange
+  onMilestoneDateChange,
+  onTaskDateEdit
 }) => {
   // 创建坐标计算工具实例
   const coordinateUtils = useMemo(() => 
@@ -111,6 +113,7 @@ const TaskBarsContainer: React.FC<TaskBarsContainerProps> = ({
               onTaskContextMenu={onTaskContextMenu}
               onEdgeHover={onEdgeHover}
               onMouseLeave={onMouseLeave}
+              onTaskDateEdit={onTaskDateEdit}
             />
           );
         })

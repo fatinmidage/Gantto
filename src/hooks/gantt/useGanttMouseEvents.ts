@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useHorizontalDrag } from './useHorizontalDrag';
 import { useVerticalDrag } from './useVerticalDrag';
-import { Task } from '../../types';
+import { Task, TempDragPosition } from '../../types';
 
 interface UseGanttMouseEventsProps {
   // 拖拽相关
@@ -9,7 +9,7 @@ interface UseGanttMouseEventsProps {
   draggedTask: string | null;
   draggedTaskData: Task | null;
   dragType: 'move' | 'resize-left' | 'resize-right' | null;
-  tempDragPosition: { x: number; width: number } | null;
+  tempDragPosition: TempDragPosition | null;
   isHoveringEdge: 'left' | 'right' | null;
   
   // 垂直拖拽相关

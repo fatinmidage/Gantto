@@ -1,5 +1,5 @@
 import React from 'react';
-import { Task, MilestoneNode, ProjectRow, DragState, VerticalDragState, DragType, DateRange, ChartTaskRowContainer } from '../../../types';
+import { Task, MilestoneNode, ProjectRow, VerticalDragState, DragType, DateRange, ChartTaskRowContainer, TempDragPosition } from '../../../types';
 import { TimeGranularity, LayeredTimeScale, TimelineLayerConfig } from '../../../utils/timelineLayerUtils';
 
 // 里程碑管理器类型接口
@@ -66,7 +66,7 @@ export interface GanttStateData {
   // 拖拽状态
   draggedTask: string | null;
   isDragging: boolean;
-  tempDragPosition: DragState['tempPosition'] | null;
+  tempDragPosition: TempDragPosition | null;
   verticalDragState: VerticalDragState;
   isHoveringEdge: 'left' | 'right' | null;
   setIsHoveringEdge: (edge: 'left' | 'right' | null) => void;

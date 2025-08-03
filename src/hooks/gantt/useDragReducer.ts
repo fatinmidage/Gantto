@@ -1,5 +1,5 @@
 import { useReducer, useRef, useCallback } from 'react';
-import { Task, VerticalDragState } from '../../types';
+import { Task, VerticalDragState, TempDragPosition } from '../../types';
 
 // 拖拽类型定义
 export type DragType = 'move' | 'resize-left' | 'resize-right' | 'milestone-move' | null;
@@ -12,12 +12,7 @@ interface DragMetrics {
   minWidth: number;
 }
 
-// 拖拽过程中的临时位置状态
-interface TempDragPosition {
-  id: string;
-  x: number;
-  width: number;
-}
+// TempDragPosition 接口现在从 '../../types' 导入
 
 // 拖拽偏移量
 interface DragOffset {

@@ -78,6 +78,7 @@ interface GanttChartBodyProps {
   onMilestoneDragStart?: (e: React.MouseEvent, milestone: MilestoneNode) => void;
   onMilestoneLabelEdit?: (milestoneId: string, label: string) => void;
   onMilestoneDateChange?: (milestoneId: string, newDate: Date) => void;
+  onTaskDateEdit?: (taskId: string, newStartDate: Date, newEndDate: Date) => void;
   
   // 事件监听器
   onMouseMove: (e: MouseEvent) => void;
@@ -118,6 +119,7 @@ const GanttChartBody: React.FC<GanttChartBodyProps> = ({
   onMilestoneDragStart,
   onMilestoneLabelEdit,
   onMilestoneDateChange,
+  onTaskDateEdit,
   dateToPixel,
   pixelToDate,
   onMouseMove: _onMouseMove,
@@ -203,6 +205,7 @@ const GanttChartBody: React.FC<GanttChartBodyProps> = ({
           onMilestoneDragStart={onMilestoneDragStart}
           onMilestoneLabelEdit={onMilestoneLabelEdit}
           onMilestoneDateChange={onMilestoneDateChange}
+          onTaskDateEdit={onTaskDateEdit}
         />
       </div>
     </div>

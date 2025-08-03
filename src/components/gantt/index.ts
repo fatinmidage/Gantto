@@ -33,6 +33,10 @@ export { default as ColorPicker } from './ColorPicker';
 export { default as GanttContextMenu } from './GanttContextMenu';
 export { default as EditableLabel } from './EditableLabel';
 
+// === 日期选择器组件 ===
+export { default as MilestoneDatePicker } from './MilestoneDatePicker';
+export { default as TaskDateRangePicker } from './TaskDateRangePicker';
+
 // === 子组件导出 ===
 export { TaskHierarchyControls } from './components/TaskHierarchyControls';
 export { TaskTitleItem } from './components/TaskTitleItem';
