@@ -25,6 +25,9 @@ const TaskDateRangePicker: React.FC<TaskDateRangePickerProps> = ({
   const [tempEndDate, setTempEndDate] = useState(endDate);
   const startDateInputRef = useRef<HTMLInputElement>(null);
   const endDateInputRef = useRef<HTMLInputElement>(null);
+  
+  // 用于区分用户主动关闭和Radix UI自动关闭的标志
+  const userTriggeredCloseRef = useRef(false);
 
   // 同步外部日期变化
   useEffect(() => {
@@ -105,6 +108,7 @@ const TaskDateRangePicker: React.FC<TaskDateRangePickerProps> = ({
   const handleConfirm = useCallback(() => {
     const validated = validateDateRange(tempStartDate, tempEndDate);
     onDateRangeChange(validated.start, validated.end);
+    userTriggeredCloseRef.current = true;
     onOpenChange(false);
   }, [tempStartDate, tempEndDate, onDateRangeChange, onOpenChange]);
 
@@ -112,6 +116,7 @@ const TaskDateRangePicker: React.FC<TaskDateRangePickerProps> = ({
   const handleCancel = useCallback(() => {
     setTempStartDate(startDate); // 恢复原始日期
     setTempEndDate(endDate);
+    userTriggeredCloseRef.current = true;
     onOpenChange(false);
   }, [startDate, endDate, onOpenChange]);
 
@@ -124,6 +129,7 @@ const TaskDateRangePicker: React.FC<TaskDateRangePickerProps> = ({
         break;
       case 'Escape':
         e.preventDefault();
+        userTriggeredCloseRef.current = true;
         handleCancel();
         break;
       case 'Tab':
@@ -156,8 +162,24 @@ const TaskDateRangePicker: React.FC<TaskDateRangePickerProps> = ({
     };
   };
 
+  // 包装onOpenChange以阻止不当关闭
+  const handleOpenChange = useCallback((open: boolean) => {
+    // 🔧 修复：阻止Radix UI在用户与日期输入框交互时自动关闭
+    // 只有当用户明确要求关闭时（通过确认/取消按钮）才真正关闭
+    if (!open && isOpen && !userTriggeredCloseRef.current) {
+      return; // 阻止自动关闭
+    }
+    
+    // 重置标志
+    if (!open) {
+      userTriggeredCloseRef.current = false;
+    }
+    
+    onOpenChange(open);
+  }, [isOpen, onOpenChange]);
+
   return (
-    <Popover.Root open={isOpen} onOpenChange={onOpenChange}>
+    <Popover.Root open={isOpen} onOpenChange={handleOpenChange}>
       <Popover.Portal>
         <Popover.Content 
           className={`task-date-range-picker-content ${className}`}

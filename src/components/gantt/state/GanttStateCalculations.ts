@@ -57,9 +57,18 @@ export const useGanttStateCalculations = ({
   
   // 使用过滤后的图表任务，并添加位置计算
   const sortedChartTasks = useMemo(() => filteredChartTasks.map(task => {
-    const x = dateToPixel(task.startDate);
-    const width = dateToPixel(task.endDate) - x;
-    return { ...task, x, width: Math.max(width, 20) };
+    // 🔧 修复：只在任务没有x和width时才重新计算，避免覆盖updateTaskDates的更新
+    if (task.x !== undefined && task.width !== undefined) {
+      // 任务已有位置信息，直接使用（保留updateTaskDates的坐标转换结果）
+      return { ...task };
+    }
+    
+    // 任务没有位置信息，计算初始位置（使用中心点坐标系统）
+    const leftEdgeX = dateToPixel(task.startDate);
+    const width = Math.max(dateToPixel(task.endDate) - leftEdgeX, 20);
+    const centerX = leftEdgeX + width / 2;  // 转换为中心点坐标
+    
+    return { ...task, x: centerX, width };
   }), [filteredChartTasks, dateToPixel]);
 
   // 左侧面板任务

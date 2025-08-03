@@ -16,6 +16,8 @@ interface UseGanttEventsProps {
   milestoneManager?: {
     updateMilestone: (updates: { id: string; date?: Date; iconType?: string; color?: string; label?: string }) => void;
   };
+  dateToPixel?: (date: Date) => number;
+  taskHeight?: number;
 }
 
 export const useGanttEvents = ({
@@ -27,7 +29,9 @@ export const useGanttEvents = ({
   setChartTasks,
   setProjectRows,
   setMilestones = () => {},
-  milestoneManager
+  milestoneManager,
+  dateToPixel,
+  taskHeight
 }: UseGanttEventsProps) => {
   
   // 使用统一的全局标签管理（供后续扩展使用）
@@ -43,7 +47,9 @@ export const useGanttEvents = ({
     setChartTasks,
     setProjectRows,
     setMilestones,
-    milestoneManager
+    milestoneManager,
+    dateToPixel,
+    taskHeight
   });
   
   const taskAttributes = useTaskAttributes({

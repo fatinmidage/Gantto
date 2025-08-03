@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import { Task, ProjectRow, MilestoneNode, TaskType } from '../../types';
 import { getIconConfig } from '../../config/icons';
+import { CoordinateUtils } from '../../utils/coordinateUtils';
 
 interface UseTaskCRUDProps {
   tasks: Task[];
@@ -14,6 +15,8 @@ interface UseTaskCRUDProps {
   milestoneManager?: {
     updateMilestone: (updates: { id: string; date?: Date; iconType?: string; color?: string; label?: string }) => void;
   };
+  dateToPixel?: (date: Date) => number;
+  taskHeight?: number;
 }
 
 export interface UseTaskCRUDResult {
@@ -35,7 +38,9 @@ export const useTaskCRUD = ({
   setChartTasks,
   setProjectRows,
   setMilestones,
-  milestoneManager
+  milestoneManager,
+  dateToPixel,
+  taskHeight = 40
 }: UseTaskCRUDProps): UseTaskCRUDResult => {
   
   // 添加新任务
@@ -193,13 +198,32 @@ export const useTaskCRUD = ({
       setChartTasks(prev => {
         const updatedTasks = prev.map(task => {
           if (task.id === taskId) {
-            const updatedTask = { 
+            let updatedTask = { 
               ...task, 
               startDate, 
               endDate,
               // 保持原有的 type 字段不变
               type: task.type
             };
+            
+            // 🔧 关键修复：重新计算任务位置
+            if (dateToPixel) {
+              const coordinateUtils = new CoordinateUtils(dateToPixel, taskHeight);
+              const rowIndex = prev.findIndex(t => t.id === taskId);
+              const newPosition = coordinateUtils.calculateTaskPosition(updatedTask, rowIndex);
+              
+              // 🎯 坐标系统转换：从左边缘位置转换为中心点位置
+              const leftEdgeX = newPosition.x;
+              const width = newPosition.width;
+              const centerX = leftEdgeX + width / 2;
+              
+              updatedTask = {
+                ...updatedTask,
+                x: centerX,  // 使用中心点坐标
+                width: width
+              };
+            }
+            
             return updatedTask;
           }
           return task;

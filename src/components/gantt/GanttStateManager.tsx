@@ -140,7 +140,9 @@ const GanttStateManager: React.FC<GanttStateManagerProps> = ({
     setMilestones: milestoneManager.setMilestones,
     milestoneManager: {
       updateMilestone: milestoneManager.updateMilestone
-    }
+    },
+    dateToPixel: timeline.dateToPixel,
+    taskHeight
   });
 
   const ganttInteractions = useGanttInteractions({

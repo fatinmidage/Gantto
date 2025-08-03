@@ -96,6 +96,7 @@ const TaskBarsContainer: React.FC<TaskBarsContainerProps> = ({
           const displayX = isBeingDragged && tempDragPosition ? tempDragPosition.x : chartTask.x;
           const displayWidth = isBeingDragged && tempDragPosition ? tempDragPosition.width : chartTask.width;
           
+          
           // 所有任务都作为普通任务条渲染
           return (
             <TaskBar
