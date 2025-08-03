@@ -50,9 +50,14 @@ export const logMouseReleasePosition = (data: {
     bounds?: DOMRect;
   };
 }) => {
-  // 特别针对左侧边界调整问题的调试
+  // 特别针对边界调整问题的调试
   const isLeftResize = data.dragType === 'resize-left';
-  const prefix = isLeftResize ? '🔍 [左侧边界调试]' : '🖱️ [鼠标释放]';
+  const isRightResize = data.dragType === 'resize-right';
+  const isEdgeResize = isLeftResize || isRightResize;
+  
+  const prefix = isLeftResize ? '🔍 [左侧边界调试]' 
+    : isRightResize ? '🔍 [右侧边界调试]' 
+    : '🖱️ [鼠标释放]';
   
   console.group(`${prefix} ${data.dragType} | 任务ID: ${data.taskId}`);
   console.log(`原始坐标: clientX=${data.mousePosition.clientX}, clientY=${data.mousePosition.clientY}`);
@@ -76,9 +81,13 @@ export const logMouseReleasePosition = (data: {
     }
   }
   
-  // 左侧边界调整特殊调试信息
-  if (isLeftResize) {
-    console.warn('⚠️ 左侧边界调整检测: 请检查鼠标位置是否与预期的任务开始日期一致');
+  // 边界调整特殊调试信息
+  if (isEdgeResize) {
+    const warningMessage = isLeftResize 
+      ? '⚠️ 左侧边界调整检测: 请检查鼠标位置是否与预期的任务开始日期一致'
+      : '⚠️ 右侧边界调整检测: 请检查鼠标位置是否与预期的任务结束日期一致';
+    
+    console.warn(warningMessage);
     if (data.pixelToDateResult && data.containerInfo) {
       const datePosition = (data.pixelToDateResult.pixel / data.containerInfo.width) * 100;
       console.log(`📍 相对位置: ${datePosition.toFixed(1)}% of 容器宽度`);

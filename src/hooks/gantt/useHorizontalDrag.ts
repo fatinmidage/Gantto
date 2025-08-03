@@ -411,8 +411,31 @@ export const useHorizontalDrag = ({
           newEndDate = draggedTaskData.endDate;
         } else if (dragType === 'resize-right') {
           // 右边界拖拽：保持开始时间，改变结束时间
+          
+          // 🔍 调试：对比鼠标实际位置 vs tempDragPosition 计算的右边缘
+          let rightEdgePixel = tempDragPosition.x + tempDragPosition.width; // 默认计算方式
+          
+          if (lastMousePosition.current && containerRef.current) {
+            const actualMouseX = lastMousePosition.current.clientX - containerRef.current.getBoundingClientRect().left;
+            
+            // 🛠️ 修复：对于右边缘调整，鼠标位置就是新的右边缘位置
+            const taskWidth = tempDragPosition.width || 0;
+            const rightEdgeFromCenter = tempDragPosition.x + taskWidth / 2;
+            
+            console.group('🔍 [右侧边界位置对比]');
+            console.log(`鼠标实际位置: ${actualMouseX}px → ${formatDate(pixelToDate(actualMouseX))}`);
+            console.log(`tempDragPosition.x + width: ${rightEdgePixel}px → ${formatDate(pixelToDate(rightEdgePixel))}`);
+            console.log(`计算的右边缘位置: ${rightEdgeFromCenter}px → ${formatDate(pixelToDate(rightEdgeFromCenter))}`);
+            console.log(`任务宽度: ${taskWidth}px`);
+            console.log(`修复前后日期差异: ${formatDate(pixelToDate(rightEdgePixel))} → ${formatDate(pixelToDate(actualMouseX))}`);
+            console.groupEnd();
+            
+            // 🛠️ 使用鼠标实际位置作为右边缘（这更符合用户预期）
+            rightEdgePixel = actualMouseX;
+          }
+          
           newStartDate = draggedTaskData.startDate;
-          newEndDate = pixelToDate(tempDragPosition.x + tempDragPosition.width);
+          newEndDate = pixelToDate(rightEdgePixel);
         } else {
           resetHorizontalDrag();
           return;
