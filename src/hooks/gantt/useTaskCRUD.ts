@@ -57,7 +57,7 @@ export const useTaskCRUD = ({
       endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
       color: iconConfig.color, // 使用图标配置的颜色
       x: 0,
-      width: 0,
+      width: undefined, // 🔧 修复：让宽度计算逻辑来处理，不要硬编码为0
       order: tasks.length,
       type: defaultTaskType,
       iconType: defaultIconType,

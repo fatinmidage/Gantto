@@ -79,7 +79,6 @@ export const useTimeline = (
     
     const pixelPosition = daysDiff * pixelPerDay;
     
-    
     return pixelPosition;
   }, [dateRange, containerWidth, zoomLevel]);
 

@@ -60,18 +60,6 @@ const TaskBar: React.FC<TaskBarProps> = ({
     const taskCenterX = displayX !== undefined ? displayX : (task.x || 0);
     const taskWidth = displayWidth !== undefined ? displayWidth : (task.width || LAYOUT_CONSTANTS.DEFAULT_TASK_WIDTH);
     
-    console.log('📊 [DEBUG] TaskBar样式计算:', {
-      taskId: task.id,
-      taskTitle: task.title,
-      task_x: task.x,
-      task_width: task.width,
-      displayX,
-      displayWidth,
-      finalCenterX: taskCenterX,
-      finalWidth: taskWidth,
-      startDate: task.startDate.toISOString().split('T')[0],
-      endDate: task.endDate.toISOString().split('T')[0]
-    });
     
     // 防止 NaN 值导致样式错误
     const safeCenterX = isNaN(taskCenterX) ? 0 : taskCenterX;
@@ -116,15 +104,6 @@ const TaskBar: React.FC<TaskBarProps> = ({
 
   // 任务日期范围变更处理
   const handleTaskDateRangeChange = (newStartDate: Date, newEndDate: Date) => {
-    console.log('📅 [DEBUG] TaskBar日期变更处理:', {
-      taskId: task.id,
-      taskTitle: task.title,
-      oldStartDate: task.startDate.toISOString().split('T')[0],
-      oldEndDate: task.endDate.toISOString().split('T')[0],
-      newStartDate: newStartDate.toISOString().split('T')[0],
-      newEndDate: newEndDate.toISOString().split('T')[0]
-    });
-    
     if (onTaskDateEdit) {
       onTaskDateEdit(task.id, newStartDate, newEndDate);
     }

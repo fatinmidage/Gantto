@@ -133,7 +133,7 @@ const GanttContextMenu: React.FC<GanttContextMenuProps> = ({
       endDate: new Date(clickDate.getTime() + 7 * 24 * 60 * 60 * 1000),
       color: typeColor, // 使用图标配置的颜色
       x: clickPosition?.x || 0,
-      width: 0,
+      width: undefined, // 🔧 修复：让宽度计算逻辑来处理，不要硬编码为0
       rowId: targetRowId,
       type: 'default', // 🔧 修复：任务类型固定为 'default'，不要使用图标类型
       iconType: iconType, // 设置图标类型（仅用于显示）

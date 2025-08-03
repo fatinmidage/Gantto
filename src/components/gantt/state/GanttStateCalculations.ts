@@ -65,7 +65,8 @@ export const useGanttStateCalculations = ({
     
     // 任务没有位置信息，计算初始位置（使用中心点坐标系统）
     const leftEdgeX = dateToPixel(task.startDate);
-    const width = Math.max(dateToPixel(task.endDate) - leftEdgeX, 20);
+    const rightEdgeX = dateToPixel(task.endDate);
+    const width = Math.max(rightEdgeX - leftEdgeX, 20);
     const centerX = leftEdgeX + width / 2;  // 转换为中心点坐标
     
     return { ...task, x: centerX, width };
