@@ -42,38 +42,18 @@ export class CoordinateUtils {
    * 计算任务条的完整位置信息
    */
   calculateTaskPosition(task: Task, rowIndex: number): TaskPosition {
-    console.log('🧮 [DEBUG] calculateTaskPosition 开始计算:', {
-      taskId: task.id,
-      taskTitle: task.title,
-      startDate: task.startDate.toISOString().split('T')[0],
-      endDate: task.endDate.toISOString().split('T')[0],
-      rowIndex
-    });
-
     const startX = this.dateToPixel(task.startDate);
     const endX = this.dateToPixel(task.endDate);
-    const width = Math.max(endX - startX, LAYOUT_CONSTANTS.MIN_TASK_WIDTH); // 使用常量定义的最小宽度
+    const width = Math.max(endX - startX, LAYOUT_CONSTANTS.MIN_TASK_WIDTH);
     const x = startX;
     const y = layoutUtils.calculateTaskY(rowIndex, this.taskHeight);
 
-    const result = {
+    return {
       x,
       y,
       width,
       height: this.taskHeight
     };
-
-    console.log('✅ [DEBUG] calculateTaskPosition 计算结果:', {
-      taskId: task.id,
-      startX,
-      endX,
-      calculatedX: x,
-      calculatedWidth: width,
-      calculatedY: y,
-      result
-    });
-
-    return result;
   }
 
   /**

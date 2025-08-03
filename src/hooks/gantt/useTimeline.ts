@@ -116,13 +116,15 @@ export const useTimeline = (
     const resultTimestamp = dateRange.startDate.getTime() + days * 24 * 60 * 60 * 1000;
     const resultDate = new Date(resultTimestamp);
     
-    
     // 5. 结果验证
     if (isNaN(resultDate.getTime())) {
       return new Date(dateRange.startDate);
     }
     
-    return resultDate;
+    // 🔧 修复：对于任务日期，返回整天日期（去除时分秒）
+    const normalizedDate = new Date(resultDate.getFullYear(), resultDate.getMonth(), resultDate.getDate());
+    
+    return normalizedDate;
   }, [dateRange, containerWidth, zoomLevel]);
 
   // === 使用分层时间轴 ===

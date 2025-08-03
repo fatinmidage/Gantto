@@ -7,6 +7,9 @@ import { LAYOUT_CONSTANTS } from './ganttStyles';
 // 导入自定义 Hook
 import { useThrottledMouseMove } from '../../hooks';
 
+// 导入调试工具
+import { logDragComplete } from '../../utils/debugUtils';
+
 // 事件处理器属性接口
 interface GanttEventHandlerProps {
   children: React.ReactNode;
@@ -267,12 +270,28 @@ export const GanttEventHandler: React.FC<GanttEventHandlerProps> = ({
 
   const handleMouseUp = useCallback(() => {
     if (tempDragPosition && draggedTask && draggedTaskData && dragType) {
+      
       const newStartDate = pixelToDate(tempDragPosition.x);
       const newEndDate = dragType === 'move' 
         ? new Date(newStartDate.getTime() + (draggedTaskData.endDate.getTime() - draggedTaskData.startDate.getTime()))
         : dragType === 'resize-left' 
         ? draggedTaskData.endDate 
         : pixelToDate(tempDragPosition.x + tempDragPosition.width);
+      
+      // 🐛 调试：记录拖拽完成后的最终结果
+      logDragComplete({
+        taskId: draggedTask,
+        dragType: dragType as any,
+        tempPosition: tempDragPosition,
+        originalStartDate: draggedTaskData.startDate,
+        originalEndDate: draggedTaskData.endDate,
+        newStartDate,
+        newEndDate,
+        pixelToDateConversion: {
+          startPixel: tempDragPosition.x,
+          endPixel: tempDragPosition.x + tempDragPosition.width
+        }
+      });
       
       ganttEvents.updateTaskDates(draggedTask, newStartDate, newEndDate);
     }

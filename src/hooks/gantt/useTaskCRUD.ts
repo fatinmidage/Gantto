@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { Task, ProjectRow, MilestoneNode, TaskType } from '../../types';
 import { getIconConfig } from '../../config/icons';
 import { CoordinateUtils } from '../../utils/coordinateUtils';
+import { logActualRender } from '../../utils/debugUtils';
 
 interface UseTaskCRUDProps {
   tasks: Task[];
@@ -223,6 +224,9 @@ export const useTaskCRUD = ({
                 width: width
               };
             }
+            
+            // 🐛 调试：记录实际渲染的任务日期
+            logActualRender(taskId, updatedTask);
             
             return updatedTask;
           }

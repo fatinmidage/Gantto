@@ -72,14 +72,7 @@ const TaskBar: React.FC<TaskBarProps> = ({
     // 计算任务Y位置
     const taskY = layoutUtils.calculateTaskY(rowIndex, taskHeight);
 
-    console.log('🎨 [DEBUG] TaskBar最终渲染位置:', {
-      taskId: task.id,
-      renderLeft: safeRenderLeft,
-      renderTop: taskY,
-      renderWidth: safeTaskWidth
-    });
-
-    return {
+return {
       left: safeRenderLeft,
       top: taskY,
       width: safeTaskWidth,

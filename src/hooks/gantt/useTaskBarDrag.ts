@@ -3,6 +3,7 @@ import { Task } from '../../types';
 import { useDragReducer, DragType } from './useDragReducer';
 import { LAYOUT_CONSTANTS } from '../../components/gantt/ganttStyles';
 import { boundaryHelpers } from '../../utils/boundaryUtils';
+import { logDragStart } from '../../utils/debugUtils';
 
 // 重新导出类型定义
 export type { DragType, EdgeHover } from './useDragReducer';
@@ -55,6 +56,9 @@ export const useTaskBarDrag = () => {
     newDragType: DragType,
     containerElement: HTMLElement | null
   ) => {
+    // 🐛 调试：记录拖拽开始时的任务状态
+    logDragStart(taskId, task, newDragType);
+    
     updateContainerBounds(containerElement);
     
     const bounds = containerBounds.current;
@@ -140,6 +144,18 @@ export const useTaskBarDrag = () => {
         newWidth, 
         CHART_WIDTH
       );
+      
+      // 🔍 调试：记录左边缘调整的计算过程
+      console.group('🔍 [左边缘调整计算过程]');
+      console.log(`鼠标位置 mouseX: ${mouseX}px`);
+      console.log(`原始中心点: ${originalCenterX}px, 原始宽度: ${originalWidth}px`);
+      console.log(`固定右边缘: ${fixedRightEdge}px`);
+      console.log(`新左边缘: ${newLeftEdge}px`);
+      console.log(`新宽度: ${newWidth}px`);
+      console.log(`新中心点: ${newCenterX}px`);
+      console.log(`约束后中心点: ${constrainedResize.x}px`);
+      console.log(`约束差异: ${Math.abs(newCenterX - constrainedResize.x)}px`);
+      console.groupEnd();
       
       dragState.updateHorizontalDrag({
         id: dragState.draggedTask,

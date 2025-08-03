@@ -1,8 +1,9 @@
-import { useCallback } from 'react';
+import { useCallback, useRef } from 'react';
 import { Task, MilestoneNode } from '../../types';
 import { boundaryHelpers } from '../../utils/boundaryUtils';
 import { hasDateInLabel, replaceDateInLabel } from '../../utils/ganttUtils';
 import { LAYOUT_CONSTANTS } from '../../components/gantt/ganttStyles';
+import { logDragComplete, logMouseReleasePosition, formatDate } from '../../utils/debugUtils';
 
 interface UseHorizontalDragProps {
   // 拖拽状态
@@ -75,6 +76,9 @@ export const useHorizontalDrag = ({
   setIsHoveringEdge,
   useThrottledMouseMove
 }: UseHorizontalDragProps): UseHorizontalDragResult => {
+
+  // 用于跟踪最后的鼠标位置（调试用）
+  const lastMousePosition = useRef<{ clientX: number; clientY: number } | null>(null);
 
   // 将里程碑转换为任务对象以便复用拖拽逻辑
   const convertMilestoneToTask = useCallback((milestone: MilestoneNode): Task => {
@@ -242,6 +246,9 @@ export const useHorizontalDrag = ({
   const handleMouseMoveCore = useCallback((e: MouseEvent) => {
     if (!isDragging || !containerRef.current) return;
     
+    // 🖱️ 调试：更新最后的鼠标位置
+    lastMousePosition.current = { clientX: e.clientX, clientY: e.clientY };
+    
     const chartWidth = containerRef.current.clientWidth;
     const chartHeight = containerRef.current.clientHeight;
     
@@ -301,6 +308,44 @@ export const useHorizontalDrag = ({
 
   // 水平拖拽结束处理
   const handleMouseUp = useCallback(() => {
+    // 🖱️ 调试：首先记录鼠标释放时的位置信息
+    if (draggedTask && dragType && containerRef.current && lastMousePosition.current) {
+      const containerBounds = containerRef.current.getBoundingClientRect();
+      const relativeX = lastMousePosition.current.clientX - containerBounds.left;
+      const relativeY = lastMousePosition.current.clientY - containerBounds.top;
+      
+      // 使用 pixelToDate 转换位置信息
+      const convertedDate = pixelToDate(relativeX);
+      
+      // 计算像素密度（如果可能）
+      const dateRange = {
+        startDate: new Date(2024, 0, 1), // 示例开始日期
+        endDate: new Date(2024, 11, 31)  // 示例结束日期
+      };
+      const totalDays = Math.ceil((dateRange.endDate.getTime() - dateRange.startDate.getTime()) / (24 * 60 * 60 * 1000));
+      const pixelPerDay = containerBounds.width / totalDays;
+      
+      logMouseReleasePosition({
+        taskId: draggedTask,
+        dragType: dragType,
+        mousePosition: {
+          clientX: lastMousePosition.current.clientX,
+          clientY: lastMousePosition.current.clientY,
+          relativeX: relativeX,
+          relativeY: relativeY
+        },
+        pixelToDateResult: {
+          pixel: relativeX,
+          convertedDate: convertedDate,
+          pixelPerDay: pixelPerDay
+        },
+        containerInfo: {
+          width: containerBounds.width,
+          bounds: containerBounds
+        }
+      });
+    }
+    
     if (tempDragPosition && draggedTask && draggedTaskData && dragType) {
       
       if (dragType === 'milestone-move') {
@@ -339,7 +384,30 @@ export const useHorizontalDrag = ({
           newEndDate = new Date(newStartDate.getTime() + duration);
         } else if (dragType === 'resize-left') {
           // 左边界拖拽：改变开始时间，保持结束时间
-          newStartDate = pixelToDate(tempDragPosition.x);
+          
+          // 🔍 调试：对比鼠标实际位置 vs tempDragPosition.x
+          let leftEdgePixel = tempDragPosition.x; // 默认使用中心点
+          
+          if (lastMousePosition.current && containerRef.current) {
+            const actualMouseX = lastMousePosition.current.clientX - containerRef.current.getBoundingClientRect().left;
+            
+            // 🛠️ 修复：计算左边缘位置而不是中心点
+            const taskWidth = tempDragPosition.width || 0;
+            const leftEdgeFromCenter = tempDragPosition.x - taskWidth / 2;
+            
+            console.group('🔍 [左侧边界位置对比]');
+            console.log(`鼠标实际位置: ${actualMouseX}px → ${formatDate(pixelToDate(actualMouseX))}`);
+            console.log(`tempDragPosition.x (中心点): ${tempDragPosition.x}px → ${formatDate(pixelToDate(tempDragPosition.x))}`);
+            console.log(`计算的左边缘位置: ${leftEdgeFromCenter}px → ${formatDate(pixelToDate(leftEdgeFromCenter))}`);
+            console.log(`任务宽度: ${taskWidth}px`);
+            console.log(`修复前后日期差异: ${formatDate(pixelToDate(tempDragPosition.x))} → ${formatDate(pixelToDate(leftEdgeFromCenter))}`);
+            console.groupEnd();
+            
+            // 使用计算出的左边缘位置
+            leftEdgePixel = leftEdgeFromCenter;
+          }
+          
+          newStartDate = pixelToDate(leftEdgePixel);
           newEndDate = draggedTaskData.endDate;
         } else if (dragType === 'resize-right') {
           // 右边界拖拽：保持开始时间，改变结束时间
@@ -349,6 +417,21 @@ export const useHorizontalDrag = ({
           resetHorizontalDrag();
           return;
         }
+        
+        // 🐛 调试：记录拖拽完成后的最终结果
+        logDragComplete({
+          taskId: draggedTask,
+          dragType: dragType as any,
+          tempPosition: tempDragPosition,
+          originalStartDate: draggedTaskData.startDate,
+          originalEndDate: draggedTaskData.endDate,
+          newStartDate,
+          newEndDate,
+          pixelToDateConversion: {
+            startPixel: tempDragPosition.x,
+            endPixel: tempDragPosition.x + tempDragPosition.width
+          }
+        });
         
         // 更新任务时间
         updateTaskDates(draggedTask, newStartDate, newEndDate);
@@ -366,7 +449,8 @@ export const useHorizontalDrag = ({
     pixelToDate,
     onMilestoneUpdate,
     resetHorizontalDrag,
-    updateTaskDates
+    updateTaskDates,
+    containerRef
   ]);
 
   return {
