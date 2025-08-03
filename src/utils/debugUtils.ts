@@ -50,13 +50,16 @@ export const logMouseReleasePosition = (data: {
     bounds?: DOMRect;
   };
 }) => {
-  // 特别针对边界调整问题的调试
+  // 特别针对拖拽操作问题的调试
   const isLeftResize = data.dragType === 'resize-left';
   const isRightResize = data.dragType === 'resize-right';
+  const isMove = data.dragType === 'move';
   const isEdgeResize = isLeftResize || isRightResize;
+  const isSpecialDrag = isEdgeResize || isMove;
   
   const prefix = isLeftResize ? '🔍 [左侧边界调试]' 
-    : isRightResize ? '🔍 [右侧边界调试]' 
+    : isRightResize ? '🔍 [右侧边界调试]'
+    : isMove ? '🔍 [任务条移动调试]'
     : '🖱️ [鼠标释放]';
   
   console.group(`${prefix} ${data.dragType} | 任务ID: ${data.taskId}`);
@@ -81,11 +84,13 @@ export const logMouseReleasePosition = (data: {
     }
   }
   
-  // 边界调整特殊调试信息
-  if (isEdgeResize) {
+  // 拖拽操作特殊调试信息
+  if (isSpecialDrag) {
     const warningMessage = isLeftResize 
       ? '⚠️ 左侧边界调整检测: 请检查鼠标位置是否与预期的任务开始日期一致'
-      : '⚠️ 右侧边界调整检测: 请检查鼠标位置是否与预期的任务结束日期一致';
+      : isRightResize 
+      ? '⚠️ 右侧边界调整检测: 请检查鼠标位置是否与预期的任务结束日期一致'
+      : '⚠️ 任务条移动检测: 请检查鼠标位置是否与预期的任务位置一致';
     
     console.warn(warningMessage);
     if (data.pixelToDateResult && data.containerInfo) {
