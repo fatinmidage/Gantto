@@ -16,7 +16,7 @@ interface ContextMenuState {
 interface UseGanttContextMenuProps {
   setChartTasks: React.Dispatch<React.SetStateAction<Task[]>>;
   setMilestones: React.Dispatch<React.SetStateAction<MilestoneNode[]>>;
-  leftPanelTasks: any[];
+  leftPanelTasks: Task[];
   taskHeight: number;
   timelineHeight: number;
   pixelToDate: (pixel: number) => Date;

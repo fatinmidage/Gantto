@@ -4,7 +4,7 @@ import TaskContextMenu from './TaskContextMenu';
 import MilestoneContextMenu from './MilestoneContextMenu';
 import ColorPicker from './ColorPicker';
 import TagManager from './TagManager';
-import { Task, MilestoneNode } from '../../types';
+import { Task, MilestoneNode, IconType } from '../../types';
 import { COLOR_CONSTANTS } from './ganttStyles';
 
 interface GanttMenuManagerProps {
@@ -41,7 +41,7 @@ interface GanttMenuManagerProps {
   availableTags: string[];
   
   // 可见行数据
-  visibleRows?: Array<{ id: string; [key: string]: any }>;
+  visibleRows?: Array<{ id: string; title: string; level?: number; isExpanded?: boolean; [key: string]: unknown }>;
   taskHeight?: number;
   
   // 事件处理
@@ -55,7 +55,7 @@ interface GanttMenuManagerProps {
   onTagRemove: (taskId: string, tag: string) => void;
   onTaskDelete: (taskId: string) => void;
   onLabelEdit?: (taskId: string, label: string) => void; // 里程碑标签编辑
-  onMilestoneIconChange?: (milestoneId: string, iconType: any, color?: string) => void;
+  onMilestoneIconChange?: (milestoneId: string, iconType: IconType, color?: string) => void;
   onMilestoneLabelEdit?: (milestoneId: string, label: string) => void;
   onMilestoneDelete?: (milestoneId: string) => void;
   

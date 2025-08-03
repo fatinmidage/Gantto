@@ -167,7 +167,7 @@ const GanttStateManager: React.FC<GanttStateManagerProps> = ({
   });
 
   // === updateDragMetrics 适配器函数 ===
-  const updateDragMetrics = React.useCallback((task: any, pixelPerDay: number) => {
+  const updateDragMetrics = React.useCallback((task: { id: string; startDate: Date; endDate: Date }, pixelPerDay: number) => {
     const duration = task.endDate.getTime() - task.startDate.getTime();
     // 移除了milestone类型判断
     

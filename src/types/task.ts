@@ -167,18 +167,32 @@ export interface TaskSortOptions {
   direction: 'asc' | 'desc';
 }
 
+// 任务批量操作参数类型
+export type TaskBatchOperationParams = 
+  | { operation: 'delete' } // 删除操作无需额外参数
+  | { operation: 'move'; targetParentId?: string; targetIndex?: number }
+  | { operation: 'updateStatus'; status: TaskStatus }
+  | { operation: 'updateTags'; tags: string[]; mode: 'replace' | 'add' | 'remove' };
+
+// 里程碑批量操作参数类型
+export type MilestoneBatchOperationParams = 
+  | { operation: 'delete' } // 删除操作无需额外参数
+  | { operation: 'move'; targetDate: Date; targetParentId?: string }
+  | { operation: 'updateIcon'; iconType: IconType; color?: string }
+  | { operation: 'detach' }; // 从父任务分离，无需额外参数
+
 // 批量操作类型
 export interface TaskBatchOperation {
   taskIds: string[];
   operation: 'delete' | 'move' | 'updateStatus' | 'updateTags';
-  params?: Record<string, any>;
+  params?: TaskBatchOperationParams;
 }
 
 // 里程碑批量操作类型
 export interface MilestoneBatchOperation {
   milestoneIds: string[];
   operation: 'delete' | 'move' | 'updateIcon' | 'detach';
-  params?: Record<string, any>;
+  params?: MilestoneBatchOperationParams;
 }
 
 // 组合任务和里程碑的数据类型（用于统一处理）

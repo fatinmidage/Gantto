@@ -1,5 +1,5 @@
 import { useMemo, useCallback } from 'react';
-import { Task } from '../../../types';
+import { Task, ProjectRow } from '../../../types';
 import { getVisibleProjectRows } from '../GanttHelpers';
 import { LAYOUT_CONSTANTS, layoutUtils } from '../ganttStyles';
 
@@ -16,13 +16,13 @@ export const useGanttStateCalculations = ({
   setTasks,
   setProjectRows
 }: {
-  projectRows: any[];
-  chartTasks: any[];
+  projectRows: ProjectRow[];
+  chartTasks: Task[];
   filteredTasks: Task[];
   dateToPixel: (date: Date) => number;
   taskHeight: number;
-  setTasks: React.Dispatch<React.SetStateAction<any[]>>;
-  setProjectRows: React.Dispatch<React.SetStateAction<any[]>>;
+  setTasks: React.Dispatch<React.SetStateAction<Task[]>>;
+  setProjectRows: React.Dispatch<React.SetStateAction<ProjectRow[]>>;
 }) => {
   const MIN_CONTAINER_HEIGHT = LAYOUT_CONSTANTS.MIN_CONTAINER_HEIGHT;
 

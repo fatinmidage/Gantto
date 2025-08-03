@@ -18,6 +18,15 @@ export * from './ui';
 // 导出时间轴相关类型
 export * from './timeline';
 
+// 导出甘特图相关类型
+export * from './gantt';
+
+// 导出拖拽相关类型
+export * from './drag';
+
+// 导出事件相关类型
+export * from './events';
+
 // 向后兼容的别名（逐步移除）
 export type { Task as ChartTask } from './task';
 
@@ -42,7 +51,9 @@ export type {
   ContextMenuState,
   TaskContextMenu,
   ColorPickerState,
-  TagManagerState
+  TagManagerState,
+  ProjectRowData,
+  VisibleRowData
 } from './ui';
 
 export type {
@@ -50,3 +61,10 @@ export type {
   TimelineMetrics,
   TimelineScale
 } from './timeline';
+
+export type {
+  GanttEvent,
+  GanttEventType,
+  GanttInteraction,
+  GanttEventPayload
+} from './events';

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Task, MilestoneNode } from '../../../types';
+import { Task, MilestoneNode, ProjectRow, DragState, VerticalDragState, DragType, DateRange, ChartTaskRowContainer } from '../../../types';
 import { TimeGranularity, LayeredTimeScale, TimelineLayerConfig } from '../../../utils/timelineLayerUtils';
 
 // 里程碑管理器类型接口
@@ -9,8 +9,8 @@ export interface MilestoneManager {
   selectedMilestone: string | null;
   
   // CRUD 操作
-  createMilestone: (input: any) => void;
-  updateMilestone: (updates: any) => void;
+  createMilestone: (input: Omit<MilestoneNode, 'id'>) => void;
+  updateMilestone: (updates: Partial<MilestoneNode> & { id: string }) => void;
   updateMilestoneDate: (milestoneId: string, newDate: Date) => void;
   deleteMilestone: (milestoneId: string) => void;
   deleteMilestones: (milestoneIds: string[]) => void;
@@ -38,8 +38,8 @@ export interface GanttStateManagerProps {
   taskHeight: number;
   timeGranularity?: TimeGranularity;
   layerConfig?: TimelineLayerConfig;
-  initialProjectRows: any[];
-  initialChartTasks: any[];
+  initialProjectRows: ProjectRow[];
+  initialChartTasks: Task[];
   initialMilestones?: MilestoneNode[];
   children: (state: GanttStateData) => React.ReactElement;
 }
@@ -47,12 +47,12 @@ export interface GanttStateManagerProps {
 // 甘特图状态数据接口
 export interface GanttStateData {
   // 数据状态
-  projectRows: any[];
-  chartTasks: any[];
-  tasks: any[];
-  setProjectRows: React.Dispatch<React.SetStateAction<any[]>>;
-  setChartTasks: React.Dispatch<React.SetStateAction<any[]>>;
-  setTasks: React.Dispatch<React.SetStateAction<any[]>>;
+  projectRows: ProjectRow[];
+  chartTasks: Task[];
+  tasks: Task[];
+  setProjectRows: React.Dispatch<React.SetStateAction<ProjectRow[]>>;
+  setChartTasks: React.Dispatch<React.SetStateAction<Task[]>>;
+  setTasks: React.Dispatch<React.SetStateAction<Task[]>>;
   
   // 过滤状态
   filteredTasks: Task[];
@@ -66,23 +66,23 @@ export interface GanttStateData {
   // 拖拽状态
   draggedTask: string | null;
   isDragging: boolean;
-  tempDragPosition: any;
-  verticalDragState: any;
+  tempDragPosition: DragState['tempPosition'] | null;
+  verticalDragState: VerticalDragState;
   isHoveringEdge: 'left' | 'right' | null;
   setIsHoveringEdge: (edge: 'left' | 'right' | null) => void;
-  draggedTaskData: any;
-  dragType: any;
-  startHorizontalDrag: (taskId: string, task: any, clientX: number, clientY: number, dragType: any, container: HTMLElement) => void;
+  draggedTaskData: Task | null;
+  dragType: DragType | null;
+  startHorizontalDrag: (taskId: string, task: Task, clientX: number, clientY: number, dragType: DragType, container: HTMLElement) => void;
   startVerticalDrag: (taskId: string, taskIndex: number, clientY: number) => void;
   updateHorizontalDragPosition: (clientX: number, chartWidth: number, minWidth: number) => void;
   updateVerticalDragPosition: (clientY: number, rowHeight: number, totalRows: number) => void;
-  updateDragMetrics: (task: any, pixelPerDay: number) => void;
+  updateDragMetrics: (task: Task, pixelPerDay: number) => void;
   resetHorizontalDrag: () => void;
   resetVerticalDrag: () => void;
   
   // 时间轴状态
   zoomLevel: number;
-  dateRange: any;
+  dateRange: DateRange;
   dateToPixel: (date: Date) => number;
   pixelToDate: (pixel: number) => Date;
   handleZoomIn: () => void;
@@ -97,17 +97,48 @@ export interface GanttStateData {
   setSelectedChartTaskId: (id: string | null) => void;
   
   // 计算数据
-  sortedProjectRows: any[];
-  visibleProjectRows: any[];
-  sortedChartTasks: any[];
-  leftPanelTasks: any[];
-  chartTaskRows: any[];
+  sortedProjectRows: ProjectRow[];
+  visibleProjectRows: ProjectRow[];
+  sortedChartTasks: Task[];
+  leftPanelTasks: Task[];
+  chartTaskRows: ChartTaskRowContainer[];
   containerHeight: number;
   taskContentHeight: number;
   
   // 事件处理
-  ganttEvents: any;
-  ganttInteractions: any;
+  ganttEvents: {
+    createTask: (task: Task) => void;
+    createMilestone: (milestone: MilestoneNode) => void;
+    addNewTask: () => void;
+    deleteTaskCore: (taskId: string) => void;
+    handleColorChange: (taskId: string, color: string) => void;
+    handleTagAdd: (taskId: string, tag: string) => void;
+    handleTagRemove: (taskId: string, tag: string) => void;
+    handleLabelEdit: (taskId: string, label: string) => void;
+    updateTaskDates: (taskId: string, startDate: Date, endDate: Date) => void;
+  };
+  ganttInteractions: {
+    selectedTitleTaskId: string | null;
+    setSelectedTitleTaskId: (id: string | null) => void;
+    handleToggleExpand: (taskId: string) => void;
+    handleCreateSubtask: (taskId: string) => void;
+    handleTaskContextMenu: (e: React.MouseEvent, taskId: string) => void;
+    handleContextMenu: (e: React.MouseEvent) => void;
+    setContextMenu: (state: { visible: boolean; x: number; y: number; clickPosition?: { x: number; y: number } }) => void;
+    setTaskContextMenu: (state: { visible: boolean; x: number; y: number; taskId: string | null }) => void;
+    contextMenu: {
+      visible: boolean;
+      x: number;
+      y: number;
+      clickPosition?: { x: number; y: number };
+    };
+    taskContextMenu: {
+      visible: boolean;
+      x: number;
+      y: number;
+      taskId: string | null;
+    };
+  };
   handleTaskUpdate: (taskId: string, updates: Partial<Task>) => void;
   
   // 标签状态

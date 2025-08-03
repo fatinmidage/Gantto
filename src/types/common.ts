@@ -33,8 +33,8 @@ export interface DateRange {
   endDate: Date;
 }
 
-// 拖拽类型
-export type DragType = 'move' | 'resize-left' | 'resize-right' | 'milestone-move';
+// 拖拽类型 (已移至 drag.ts，保留此处为向后兼容)
+// export type DragType = 'move' | 'resize-left' | 'resize-right' | 'milestone-move';
 
 // 视图类型
 export type ViewType = 'timeline' | 'list' | 'grid';

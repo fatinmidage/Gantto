@@ -19,7 +19,7 @@ interface GanttContextMenuProps {
     y: number;
   };
   pixelToDate?: (pixel: number) => Date;
-  visibleRows?: Array<{ id: string; [key: string]: any }>;
+  visibleRows?: Array<{ id: string; title: string; level?: number; isExpanded?: boolean; [key: string]: unknown }>;
   taskHeight?: number;
 }
 
@@ -96,16 +96,16 @@ const GanttContextMenu: React.FC<GanttContextMenuProps> = ({
     if (clickedRowIndex >= 0 && clickedRowIndex < visibleRows.length) {
       const targetRow = visibleRows[clickedRowIndex];
       
-      // 优先使用 iconType，其次使用 type
-      const iconType = targetRow.iconType || targetRow.type;
+      // 优先使用 iconType，其次使用 type，提供默认值
+      const iconType = (targetRow as any).iconType || (targetRow as any).type || 'circle';
       return { id: targetRow.id, type: iconType };
     } else {
       // 如果点击在空白区域，使用最后一个有效行或默认行
       const fallbackRow = visibleRows.length > 0 ? visibleRows[visibleRows.length - 1] : null;
-      const iconType = fallbackRow?.iconType || fallbackRow?.type;
+      const iconType = (fallbackRow as any)?.iconType || (fallbackRow as any)?.type || 'circle';
       const result = fallbackRow 
         ? { id: fallbackRow.id, type: iconType }
-        : { id: defaultRowId, type: undefined };
+        : { id: defaultRowId, type: 'circle' };
       return result;
     }
   };

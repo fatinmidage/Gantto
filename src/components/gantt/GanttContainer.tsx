@@ -3,7 +3,7 @@ import GanttChartHeader from './GanttChartHeader';
 import GanttChartBody from './GanttChartBody';
 import GanttMenuManager from './GanttMenuManager';
 import { LAYOUT_CONSTANTS } from './ganttStyles';
-import { Task, MilestoneNode } from '../../types';
+import { Task, MilestoneNode, TaskContextMenu, TempDragPosition, VerticalDragState, IconType } from '../../types';
 import { TimelineLayerConfig, LayeredTimeScale, DateRange } from '../../utils/timelineLayerUtils';
 
 interface GanttContainerProps {
@@ -25,11 +25,11 @@ interface GanttContainerProps {
   
   // Body props
   leftPanelTasks: Task[];
-  chartTaskRows: any[];
+  chartTaskRows: Array<{ rowId: string; tasks: Task[] }>;
   selectedTitleTaskId: string | null;
-  verticalDragState: any;
+  verticalDragState: VerticalDragState;
   draggedTask: string | null;
-  tempDragPosition: any;
+  tempDragPosition: TempDragPosition | null;
   isHoveringEdge: 'left' | 'right' | null;
   isDragging: boolean;
   timelineHeight: number;
@@ -57,22 +57,32 @@ interface GanttContainerProps {
   
   // Menu props
   tasks: Task[];
-  contextMenuState: any;
-  taskContextMenuState: any;
-  milestoneContextMenuState?: any;
+  contextMenuState: {
+    visible: boolean;
+    x: number;
+    y: number;
+    clickPosition?: { x: number; y: number };
+  };
+  taskContextMenuState: TaskContextMenu;
+  milestoneContextMenuState?: {
+    visible: boolean;
+    x: number;
+    y: number;
+    milestoneId: string | null;
+  };
   defaultRowId: string;
   availableTags: string[];
   onContextMenuClose: () => void;
   onTaskContextMenuClose: () => void;
   onMilestoneContextMenuClose?: () => void;
-  onCreateTask: (task: any) => void;
-  onCreateMilestone: (milestone: any) => void;
+  onCreateTask: (task: Task) => void;
+  onCreateMilestone: (milestone: MilestoneNode) => void;
   onColorChange: (taskId: string, color: string) => void;
   onTagAdd: (taskId: string, tag: string) => void;
   onTagRemove: (taskId: string, tag: string) => void;
   onTaskDelete: (taskId: string) => void;
   onLabelEdit?: (taskId: string, label: string) => void; // 里程碑标签编辑
-  onMilestoneIconChange?: (milestoneId: string, iconType: any, color?: string) => void;
+  onMilestoneIconChange?: (milestoneId: string, iconType: IconType, color?: string) => void;
   onMilestoneLabelEdit?: (milestoneId: string, label: string) => void;
   onMilestoneDateChange?: (milestoneId: string, newDate: Date) => void;
   onMilestoneDelete?: (milestoneId: string) => void;
@@ -249,7 +259,7 @@ const GanttContainer: React.FC<GanttContainerProps> = ({
         milestoneContextMenuState={milestoneContextMenuState || { visible: false, x: 0, y: 0, milestoneId: null }}
         defaultRowId={defaultRowId}
         availableTags={availableTags}
-        visibleRows={leftPanelTasks}
+        visibleRows={leftPanelTasks as unknown as Array<{ id: string; title: string; level?: number; isExpanded?: boolean; [key: string]: unknown }>}
         taskHeight={taskHeight}
         onContextMenuClose={onContextMenuClose}
         onTaskContextMenuClose={onTaskContextMenuClose}

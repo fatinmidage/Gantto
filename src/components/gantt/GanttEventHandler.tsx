@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect } from 'react';
-import { Task, MilestoneNode } from '../../types';
+import { Task, MilestoneNode, ColorPickerState, TagManagerState, ProjectRowData, TempDragPosition, VerticalDragState } from '../../types';
 
 // 导入样式常量
 import { LAYOUT_CONSTANTS } from './ganttStyles';
@@ -16,7 +16,7 @@ interface GanttEventHandlerProps {
   sortedChartTasks: Task[];
   leftPanelTasks: Task[];
   taskMapMemo: Map<string, Task>;
-  setProjectRows: (rows: any) => void;
+  setProjectRows: (rows: ProjectRowData[] | ((prev: ProjectRowData[]) => ProjectRowData[])) => void;
   taskHeight: number;
   
   // 拖拽状态
@@ -24,8 +24,8 @@ interface GanttEventHandlerProps {
   draggedTask: string | null;
   draggedTaskData: Task | null;
   dragType: string | null;
-  tempDragPosition: any;
-  verticalDragState: any;
+  tempDragPosition: TempDragPosition | null;
+  verticalDragState: VerticalDragState;
   isHoveringEdge: string | null;
   setIsHoveringEdge: (edge: string | null) => void;
   
@@ -46,8 +46,21 @@ interface GanttEventHandlerProps {
   resetVerticalDrag: () => void;
   
   // 事件处理方法
-  ganttEvents: any;
-  ganttInteractions: any;
+  ganttEvents: {
+    createTask: (task: Task) => void;
+    createMilestone: (milestone: MilestoneNode) => void;
+    deleteTaskCore: (taskId: string) => void;
+    handleColorChange: (taskId: string, color: string) => void;
+    handleTagAdd: (taskId: string, tag: string) => void;
+    handleTagRemove: (taskId: string, tag: string) => void;
+    updateTaskDates: (taskId: string, startDate: Date, endDate: Date) => void;
+  };
+  ganttInteractions: {
+    taskContextMenu: {
+      x: number;
+      y: number;
+    };
+  };
   
   // 时间轴方法
   pixelToDate: (pixel: number) => Date;
@@ -64,8 +77,8 @@ interface GanttEventHandlerProps {
   CHART_WIDTH: number;
   
   // 菜单状态设置
-  setColorPickerState: (state: any) => void;
-  setTagManagerState: (state: any) => void;
+  setColorPickerState: (state: Partial<ColorPickerState>) => void;
+  setTagManagerState: (state: Partial<TagManagerState>) => void;
 }
 
 /**
@@ -119,23 +132,19 @@ export const GanttEventHandler: React.FC<GanttEventHandlerProps> = ({
     const task = tasks.find(t => t.id === taskId);
     setColorPickerState({
       visible: true,
-      x: ganttInteractions.taskContextMenu.x,
-      y: ganttInteractions.taskContextMenu.y,
+      position: { x: ganttInteractions.taskContextMenu.x, y: ganttInteractions.taskContextMenu.y },
       taskId,
       currentColor: task?.color
     });
   }, [tasks, ganttInteractions.taskContextMenu, setColorPickerState]);
 
   const handleShowTagManager = useCallback((taskId: string) => {
-    const task = tasks.find(t => t.id === taskId);
     setTagManagerState({
       visible: true,
-      x: ganttInteractions.taskContextMenu.x,
-      y: ganttInteractions.taskContextMenu.y,
-      taskId,
-      task
+      position: { x: ganttInteractions.taskContextMenu.x, y: ganttInteractions.taskContextMenu.y },
+      taskId
     });
-  }, [tasks, ganttInteractions.taskContextMenu, setTagManagerState]);
+  }, [ganttInteractions.taskContextMenu, setTagManagerState]);
 
   const handleTaskDelete = useCallback((taskId: string) => {
     ganttEvents.deleteTaskCore(taskId);
@@ -143,7 +152,7 @@ export const GanttEventHandler: React.FC<GanttEventHandlerProps> = ({
 
   const handleColorChange = useCallback((taskId: string, color: string) => {
     ganttEvents.handleColorChange(taskId, color);
-    setColorPickerState({ visible: false, x: 0, y: 0 });
+    setColorPickerState({ visible: false });
   }, [ganttEvents, setColorPickerState]);
 
   const handleTagAdd = useCallback((taskId: string, tag: string) => {
@@ -156,7 +165,7 @@ export const GanttEventHandler: React.FC<GanttEventHandlerProps> = ({
 
   // === 边界检测和拖拽事件处理器 ===
 
-  const detectEdgeHover = useCallback((e: React.MouseEvent, _task: any): 'left' | 'right' | null => {
+  const detectEdgeHover = useCallback((e: React.MouseEvent, _task: Task): 'left' | 'right' | null => {
     const rect = e.currentTarget.getBoundingClientRect();
     const mouseX = e.clientX - rect.left;
     const edgeZone = LAYOUT_CONSTANTS.EDGE_DETECTION_ZONE;
@@ -166,7 +175,7 @@ export const GanttEventHandler: React.FC<GanttEventHandlerProps> = ({
     return null;
   }, []);
 
-  const handleEdgeHover = useCallback((e: React.MouseEvent, task: any) => {
+  const handleEdgeHover = useCallback((e: React.MouseEvent, task: Task) => {
     if (!isDragging) {
       const edgeType = detectEdgeHover(e, task);
       if (isHoveringEdge !== edgeType) {
@@ -220,7 +229,7 @@ export const GanttEventHandler: React.FC<GanttEventHandlerProps> = ({
         verticalDragState.targetIndex !== verticalDragState.draggedTaskIndex) {
       
       // 简化的重排序逻辑
-      setProjectRows((prev: any) => {
+      setProjectRows((prev: ProjectRowData[]) => {
         const newRows = [...prev];
         const draggedIndex = verticalDragState.draggedTaskIndex!;
         const targetIndex = verticalDragState.targetIndex!;
@@ -319,7 +328,7 @@ export const GanttEventHandler: React.FC<GanttEventHandlerProps> = ({
     <div data-event-handler="gantt" style={{ display: 'contents' }}>
       {React.Children.map(children, child => {
         if (React.isValidElement(child)) {
-          return React.cloneElement(child, { eventHandlers } as any);
+          return React.cloneElement(child as React.ReactElement<any>, { eventHandlers });
         }
         return child;
       })}

@@ -3,31 +3,31 @@ import { getAllDescendantRows, getVisibleProjectRows } from './GanttHelpers';
 // import { LAYOUT_CONSTANTS } from './ganttStyles'; // 暂时不需要
 import { useThrottledMouseMove } from '../../hooks';
 import { useHorizontalDrag } from '../../hooks/gantt/useHorizontalDrag';
-import { Task, MilestoneNode } from '../../types';
+import { Task, MilestoneNode, ProjectRowData, VerticalDragState, DateRange } from '../../types';
 
 interface GanttEventCoordinatorProps {
   // 状态数据
-  sortedChartTasks: any[];
-  leftPanelTasks: any[];
+  sortedChartTasks: Task[];
+  leftPanelTasks: Task[];
   milestones?: MilestoneNode[];
   taskHeight: number;
   
   // 拖拽状态
   isDragging: boolean;
-  verticalDragState: any;
-  tempDragPosition: any;
+  verticalDragState: VerticalDragState;
+  tempDragPosition: { id: string; x: number; width: number } | null | undefined;
   draggedTask: string | null;
-  draggedTaskData: any;
-  dragType: any;
+  draggedTaskData: Task | null;
+  dragType: 'move' | 'resize-left' | 'resize-right' | 'milestone-move' | null;
   isHoveringEdge: 'left' | 'right' | null;
   setIsHoveringEdge: (edge: 'left' | 'right' | null) => void;
   
   // 拖拽方法
-  startHorizontalDrag: (taskId: string, task: any, clientX: number, clientY: number, dragType: any, container: HTMLElement) => void;
+  startHorizontalDrag: (taskId: string, task: Task, clientX: number, clientY: number, dragType: 'move' | 'resize-left' | 'resize-right' | 'milestone-move', container: HTMLElement) => void;
   startVerticalDrag: (taskId: string, taskIndex: number, clientY: number) => void;
   updateHorizontalDragPosition: (clientX: number, chartWidth: number, minWidth: number) => void;
   updateVerticalDragPosition: (clientY: number, rowHeight: number, totalRows: number) => void;
-  updateDragMetrics: (task: any, pixelPerDay: number) => void;
+  updateDragMetrics: (task: Task, pixelPerDay: number) => void;
   resetHorizontalDrag: () => void;
   resetVerticalDrag: () => void;
   
@@ -37,9 +37,13 @@ interface GanttEventCoordinatorProps {
   // 其他方法
   pixelToDate: (pixel: number) => Date;
   dateToPixel: (date: Date) => number;
-  dateRange: any;
-  setProjectRows: React.Dispatch<React.SetStateAction<any[]>>;
-  ganttEvents: any;
+  dateRange: DateRange;
+  setProjectRows: React.Dispatch<React.SetStateAction<ProjectRowData[]>>;
+  ganttEvents: {
+    createTask: (task: Task) => void;
+    createMilestone: (milestone: MilestoneNode) => void;
+    updateTaskDates: (taskId: string, startDate: Date, endDate: Date) => void;
+  };
   handleTaskUpdate: (taskId: string, updates: Partial<Task>) => void;
   
   // 容器引用 - 从状态管理器传入
@@ -52,7 +56,7 @@ interface GanttEventCoordinatorProps {
 interface EventHandlers {
   handleCreateTask: (task: Task) => void;
   handleCreateMilestone: (milestone: MilestoneNode) => void;
-  handleEdgeHover: (e: React.MouseEvent, task: any) => void;
+  handleEdgeHover: (e: React.MouseEvent, task: Task) => void;
   handleMouseDown: (e: React.MouseEvent, taskId: string) => void;
   handleMilestoneDragStart: (e: React.MouseEvent, milestone: MilestoneNode) => void;
   handleTitleMouseDown: (e: React.MouseEvent, taskId: string) => void;
@@ -162,7 +166,7 @@ const GanttEventCoordinator: React.FC<GanttEventCoordinatorProps> = ({
         verticalDragState.targetIndex !== verticalDragState.draggedTaskIndex) {
       
       // 修复后的重排序逻辑
-      setProjectRows((prev: any[]) => {
+      setProjectRows((prev: ProjectRowData[]) => {
         const newRows = [...prev];
         const draggedTaskId = verticalDragState.draggedTaskId;
         const draggedIndex = verticalDragState.draggedTaskIndex!;

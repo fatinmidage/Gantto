@@ -20,6 +20,8 @@ export interface TempDragPosition {
   id: string;
   x: number;
   width: number;
+  y?: number;
+  height?: number;
 }
 
 // 里程碑临时拖拽位置

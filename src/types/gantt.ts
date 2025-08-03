@@ -7,7 +7,7 @@ import { Task } from './task';
 import { ProjectRow } from './project';
 import { VerticalDragState, TempDragPosition, DragMetrics } from './drag';
 
-// 图表任务行 - 用于右侧图表区域
+// 图表任务行 - 用于右侧图表区域 (旧版本，保留兼容性)
 export interface ChartTaskRow {
   id: string;
   taskId: string;
@@ -16,6 +16,12 @@ export interface ChartTaskRow {
   isExpanded: boolean;
   hasChildren: boolean;
   order: number;
+}
+
+// 图表任务行容器 - 实际使用的结构
+export interface ChartTaskRowContainer {
+  rowId: string;
+  tasks: Task[];
 }
 
 // 时间刻度

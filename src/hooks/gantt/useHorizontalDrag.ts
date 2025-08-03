@@ -10,7 +10,7 @@ interface UseHorizontalDragProps {
   draggedTask: string | null;
   draggedTaskData: Task | null;
   dragType: 'move' | 'resize-left' | 'resize-right' | 'milestone-move' | null;
-  tempDragPosition: { x: number; y?: number; width: number; height?: number } | null;
+  tempDragPosition: { id: string; x: number; width: number; y?: number; height?: number } | null;
   isHoveringEdge: 'left' | 'right' | null;
   
   // 任务数据
@@ -23,7 +23,7 @@ interface UseHorizontalDragProps {
   onMilestoneUpdate: (milestoneId: string, updates: Partial<MilestoneNode>) => void;
   
   // 拖拽系统方法
-  startHorizontalDrag: (taskId: string, task: Task, clientX: number, clientY: number, dragType: string, container: HTMLDivElement) => void;
+  startHorizontalDrag: (taskId: string, task: Task, clientX: number, clientY: number, dragType: 'move' | 'resize-left' | 'resize-right' | 'milestone-move', container: HTMLDivElement) => void;
   updateHorizontalDragPosition: (clientX: number, chartWidth: number, minWidth: number) => void;
   updateMilestoneDragPosition?: (clientX: number, clientY: number, chartWidth: number, chartHeight: number) => void;
   resetHorizontalDrag: () => void;
@@ -36,12 +36,12 @@ interface UseHorizontalDragProps {
   
   // 事件设置
   setIsHoveringEdge: (edge: 'left' | 'right' | null) => void;
-  useThrottledMouseMove: (callback: (e: MouseEvent) => void, deps: any[]) => (e: MouseEvent) => void;
+  useThrottledMouseMove: (callback: (e: MouseEvent) => void, deps: unknown[]) => (e: MouseEvent) => void;
 }
 
 export interface UseHorizontalDragResult {
-  detectEdgeHover: (e: React.MouseEvent, task: any) => 'left' | 'right' | null;
-  handleEdgeHover: (e: React.MouseEvent, task: any) => void;
+  detectEdgeHover: (e: React.MouseEvent, task: Task) => 'left' | 'right' | null;
+  handleEdgeHover: (e: React.MouseEvent, task: Task) => void;
   handleMouseDown: (e: React.MouseEvent, taskId: string) => void;
   handleMouseMove: (e: MouseEvent) => void;
   handleMouseUp: () => void;
@@ -146,7 +146,7 @@ export const useHorizontalDrag = ({
   }, []);
 
   // 检测是否在任务条边界附近
-  const detectEdgeHover = useCallback((e: React.MouseEvent, _task: any): 'left' | 'right' | null => {
+  const detectEdgeHover = useCallback((e: React.MouseEvent, _task: Task): 'left' | 'right' | null => {
     const rect = e.currentTarget.getBoundingClientRect();
     const mouseX = e.clientX - rect.left;
     const edgeZone = 8; // 8px边界检测区域
@@ -160,7 +160,7 @@ export const useHorizontalDrag = ({
   }, []);
 
   // 简化的边界检测处理器
-  const handleEdgeHover = useCallback((e: React.MouseEvent, task: any) => {
+  const handleEdgeHover = useCallback((e: React.MouseEvent, task: Task) => {
     if (!isDragging) {
       const edgeType = detectEdgeHover(e, task);
       if (isHoveringEdge !== edgeType) {
@@ -198,7 +198,7 @@ export const useHorizontalDrag = ({
     }
     
     // 优先查找chartTask
-    let task: any = sortedChartTasks.find(t => t.id === taskId);
+    let task: Task | undefined = sortedChartTasks.find(t => t.id === taskId);
     
     // 如果不是chartTask，查找兼容性task
     if (!task) {

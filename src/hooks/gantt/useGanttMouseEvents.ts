@@ -46,7 +46,7 @@ interface UseGanttMouseEventsProps {
   
   // 事件设置
   setIsHoveringEdge: (edge: 'left' | 'right' | null) => void;
-  useThrottledMouseMove: (callback: (e: MouseEvent) => void, deps: any[]) => (e: MouseEvent) => void;
+  useThrottledMouseMove: (callback: (e: MouseEvent) => void, deps: unknown[]) => (e: MouseEvent) => void;
 }
 
 export const useGanttMouseEvents = ({

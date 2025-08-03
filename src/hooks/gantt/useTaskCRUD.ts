@@ -12,7 +12,7 @@ interface UseTaskCRUDProps {
   setProjectRows: React.Dispatch<React.SetStateAction<ProjectRow[]>>;
   setMilestones: React.Dispatch<React.SetStateAction<MilestoneNode[]>>;
   milestoneManager?: {
-    updateMilestone: (updates: { id: string; date: Date; [key: string]: any }) => void;
+    updateMilestone: (updates: { id: string; date?: Date; iconType?: string; color?: string; label?: string }) => void;
   };
 }
 

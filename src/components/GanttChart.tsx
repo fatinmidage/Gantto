@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { GanttStateManager, GanttEventCoordinator, GanttContainer } from './gantt';
 import { useTimelineSettings } from '../hooks/gantt/useTimelineSettings';
+import { IconType } from '../types';
 
 // 导入初始数据
 import { initialProjectRows, initialChartTasks, initialMilestones } from '../data/initialData';
@@ -157,8 +158,8 @@ const GanttChart: React.FC<GanttChartProps> = ({
               onTagRemove={stateData.ganttEvents.handleTagRemove}
               onTaskDelete={stateData.ganttEvents.deleteTaskCore}
               onLabelEdit={stateData.ganttEvents.handleLabelEdit}
-              onMilestoneIconChange={(milestoneId: string, iconType: any, color?: string) => {
-                const updates: any = { id: milestoneId, iconType };
+              onMilestoneIconChange={(milestoneId: string, iconType: IconType, color?: string) => {
+                const updates: { id: string; iconType: IconType; color?: string } = { id: milestoneId, iconType };
                 if (color) {
                   updates.color = color;
                 }

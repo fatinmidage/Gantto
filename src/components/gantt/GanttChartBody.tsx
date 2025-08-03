@@ -70,12 +70,12 @@ interface GanttChartBodyProps {
   onTaskUpdate?: (taskId: string, updates: Partial<Task>) => void;
   onMouseDown: (e: React.MouseEvent, taskId: string) => void;
   onTaskContextMenu: (e: React.MouseEvent, taskId: string) => void;
-  onEdgeHover: (e: React.MouseEvent, task: any) => void;
+  onEdgeHover: (e: React.MouseEvent, task: Task) => void;
   onMouseLeave: () => void;
   onContextMenu: (e: React.MouseEvent) => void;
   onMilestoneSelect?: (milestoneId: string) => void;
   onMilestoneContextMenu?: (e: React.MouseEvent, milestoneId: string) => void;
-  onMilestoneDragStart?: (e: React.MouseEvent, milestone: any) => void;
+  onMilestoneDragStart?: (e: React.MouseEvent, milestone: MilestoneNode) => void;
   onMilestoneLabelEdit?: (milestoneId: string, label: string) => void;
   onMilestoneDateChange?: (milestoneId: string, newDate: Date) => void;
   

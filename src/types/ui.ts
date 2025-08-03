@@ -3,7 +3,8 @@
  * 包含所有用户界面交互状态
  */
 
-import { Position, DragType, ViewType, ContextMenuType } from './common';
+import { Position, ViewType, ContextMenuType } from './common';
+import { DragType } from './drag';
 
 // 拖拽状态接口
 export interface DragState {
@@ -75,8 +76,12 @@ export interface TaskContextMenu {
 export interface ColorPickerState {
   visible: boolean;
   taskId: string | null;
+  milestoneId?: string | null;
   currentColor?: string;
   position?: Position;
+  targetType?: 'task' | 'milestone';
+  onColorChange?: (color: string) => void;
+  onClose?: () => void;
 }
 
 // 标签管理器状态
@@ -84,8 +89,32 @@ export interface TagManagerState {
   visible: boolean;
   taskId: string | null;
   newTag: string;
-  availableTags?: string[]; // 改为可选，兼容现有代码
-  selectedTags?: string[]; // 改为可选，兼容现有代码
+  availableTags?: string[];
+  selectedTags?: string[];
+  position?: Position;
+  onTagsChange?: (tags: string[]) => void;
+  onClose?: () => void;
+  allowCreate?: boolean;
+}
+
+// 项目行数据接口
+export interface ProjectRowData {
+  id: string;
+  title: string;
+  isExpanded?: boolean;
+  level?: number;
+  parentId?: string;
+  children?: string[];
+  order: number; // 改为必需字段，与ProjectRow保持一致
+  metadata?: Record<string, unknown>;
+}
+
+// 可见行数据接口（用于渲染优化）
+export interface VisibleRowData extends ProjectRowData {
+  index: number;
+  isVisible: boolean;
+  yPosition: number;
+  height: number;
 }
 
 // 模态框状态集合
